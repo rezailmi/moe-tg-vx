@@ -124,3 +124,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .tab-scrollbar-hidden {
+    scrollbar-width: none;
+  }
+
+  .tab-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
