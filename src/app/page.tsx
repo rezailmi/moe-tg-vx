@@ -4,19 +4,25 @@ import { useEffect, useState } from 'react'
 
 import type { LucideIcon } from 'lucide-react'
 import {
+  BotIcon,
   CalendarDaysIcon,
   FilePenIcon,
   FolderIcon,
   HomeIcon,
   InboxIcon,
-  LayersIcon,
   NewspaperIcon,
   PieChartIcon,
   PlusIcon,
-  StarIcon,
+  UserIcon,
   XIcon,
 } from 'lucide-react'
 
+import {
+  AssistantBody,
+  AssistantModeSwitcher,
+  AssistantPanel,
+  type AssistantMode,
+} from '@/components/assistant-panel'
 import { Button } from '@/components/ui/button'
 import {
   Sidebar,
@@ -30,6 +36,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
@@ -55,10 +62,28 @@ const newTabConfig = {
   tooltip: 'New tab',
 } as const
 
-type PageKey = (typeof primaryPages)[number]['key']
-type TabKey = typeof newTabConfig['key'] | PageKey
-type PageConfig = (typeof primaryPages)[number]
-type TabConfig = PageConfig | typeof newTabConfig
+const profileTabConfig = {
+  key: 'profile',
+  label: 'Profile',
+  icon: UserIcon,
+  tooltip: 'Profile',
+} as const
+
+const assistantTabConfig = {
+  key: 'assistant',
+  label: 'Assistant',
+  icon: BotIcon,
+  tooltip: 'Assistant',
+} as const
+
+type PrimaryPageKey = (typeof primaryPages)[number]['key']
+type ProfileTabKey = typeof profileTabConfig['key']
+type AssistantTabKey = typeof assistantTabConfig['key']
+type PageKey = PrimaryPageKey | ProfileTabKey
+type ClosableTabKey = PageKey | AssistantTabKey
+type TabKey = typeof newTabConfig['key'] | ClosableTabKey
+type PageConfig = (typeof primaryPages)[number] | typeof profileTabConfig
+type TabConfig = PageConfig | typeof newTabConfig | typeof assistantTabConfig
 
 type EmptyState = {
   heading: string
@@ -126,6 +151,24 @@ const emptyStates: Record<TabKey, EmptyState> = {
     icon: InboxIcon,
     primaryAction: 'Compose a note',
   },
+  profile: {
+    heading: 'Profile',
+    title: 'Complete your profile details',
+    description:
+      'Add a bio, contact information, and personalize your presence so teammates know who you are.',
+    icon: UserIcon,
+    primaryAction: 'Edit profile',
+    secondaryAction: 'Upload photo',
+  },
+  assistant: {
+    heading: 'Assistant',
+    title: 'Ask the assistant',
+    description:
+      'Summarize this page, ask for insights, or draft quick updates without leaving your flow.',
+    icon: BotIcon,
+    primaryAction: 'Start a prompt',
+    secondaryAction: 'Share context',
+  },
 }
 
 const pageConfigMap: Record<PageKey, PageConfig> = primaryPages.reduce(
@@ -133,40 +176,52 @@ const pageConfigMap: Record<PageKey, PageConfig> = primaryPages.reduce(
     acc[page.key] = page
     return acc
   },
-  {} as Record<PageKey, PageConfig>,
+  { [profileTabConfig.key]: profileTabConfig } as Record<PageKey, PageConfig>,
 )
 
 const tabConfigMap: Record<TabKey, TabConfig> = {
   [newTabConfig.key]: newTabConfig,
   ...pageConfigMap,
+  [assistantTabConfig.key]: assistantTabConfig,
 }
 
 const MAX_TABS = 8
 
 export default function Home() {
-  const [openTabs, setOpenTabs] = useState<PageKey[]>([])
+  const { state: sidebarState } = useSidebar()
+  const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>([])
   const [activeTab, setActiveTab] = useState<TabKey>(newTabConfig.key)
   const [tabLimitReached, setTabLimitReached] = useState(false)
+  const [assistantMode, setAssistantMode] = useState<AssistantMode>('floating')
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
 
   const currentState = emptyStates[activeTab]
   const ActiveIcon = currentState.icon
   const isNewTabActive = activeTab === newTabConfig.key
+  const isProfileActive = activeTab === profileTabConfig.key
+  const isAssistantTabActive = activeTab === assistantTabConfig.key
+  const isSidebarCollapsed = sidebarState === 'collapsed'
+  const isAssistantSidebarOpen = assistantMode === 'sidebar' && isAssistantOpen
 
-  const handleNavigate = (pageKey: PageKey) => {
+  const handleNavigate = (tabKey: ClosableTabKey) => {
     setOpenTabs((tabs) => {
-      if (tabs.includes(pageKey)) {
-        setActiveTab(pageKey)
+      if (tabs.includes(tabKey)) {
+        setActiveTab(tabKey)
         return tabs
       }
 
-      if (tabs.length >= MAX_TABS) {
+      if (
+        tabs.length >= MAX_TABS &&
+        tabKey !== profileTabConfig.key &&
+        tabKey !== assistantTabConfig.key
+      ) {
         setTabLimitReached(true)
         return tabs
       }
 
-      const nextTabs = [...tabs, pageKey]
+      const nextTabs = [...tabs, tabKey]
 
-      setActiveTab(pageKey)
+      setActiveTab(tabKey)
       return nextTabs
     })
   }
@@ -204,6 +259,40 @@ export default function Home() {
 
   const handleNewTab = () => {
     setActiveTab(newTabConfig.key)
+  }
+
+  const handleAssistantButtonClick = () => {
+    if (assistantMode === 'floating') {
+      setIsAssistantOpen((previous) => !previous)
+      return
+    }
+
+    setIsAssistantOpen((previous) => !previous)
+  }
+
+  const handleAssistantModeChange = (mode: AssistantMode | 'full') => {
+    if (mode === 'full') {
+      setAssistantMode('sidebar')
+      setIsAssistantOpen(false)
+      handleNavigate(assistantTabConfig.key)
+      return
+    }
+
+    if (mode === 'floating') {
+      setAssistantMode('floating')
+      setIsAssistantOpen(true)
+      if (isAssistantTabActive) {
+        handleCloseTab(assistantTabConfig.key)
+      }
+      return
+    }
+
+    // Sidebar mode
+    setAssistantMode('sidebar')
+    setIsAssistantOpen(true)
+    if (!isAssistantTabActive) {
+      handleNavigate(assistantTabConfig.key)
+    }
   }
 
   return (
@@ -257,16 +346,51 @@ export default function Home() {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border px-3 py-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3 rounded-xl bg-transparent px-1 py-2 text-sidebar-foreground transition-colors hover:bg-sidebar/20 group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-full group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0"
-            aria-label="Open profile"
-          >
-            <div className="flex size-8 items-center justify-center rounded-full bg-sidebar-foreground/15 text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:size-8">
-              RI
-            </div>
-            <span className="text-sm font-medium group-data-[collapsible=icon]:hidden">Reza Ilmi</span>
-          </Button>
+          <div className={cn(isSidebarCollapsed && 'flex justify-center')}>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleNavigate(profileTabConfig.key)}
+                    aria-label="Open profile"
+                    aria-pressed={isProfileActive}
+                    className={cn(
+                      'group/profile flex h-10 w-full items-center justify-start gap-3 rounded-xl px-1 text-left text-sidebar-foreground transition-colors focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                      'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                      isProfileActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
+                      'group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:rounded-full group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:transition-none',
+                      'group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:hover:bg-transparent group-data-[collapsible=icon]:hover:text-sidebar-foreground group-data-[collapsible=icon]:focus-visible:ring-0',
+                      isProfileActive &&
+                        'group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:text-sidebar-accent-foreground',
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-foreground/15 text-sm font-semibold text-sidebar-foreground transition-colors',
+                        'group-hover/profile:bg-sidebar-accent-foreground/15 group-hover/profile:text-sidebar-accent-foreground',
+                        isProfileActive && 'bg-sidebar-accent-foreground/20 text-sidebar-accent-foreground',
+                      )}
+                    >
+                      RI
+                    </div>
+                    <span
+                      className={cn(
+                        'text-sm font-medium transition-colors group-data-[collapsible=icon]:hidden',
+                        isProfileActive && 'text-sidebar-accent-foreground',
+                      )}
+                    >
+                      Reza Ilmi
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="start" hidden={!isSidebarCollapsed}>
+                  View profile
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </SidebarFooter>
       </Sidebar>
 
@@ -323,15 +447,16 @@ export default function Home() {
                       onClick={handleNewTab}
                       disabled={tabLimitReached}
                       className={cn(
-                        'flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors',
+                        'flex items-center rounded-md transition-colors',
                         isNewTabActive
-                          ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-                          : 'hover:bg-background/70 hover:text-foreground hover:ring-1 hover:ring-border/80',
+                          ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border'
+                          : 'size-9 justify-center text-muted-foreground hover:bg-background/70 hover:text-foreground hover:ring-1 hover:ring-border/80',
                         'disabled:cursor-not-allowed disabled:opacity-50',
                       )}
                       aria-label="Open new tab"
                     >
                       <PlusIcon className="size-4" />
+                      {isNewTabActive && <span className="truncate">{newTabConfig.label}</span>}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">New Tab</TooltipContent>
@@ -352,64 +477,160 @@ export default function Home() {
                 {currentState ? currentState.heading : 'New Tab'}
               </h1>
             </div>
-            <Button size="sm" variant="outline">
-              Customize
-            </Button>
+            <div className="flex items-center gap-2">
+              {!isAssistantTabActive && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={handleAssistantButtonClick}
+                  aria-expanded={isAssistantOpen}
+                  aria-controls="assistant-panel"
+                >
+                  <BotIcon className="size-4" />
+                  Assistant
+                </Button>
+              )}
+              {isAssistantTabActive && (
+                <AssistantModeSwitcher
+                  mode={assistantMode}
+                  onModeChange={handleAssistantModeChange}
+                  activeOption={isAssistantTabActive ? 'full' : assistantMode}
+                />
+              )}
+            </div>
           </div>
-          <div className="flex flex-1 flex-col overflow-y-auto px-8 py-10">
-            {currentState ? (
-              <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-                  {ActiveIcon ? <ActiveIcon className="size-7" /> : <PlusIcon className="size-7" />}
+          <div className="flex flex-1 overflow-hidden">
+            <div
+              className={cn(
+                'flex flex-1 flex-col overflow-y-auto px-8 py-10',
+                isAssistantSidebarOpen && 'lg:pr-6',
+              )}
+            >
+              {isAssistantTabActive ? (
+                <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
+                  {assistantMode === 'sidebar' ? (
+                    <AssistantPanel
+                      mode="sidebar"
+                      isOpen
+                      onOpenChange={setIsAssistantOpen}
+                      onModeChange={handleAssistantModeChange}
+                      showBodyHeading={false}
+                      showHeaderControls={false}
+                    />
+                  ) : (
+                    <AssistantBody showHeading={false} />
+                  )}
                 </div>
-                <div className="mt-6 space-y-2">
-                  <h2 className="text-2xl font-semibold tracking-tight">
-                    {currentState.title}
-                  </h2>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {currentState.description}
-                  </p>
-                </div>
-                {(currentState.primaryAction || currentState.secondaryAction) && (
-                  <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    {currentState.primaryAction && (
-                      <Button size="sm">{currentState.primaryAction}</Button>
-                    )}
-                    {currentState.secondaryAction && (
-                      <Button size="sm" variant="outline">
-                        {currentState.secondaryAction}
-                      </Button>
-                    )}
+              ) : currentState ? (
+                <div className="flex flex-1 flex-col items-center justify-center text-center">
+                  <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
+                    {ActiveIcon ? <ActiveIcon className="size-7" /> : <PlusIcon className="size-7" />}
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-                  <PlusIcon className="size-7" />
+                  <div className="mt-6 space-y-2">
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      {currentState.title}
+                    </h2>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {currentState.description}
+                    </p>
+                  </div>
+                  {(currentState.primaryAction || currentState.secondaryAction) && (
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                      {currentState.primaryAction && (
+                        <Button size="sm">{currentState.primaryAction}</Button>
+                      )}
+                      {currentState.secondaryAction && (
+                        <Button size="sm" variant="outline">
+                          {currentState.secondaryAction}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {isProfileActive && (
+                    <div className="mt-10 w-full max-w-md text-left">
+                      <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-muted/40 hover:shadow-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
+                            RI
+                          </div>
+                          <div className="flex flex-1 flex-col">
+                            <h3 className="text-base font-semibold">Reza Ilmi</h3>
+                            <p className="text-muted-foreground text-sm">
+                              Product Strategist · Ready to collaborate
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                          <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
+                            <p className="text-muted-foreground text-xs uppercase tracking-wide">Bio</p>
+                            <p className="mt-1 font-medium">Tell your story here…</p>
+                          </div>
+                          <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
+                            <p className="text-muted-foreground text-xs uppercase tracking-wide">Availability</p>
+                            <p className="mt-1 font-medium">Set your schedule</p>
+                          </div>
+                        </div>
+                        <div className="mt-6 flex flex-wrap gap-2">
+                          <Button size="sm">Preview profile</Button>
+                          <Button size="sm" variant="ghost">
+                            Share profile link
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-6 space-y-2">
-                  <h2 className="text-2xl font-semibold tracking-tight">
-                    Create your first tab
-                  </h2>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Open a page from the sidebar or start with a preselected one
-                    to jump into your workspace.
-                  </p>
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center text-center">
+                  <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
+                    <PlusIcon className="size-7" />
+                  </div>
+                  <div className="mt-6 space-y-2">
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      Create your first tab
+                    </h2>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Open a page from the sidebar or start with a preselected one
+                      to jump into your workspace.
+                    </p>
+                  </div>
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    <Button size="sm" onClick={() => handleNavigate('home')}>
+                      Go Home
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleNavigate('roundup')}>
+                      Open Round-up
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  <Button size="sm" onClick={() => handleNavigate('home')}>
-                    Go Home
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleNavigate('roundup')}>
-                    Open Round-up
-                  </Button>
-                </div>
+              )}
+            </div>
+            {assistantMode === 'sidebar' && isAssistantOpen && (
+              <div
+                id="assistant-panel"
+                className="hidden w-full max-w-xs shrink-0 border-l bg-background sm:flex"
+              >
+                <AssistantPanel
+                  mode="sidebar"
+                  isOpen={isAssistantOpen}
+                  onOpenChange={setIsAssistantOpen}
+                  onModeChange={handleAssistantModeChange}
+                  className="h-full w-full"
+                />
               </div>
             )}
           </div>
         </div>
       </SidebarInset>
+      {assistantMode === 'floating' && isAssistantOpen && (
+        <AssistantPanel
+          mode="floating"
+          isOpen={isAssistantOpen}
+          onOpenChange={setIsAssistantOpen}
+          onModeChange={handleAssistantModeChange}
+        />
+      )}
     </div>
   )
 }
