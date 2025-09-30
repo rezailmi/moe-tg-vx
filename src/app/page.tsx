@@ -194,6 +194,8 @@ export default function Home() {
   const [tabLimitReached, setTabLimitReached] = useState(false)
   const [assistantMode, setAssistantMode] = useState<AssistantMode>('floating')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [draggedTab, setDraggedTab] = useState<ClosableTabKey | null>(null)
+  const [dragOverTab, setDragOverTab] = useState<ClosableTabKey | null>(null)
 
   const currentState = emptyStates[activeTab]
   const ActiveIcon = currentState.icon
@@ -293,6 +295,61 @@ export default function Home() {
     if (!isAssistantTabActive) {
       handleNavigate(assistantTabConfig.key)
     }
+  }
+
+  const handleDragStart = (event: React.DragEvent, tabKey: ClosableTabKey) => {
+    setDraggedTab(tabKey)
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move'
+    }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedTab(null)
+    setDragOverTab(null)
+  }
+
+  const handleDragOver = (event: React.DragEvent, tabKey: ClosableTabKey) => {
+    event.preventDefault()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move'
+    }
+    
+    if (draggedTab && draggedTab !== tabKey) {
+      setDragOverTab(tabKey)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDragOverTab(null)
+  }
+
+  const handleDrop = (event: React.DragEvent, targetTabKey: ClosableTabKey) => {
+    event.preventDefault()
+    
+    if (!draggedTab || draggedTab === targetTabKey) {
+      setDraggedTab(null)
+      setDragOverTab(null)
+      return
+    }
+
+    setOpenTabs((tabs) => {
+      const draggedIndex = tabs.indexOf(draggedTab)
+      const targetIndex = tabs.indexOf(targetTabKey)
+
+      if (draggedIndex === -1 || targetIndex === -1) {
+        return tabs
+      }
+
+      const newTabs = [...tabs]
+      newTabs.splice(draggedIndex, 1)
+      newTabs.splice(targetIndex, 0, draggedTab)
+
+      return newTabs
+    })
+
+    setDraggedTab(null)
+    setDragOverTab(null)
   }
 
   return (
@@ -399,7 +456,7 @@ export default function Home() {
           <div className="border-b border-border/70 bg-muted/20 px-4">
             <div className="tab-scrollbar-hidden -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-2">
               <TooltipProvider delayDuration={150}>
-                {openTabs.map((tabKey) => {
+                {openTabs.map((tabKey, index) => {
                   const tab = tabConfigMap[tabKey]
 
                   if (!tab) {
@@ -408,20 +465,40 @@ export default function Home() {
 
                   const Icon = tab.icon
                   const isActive = activeTab === tabKey
+                  const isDragging = draggedTab === tabKey
+                  const isDragOver = dragOverTab === tabKey
+                  const draggedIndex = draggedTab ? openTabs.indexOf(draggedTab) : -1
+                  const showIndicatorLeft = isDragOver && draggedIndex > index
+                  const showIndicatorRight = isDragOver && draggedIndex < index
+                  
                   return (
                     <div
                       key={tabKey}
+                      data-tab-item
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, tabKey)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, tabKey)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, tabKey)}
                       className={cn(
-                        'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors',
+                        'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200',
                       isActive
                         ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-                        : 'text-muted-foreground hover:bg-background/70 hover:text-foreground hover:ring-1 hover:ring-border/80',
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                        isDragging && 'opacity-30',
                       )}
                     >
+                      {showIndicatorLeft && (
+                        <div className="absolute -left-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                      )}
+                      {showIndicatorRight && (
+                        <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                      )}
                       <button
                         type="button"
                         onClick={() => setActiveTab(tabKey)}
-                        className="flex items-center gap-2 truncate"
+                        className="flex items-center gap-2 truncate pointer-events-auto"
                       >
                         <Icon className="size-4" />
                         <span className="truncate">{tab.label}</span>
@@ -432,7 +509,7 @@ export default function Home() {
                           event.stopPropagation()
                           handleCloseTab(tabKey)
                         }}
-                        className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100"
+                        className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100 pointer-events-auto"
                         aria-label={`Close ${tab.label}`}
                       >
                         <XIcon className="size-3.5" />
@@ -447,10 +524,10 @@ export default function Home() {
                       onClick={handleNewTab}
                       disabled={tabLimitReached}
                       className={cn(
-                        'flex items-center rounded-md transition-colors',
+                        'flex h-9 items-center rounded-md transition-colors',
                         isNewTabActive
                           ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border'
-                          : 'size-9 justify-center text-muted-foreground hover:bg-background/70 hover:text-foreground hover:ring-1 hover:ring-border/80',
+                          : 'w-9 justify-center text-muted-foreground hover:bg-accent hover:text-foreground',
                         'disabled:cursor-not-allowed disabled:opacity-50',
                       )}
                       aria-label="Open new tab"
@@ -549,7 +626,7 @@ export default function Home() {
                   )}
                   {isProfileActive && (
                     <div className="mt-10 w-full max-w-md text-left">
-                      <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-muted/40 hover:shadow-lg">
+                      <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
                         <div className="flex items-center gap-4">
                           <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
                             RI

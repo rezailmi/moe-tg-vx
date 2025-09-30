@@ -1,0 +1,82 @@
+---
+description: shadcn/ui theming pattern and hover state guidelines
+globs: *.css,*.tsx,*.ts
+---
+
+# shadcn/ui Theming Pattern
+
+## Core Principle
+Follow the official shadcn/ui theming pattern. **Do NOT create separate `-hover` variables**. Instead, use existing semantic color variables for hover states.
+
+## Color Variable Hierarchy
+
+### Base Colors
+- `--background` - Main background
+- `--foreground` - Main text
+- `--muted` - Subtle/muted backgrounds
+- `--accent` - Interactive/hover states ← **This is the hover color**
+- `--secondary` - Secondary elements
+
+### Sidebar Colors
+- `--sidebar` - Sidebar background
+- `--sidebar-foreground` - Sidebar text
+- `--sidebar-accent` - Sidebar hover states ← **This is the sidebar hover color**
+
+## Hover State Pattern
+
+### Light Mode
+- `--muted: oklch(0.95 0 0)` - Base muted color
+- `--accent: oklch(0.85 0 0)` - **10% darker** for hover (0.95 → 0.85)
+- `--sidebar-accent: oklch(0.85 0 0)` - Same as accent
+
+### Dark Mode  
+- `--muted: oklch(0.29 0 0)` - Base muted color
+- `--accent: oklch(0.40 0 0)` - **38% lighter** for hover (0.29 → 0.40)
+- `--sidebar-accent: oklch(0.40 0 0)` - Same as accent
+
+## Usage in Components
+
+### ✅ Correct Usage
+```tsx
+// Tabs, buttons, cards
+className="hover:bg-accent hover:text-accent-foreground"
+
+// Sidebar menu items
+className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+```
+
+### ❌ Incorrect Usage
+```tsx
+// Don't create custom hover variables
+--accent-hover: oklch(...)
+--muted-hover: oklch(...)
+
+// Don't use opacity modifiers for hover
+hover:bg-muted/80
+hover:bg-accent/50
+```
+
+## Key Files
+- Theme variables: [src/app/globals.css](mdc:src/app/globals.css)
+- Main page: [src/app/page.tsx](mdc:src/app/page.tsx)
+- Button component: [src/components/ui/button.tsx](mdc:src/components/ui/button.tsx)
+- Sidebar component: [src/components/ui/sidebar.tsx](mdc:src/components/ui/sidebar.tsx)
+
+## Adjusting Hover Visibility
+
+To make hovers more/less visible, adjust the `--accent` and `--sidebar-accent` values:
+- **More visible**: Increase contrast with `--muted`
+  - Light mode: Lower the lightness value (e.g., 0.85 → 0.80)
+  - Dark mode: Raise the lightness value (e.g., 0.40 → 0.45)
+- **Less visible**: Decrease contrast with `--muted`
+  - Light mode: Raise the lightness value (e.g., 0.85 → 0.90)
+  - Dark mode: Lower the lightness value (e.g., 0.40 → 0.35)
+
+## Consistency Rules
+1. Keep `--accent` and `--sidebar-accent` the same for unified hover colors
+2. Maintain sufficient contrast between `--muted` and `--accent` (minimum 10% lightness difference)
+3. Use semantic color names in Tailwind classes (e.g., `bg-accent` not `bg-gray-200`)
+4. Reference shadcn/ui documentation when adding new color variables
+
+## Reference
+Official shadcn/ui theming docs: https://ui.shadcn.com/docs/theming
