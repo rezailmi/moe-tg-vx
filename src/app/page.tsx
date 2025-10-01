@@ -24,6 +24,7 @@ import {
   type AssistantMode,
 } from '@/components/assistant-panel'
 import { Button } from '@/components/ui/button'
+import { HomeContent } from '@/components/home-content'
 import {
   Sidebar,
   SidebarContent,
@@ -202,6 +203,7 @@ export default function Home() {
   const isNewTabActive = activeTab === newTabConfig.key
   const isProfileActive = activeTab === profileTabConfig.key
   const isAssistantTabActive = activeTab === assistantTabConfig.key
+  const isHomeActive = activeTab === 'home'
   const isSidebarCollapsed = sidebarState === 'collapsed'
   const isAssistantSidebarOpen = assistantMode === 'sidebar' && isAssistantOpen
 
@@ -452,262 +454,266 @@ export default function Home() {
       </Sidebar>
 
       <SidebarInset>
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-border/70 bg-muted/20 px-4">
-            <div className="tab-scrollbar-hidden -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-2">
-              <TooltipProvider delayDuration={150}>
-                {openTabs.map((tabKey, index) => {
-                  const tab = tabConfigMap[tabKey]
+        <div className="flex flex-1 flex-col">
+          <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
+            <div className="border-b border-border/70 bg-muted/20 px-4 backdrop-blur-sm">
+              <div className="tab-scrollbar-hidden -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-2">
+                <TooltipProvider delayDuration={150}>
+                  {openTabs.map((tabKey, index) => {
+                    const tab = tabConfigMap[tabKey]
 
-                  if (!tab) {
-                    return null
-                  }
+                    if (!tab) {
+                      return null
+                    }
 
-                  const Icon = tab.icon
-                  const isActive = activeTab === tabKey
-                  const isDragging = draggedTab === tabKey
-                  const isDragOver = dragOverTab === tabKey
-                  const draggedIndex = draggedTab ? openTabs.indexOf(draggedTab) : -1
-                  const showIndicatorLeft = isDragOver && draggedIndex > index
-                  const showIndicatorRight = isDragOver && draggedIndex < index
-                  
-                  return (
-                    <div
-                      key={tabKey}
-                      data-tab-item
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, tabKey)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => handleDragOver(e, tabKey)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, tabKey)}
-                      className={cn(
-                        'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200',
-                      isActive
-                        ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                        isDragging && 'opacity-30',
-                      )}
-                    >
-                      {showIndicatorLeft && (
-                        <div className="absolute -left-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
-                      )}
-                      {showIndicatorRight && (
-                        <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
-                      )}
+                    const Icon = tab.icon
+                    const isActive = activeTab === tabKey
+                    const isDragging = draggedTab === tabKey
+                    const isDragOver = dragOverTab === tabKey
+                    const draggedIndex = draggedTab ? openTabs.indexOf(draggedTab) : -1
+                    const showIndicatorLeft = isDragOver && draggedIndex > index
+                    const showIndicatorRight = isDragOver && draggedIndex < index
+                    
+                    return (
+                      <div
+                        key={tabKey}
+                        data-tab-item
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, tabKey)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOver(e, tabKey)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, tabKey)}
+                        className={cn(
+                          'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200',
+                        isActive
+                          ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                          isDragging && 'opacity-30',
+                        )}
+                      >
+                        {showIndicatorLeft && (
+                          <div className="absolute -left-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                        )}
+                        {showIndicatorRight && (
+                          <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab(tabKey)}
+                          className="flex items-center gap-2 truncate pointer-events-auto"
+                        >
+                          <Icon className="size-4" />
+                          <span className="truncate">{tab.label}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleCloseTab(tabKey)
+                          }}
+                          className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100 pointer-events-auto"
+                          aria-label={`Close ${tab.label}`}
+                        >
+                          <XIcon className="size-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                  <Tooltip disableHoverableContent>
+                    <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => setActiveTab(tabKey)}
-                        className="flex items-center gap-2 truncate pointer-events-auto"
+                        onClick={handleNewTab}
+                        disabled={tabLimitReached}
+                        className={cn(
+                          'flex h-9 items-center rounded-md transition-colors',
+                          isNewTabActive
+                            ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border'
+                            : 'w-9 justify-center text-muted-foreground hover:bg-accent hover:text-foreground',
+                          'disabled:cursor-not-allowed disabled:opacity-50',
+                        )}
+                        aria-label="Open new tab"
                       >
-                        <Icon className="size-4" />
-                        <span className="truncate">{tab.label}</span>
+                        <PlusIcon className="size-4" />
+                        {isNewTabActive && <span className="truncate">{newTabConfig.label}</span>}
                       </button>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleCloseTab(tabKey)
-                        }}
-                        className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100 pointer-events-auto"
-                        aria-label={`Close ${tab.label}`}
-                      >
-                        <XIcon className="size-3.5" />
-                      </button>
-                    </div>
-                  )
-                })}
-                <Tooltip disableHoverableContent>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={handleNewTab}
-                      disabled={tabLimitReached}
-                      className={cn(
-                        'flex h-9 items-center rounded-md transition-colors',
-                        isNewTabActive
-                          ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border'
-                          : 'w-9 justify-center text-muted-foreground hover:bg-accent hover:text-foreground',
-                        'disabled:cursor-not-allowed disabled:opacity-50',
-                      )}
-                      aria-label="Open new tab"
-                    >
-                      <PlusIcon className="size-4" />
-                      {isNewTabActive && <span className="truncate">{newTabConfig.label}</span>}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">New Tab</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            {tabLimitReached && (
-              <div className="pb-2 text-xs text-muted-foreground">
-                You’ve reached the tab limit. Close an open page before adding a new
-                one.
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">New Tab</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            )}
-          </div>
-          <div className="flex h-16 items-center gap-3 border-b px-6">
-            <SidebarTrigger className="md:hidden" />
-            <div className="hidden flex-1 md:flex">
-              <h1 className="text-lg font-semibold tracking-tight">
-                {currentState ? currentState.heading : 'New Tab'}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              {!isAssistantTabActive && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-2"
-                  onClick={handleAssistantButtonClick}
-                  aria-expanded={isAssistantOpen}
-                  aria-controls="assistant-panel"
-                >
-                  <BotIcon className="size-4" />
-                  Assistant
-                </Button>
-              )}
-              {isAssistantTabActive && (
-                <AssistantModeSwitcher
-                  mode={assistantMode}
-                  onModeChange={handleAssistantModeChange}
-                  activeOption={isAssistantTabActive ? 'full' : assistantMode}
-                />
-              )}
-            </div>
-          </div>
-          <div className="flex flex-1 overflow-hidden">
-            <div
-              className={cn(
-                'flex flex-1 flex-col overflow-y-auto px-8 py-10',
-                isAssistantSidebarOpen && 'lg:pr-6',
-              )}
-            >
-              {isAssistantTabActive ? (
-                <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
-                  {assistantMode === 'sidebar' ? (
-                    <AssistantPanel
-                      mode="sidebar"
-                      isOpen
-                      onOpenChange={setIsAssistantOpen}
-                      onModeChange={handleAssistantModeChange}
-                      showBodyHeading={false}
-                      showHeaderControls={false}
-                    />
-                  ) : (
-                    <AssistantBody showHeading={false} />
-                  )}
+              {tabLimitReached && (
+                <div className="pb-2 text-xs text-muted-foreground">
+                  You’ve reached the tab limit. Close an open page before adding a new
+                  one.
                 </div>
-              ) : currentState ? (
-                <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-                    {ActiveIcon ? <ActiveIcon className="size-7" /> : <PlusIcon className="size-7" />}
+              )}
+            </div>
+            <div className="flex h-16 items-center gap-3 border-b bg-background px-6">
+              <SidebarTrigger className="md:hidden" />
+              <div className="hidden flex-1 md:flex">
+                <h1 className="text-lg font-semibold tracking-tight">
+                  {currentState ? currentState.heading : 'New Tab'}
+                </h1>
+              </div>
+              <div className="flex items-center gap-2">
+                {!isAssistantTabActive && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={handleAssistantButtonClick}
+                    aria-expanded={isAssistantOpen}
+                    aria-controls="assistant-panel"
+                  >
+                    <BotIcon className="size-4" />
+                    Assistant
+                  </Button>
+                )}
+                {isAssistantTabActive && (
+                  <AssistantModeSwitcher
+                    mode={assistantMode}
+                    onModeChange={handleAssistantModeChange}
+                    activeOption={isAssistantTabActive ? 'full' : assistantMode}
+                  />
+              )}
+            </div>
+          </div>
+          </div>
+          <div className="flex flex-1 overflow-y-auto">
+            <div
+                className={cn(
+                  'flex flex-1 flex-col px-8 py-10',
+                  isAssistantSidebarOpen && 'lg:pr-6',
+                )}
+              >
+                {isAssistantTabActive ? (
+                  <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
+                    {assistantMode === 'sidebar' ? (
+                      <AssistantPanel
+                        mode="sidebar"
+                        isOpen
+                        onOpenChange={setIsAssistantOpen}
+                        onModeChange={handleAssistantModeChange}
+                        showBodyHeading={false}
+                        showHeaderControls={false}
+                      />
+                    ) : (
+                      <AssistantBody showHeading={false} />
+                    )}
                   </div>
-                  <div className="mt-6 space-y-2">
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      {currentState.title}
-                    </h2>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {currentState.description}
-                    </p>
-                  </div>
-                  {(currentState.primaryAction || currentState.secondaryAction) && (
-                    <div className="mt-6 flex flex-wrap justify-center gap-2">
-                      {currentState.primaryAction && (
-                        <Button size="sm">{currentState.primaryAction}</Button>
-                      )}
-                      {currentState.secondaryAction && (
-                        <Button size="sm" variant="outline">
-                          {currentState.secondaryAction}
-                        </Button>
-                      )}
+                ) : isHomeActive ? (
+                  <HomeContent />
+                ) : currentState ? (
+                  <div className="flex flex-1 flex-col items-center justify-center text-center">
+                    <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
+                      {ActiveIcon ? <ActiveIcon className="size-7" /> : <PlusIcon className="size-7" />}
                     </div>
-                  )}
-                  {isProfileActive && (
-                    <div className="mt-10 w-full max-w-md text-left">
-                      <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
-                            RI
-                          </div>
-                          <div className="flex flex-1 flex-col">
-                            <h3 className="text-base font-semibold">Reza Ilmi</h3>
-                            <p className="text-muted-foreground text-sm">
-                              Product Strategist · Ready to collaborate
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
-                            <p className="text-muted-foreground text-xs uppercase tracking-wide">Bio</p>
-                            <p className="mt-1 font-medium">Tell your story here…</p>
-                          </div>
-                          <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
-                            <p className="text-muted-foreground text-xs uppercase tracking-wide">Availability</p>
-                            <p className="mt-1 font-medium">Set your schedule</p>
-                          </div>
-                        </div>
-                        <div className="mt-6 flex flex-wrap gap-2">
-                          <Button size="sm">Preview profile</Button>
-                          <Button size="sm" variant="ghost">
-                            Share profile link
+                    <div className="mt-6 space-y-2">
+                      <h2 className="text-2xl font-semibold tracking-tight">
+                        {currentState.title}
+                      </h2>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {currentState.description}
+                      </p>
+                    </div>
+                    {(currentState.primaryAction || currentState.secondaryAction) && (
+                      <div className="mt-6 flex flex-wrap justify-center gap-2">
+                        {currentState.primaryAction && (
+                          <Button size="sm">{currentState.primaryAction}</Button>
+                        )}
+                        {currentState.secondaryAction && (
+                          <Button size="sm" variant="outline">
+                            {currentState.secondaryAction}
                           </Button>
+                        )}
+                      </div>
+                    )}
+                    {isProfileActive && (
+                      <div className="mt-10 w-full max-w-md text-left">
+                        <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
+                              RI
+                            </div>
+                            <div className="flex flex-1 flex-col">
+                              <h3 className="text-base font-semibold">Reza Ilmi</h3>
+                              <p className="text-muted-foreground text-sm">
+                                Product Strategist · Ready to collaborate
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                            <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
+                              <p className="text-muted-foreground text-xs uppercase tracking-wide">Bio</p>
+                              <p className="mt-1 font-medium">Tell your story here…</p>
+                            </div>
+                            <div className="rounded-lg border border-dashed border-border/60 bg-background/80 p-3 transition group-hover:border-border">
+                              <p className="text-muted-foreground text-xs uppercase tracking-wide">Availability</p>
+                              <p className="mt-1 font-medium">Set your schedule</p>
+                            </div>
+                          </div>
+                          <div className="mt-6 flex flex-wrap gap-2">
+                            <Button size="sm">Preview profile</Button>
+                            <Button size="sm" variant="ghost">
+                              Share profile link
+                            </Button>
+                          </div>
                         </div>
                       </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-1 flex-col items-center justify-center text-center">
+                    <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
+                      <PlusIcon className="size-7" />
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-                    <PlusIcon className="size-7" />
+                    <div className="mt-6 space-y-2">
+                      <h2 className="text-2xl font-semibold tracking-tight">
+                        Create your first tab
+                      </h2>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        Open a page from the sidebar or start with a preselected one
+                        to jump into your workspace.
+                      </p>
+                    </div>
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                      <Button size="sm" onClick={() => handleNavigate('home')}>
+                        Go Home
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleNavigate('roundup')}>
+                        Open Round-up
+                      </Button>
+                    </div>
                   </div>
-                  <div className="mt-6 space-y-2">
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      Create your first tab
-                    </h2>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      Open a page from the sidebar or start with a preselected one
-                      to jump into your workspace.
-                    </p>
-                  </div>
-                  <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    <Button size="sm" onClick={() => handleNavigate('home')}>
-                      Go Home
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleNavigate('roundup')}>
-                      Open Round-up
-                    </Button>
-                  </div>
+                )}
+              </div>
+              {assistantMode === 'sidebar' && isAssistantOpen && (
+                <div
+                  id="assistant-panel"
+                  className="hidden w-full max-w-xs shrink-0 border-l bg-background sm:flex"
+                >
+                  <AssistantPanel
+                    mode="sidebar"
+                    isOpen={isAssistantOpen}
+                    onOpenChange={setIsAssistantOpen}
+                    onModeChange={handleAssistantModeChange}
+                    className="h-full w-full"
+                  />
                 </div>
               )}
             </div>
-            {assistantMode === 'sidebar' && isAssistantOpen && (
-              <div
-                id="assistant-panel"
-                className="hidden w-full max-w-xs shrink-0 border-l bg-background sm:flex"
-              >
-                <AssistantPanel
-                  mode="sidebar"
-                  isOpen={isAssistantOpen}
-                  onOpenChange={setIsAssistantOpen}
-                  onModeChange={handleAssistantModeChange}
-                  className="h-full w-full"
-                />
-              </div>
-            )}
           </div>
-        </div>
-      </SidebarInset>
-      {assistantMode === 'floating' && isAssistantOpen && (
-        <AssistantPanel
-          mode="floating"
-          isOpen={isAssistantOpen}
-          onOpenChange={setIsAssistantOpen}
-          onModeChange={handleAssistantModeChange}
-        />
-      )}
-    </div>
-  )
-}
+        </SidebarInset>
+        {assistantMode === 'floating' && isAssistantOpen && (
+          <AssistantPanel
+            mode="floating"
+            isOpen={isAssistantOpen}
+            onOpenChange={setIsAssistantOpen}
+            onModeChange={handleAssistantModeChange}
+          />
+        )}
+      </div>
+    )
+  }
