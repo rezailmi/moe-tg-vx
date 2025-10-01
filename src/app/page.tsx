@@ -190,8 +190,8 @@ const MAX_TABS = 8
 
 export default function Home() {
   const { state: sidebarState } = useSidebar()
-  const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>([])
-  const [activeTab, setActiveTab] = useState<TabKey>(newTabConfig.key)
+  const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>(['home'])
+  const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [tabLimitReached, setTabLimitReached] = useState(false)
   const [assistantMode, setAssistantMode] = useState<AssistantMode>('floating')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
