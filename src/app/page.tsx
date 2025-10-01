@@ -502,17 +502,25 @@ export default function Home() {
                         )}
                         <Icon className="size-4" />
                         <span className="truncate">{tab.label}</span>
-                        <button
-                          type="button"
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={(event) => {
                             event.stopPropagation()
                             handleCloseTab(tabKey)
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              event.stopPropagation()
+                              handleCloseTab(tabKey)
+                            }
                           }}
                           className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100"
                           aria-label={`Close ${tab.label}`}
                         >
                           <XIcon className="size-3.5" />
-                        </button>
+                        </div>
                       </button>
                     )
                   })}
