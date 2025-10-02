@@ -681,7 +681,7 @@ export default function Home() {
                 )}
                 </div>
 
-                {!isAssistantTabActive && (
+                {!isAssistantTabActive && !isAssistantSidebarOpen && (
                   <div className="ml-auto">
                     <Button
                       size="sm"
