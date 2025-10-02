@@ -43,98 +43,98 @@ const homeworkData = {
 }
 
 const studentAlertsData = [
-  { id: 1, student: 'Emma Wilson', message: '3 absences this week', priority: 'high' as const },
-  { id: 2, student: 'James Chen', message: 'Missing 2 assignments', priority: 'medium' as const },
-  { id: 3, student: 'Sofia Garcia', message: 'Excellent progress', priority: 'info' as const },
+  { id: 1, student: 'Tan Wei Jie', initials: 'TW', message: '3 absences this week', priority: 'high' as const },
+  { id: 2, student: 'Lim Kai Xuan', initials: 'LK', message: 'Missing 2 assignments', priority: 'medium' as const },
+  { id: 3, student: 'Nur Aisyah', initials: 'NA', message: 'Excellent progress', priority: 'info' as const },
 ]
 
 export function HomeContent() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8 pb-16">
+    <div className="mx-auto w-full max-w-5xl space-y-6 pb-16 sm:space-y-8">
       {/* Assistant Input */}
-      <div className="flex flex-col gap-4 pt-4">
+      <div className="flex flex-col gap-3 pt-4 sm:gap-4">
         <div className="relative w-full">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2">
-            <SparklesIcon className="size-5 text-primary" />
+          <div className="absolute left-5 top-1/2 z-10 -translate-y-1/2">
+            <SparklesIcon className="size-5 text-stone-600" />
           </div>
           <Input
             type="text"
             placeholder="Ask me about students, assignments, or lesson plans..."
-            className="h-16 rounded-2xl border-2 pl-14 pr-6 text-base shadow-lg transition-all placeholder:text-muted-foreground/60 hover:shadow-xl focus-visible:border-primary focus-visible:shadow-xl"
+            className="shimmer-input relative h-14 rounded-lg border-stone-200 bg-white pl-14 pr-6 text-sm shadow-sm transition-all placeholder:text-stone-400 hover:shadow-md focus-visible:border-stone-300 focus-visible:shadow-md sm:h-16 sm:text-base"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>Try asking:</span>
-          <button className="rounded-full border bg-background px-3 py-1.5 transition-colors hover:bg-accent hover:text-accent-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600">
+          <span className="hidden sm:inline">Try asking:</span>
+          <button className="rounded-md border-stone-200 bg-stone-50 px-2.5 py-1.5 font-medium text-stone-800 transition-colors hover:bg-stone-100">
             &quot;Find student with needs&quot;
           </button>
-          <button className="rounded-full border bg-background px-3 py-1.5 transition-colors hover:bg-accent hover:text-accent-foreground">
+          <button className="rounded-md border-stone-200 bg-stone-50 px-2.5 py-1.5 font-medium text-stone-800 transition-colors hover:bg-stone-100">
             &quot;Draft a parent email&quot;
           </button>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         {actionButtons.map((action) => {
           const Icon = action.icon
           return (
             <button
               key={action.key}
-              className="group flex h-28 flex-col items-center justify-center gap-3 rounded-xl border bg-card transition-colors hover:bg-accent"
+              className="group flex h-24 flex-col items-center justify-center gap-2 rounded-lg border border-stone-200 bg-white shadow-sm transition-all hover:shadow-md sm:h-28 sm:gap-3"
             >
-              <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
-              <span className="text-sm font-medium">{action.label}</span>
+              <Icon className="size-4 text-stone-600 transition-colors group-hover:text-stone-900 sm:size-5" />
+              <span className="text-xs font-medium text-stone-900 sm:text-sm">{action.label}</span>
             </button>
           )
         })}
       </div>
 
       {/* Teacher Widgets Section */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
         {/* Class Schedule Widget */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Today&apos;s Schedule</CardTitle>
+        <Card className="rounded-lg border-stone-200 bg-white shadow-sm">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Schedule</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             {classScheduleData.classes.map((classItem) => (
               <div
                 key={classItem.period}
-                className={`space-y-1 ${classItem.isNow ? 'rounded-lg bg-accent/50 -mx-2 px-2 py-2' : ''}`}
+                className={`space-y-1 ${classItem.isNow ? 'rounded-lg bg-stone-100 -mx-2 px-2 py-2' : ''}`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{classItem.subject}</span>
-                  <span className="text-xs text-muted-foreground">{classItem.room}</span>
+                  <span className="text-sm font-medium text-stone-900">{classItem.subject}</span>
+                  <span className="text-xs text-stone-600">{classItem.room}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{classItem.time}</p>
+                <p className="text-xs text-stone-600">{classItem.time}</p>
               </div>
             ))}
           </CardContent>
         </Card>
 
         {/* Attendance Quick View Widget */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Attendance</CardTitle>
+        <Card className="rounded-lg border-stone-200 bg-white shadow-sm">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Attendance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div
-              className={`text-5xl font-bold tracking-tight ${
+              className={`text-4xl font-normal tracking-tight sm:text-5xl ${
                 attendanceData.percentage >= 90
-                  ? 'text-green-600 dark:text-green-500'
+                  ? 'text-green-600'
                   : attendanceData.percentage >= 80
-                    ? 'text-yellow-600 dark:text-yellow-500'
-                    : 'text-destructive'
+                    ? 'text-yellow-600'
+                    : 'text-red-600'
               }`}
             >
               {attendanceData.percentage}%
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-foreground">
+              <p className="text-sm font-medium text-stone-900">
                 {attendanceData.present} of {attendanceData.total} present
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-stone-600">
                 {attendanceData.absent} students absent
               </p>
             </div>
@@ -142,29 +142,29 @@ export function HomeContent() {
         </Card>
 
         {/* Assignment Tracker Widget */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Assignments</CardTitle>
+        <Card className="rounded-lg border-stone-200 bg-white shadow-sm">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Assignments</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
+          <CardContent className="space-y-4 sm:space-y-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div className="space-y-1">
-                <p className="text-3xl font-bold">{homeworkData.pendingReview}</p>
-                <p className="text-xs text-muted-foreground">To review</p>
+                <p className="text-2xl font-normal text-stone-900 sm:text-3xl">{homeworkData.pendingReview}</p>
+                <p className="text-xs text-stone-600">To review</p>
               </div>
               <div className="space-y-1">
-                <p className="text-3xl font-bold">{homeworkData.dueSoon}</p>
-                <p className="text-xs text-muted-foreground">Due soon</p>
+                <p className="text-2xl font-normal text-stone-900 sm:text-3xl">{homeworkData.dueSoon}</p>
+                <p className="text-xs text-stone-600">Due soon</p>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Submission rate</span>
-                <span className="font-medium">{homeworkData.submissionRate}%</span>
+                <span className="text-stone-600">Submission rate</span>
+                <span className="font-medium text-stone-900">{homeworkData.submissionRate}%</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-stone-200">
                 <div
-                  className="h-full rounded-full bg-foreground"
+                  className="h-full rounded-full bg-stone-900"
                   style={{ width: `${homeworkData.submissionRate}%` }}
                 />
               </div>
@@ -173,69 +173,43 @@ export function HomeContent() {
         </Card>
 
         {/* Student Alerts Widget */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Student Alerts</CardTitle>
+        <Card className="rounded-lg border-stone-200 bg-white shadow-sm">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Student Alerts</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-1.5 sm:space-y-2">
             {studentAlertsData.map((alert) => (
-              <div key={alert.id} className="flex items-start gap-3">
-                <div
-                  className={`mt-1 size-1.5 shrink-0 rounded-full ${
-                    alert.priority === 'high'
-                      ? 'bg-destructive'
-                      : alert.priority === 'medium'
-                        ? 'bg-yellow-500'
-                        : 'bg-blue-500'
-                  }`}
-                />
-                <div className="flex-1 space-y-0.5">
-                  <p className="text-sm font-medium">{alert.student}</p>
-                  <p className="text-sm text-muted-foreground">{alert.message}</p>
+              <button
+                key={alert.id}
+                className="flex w-full items-start gap-2.5 rounded-lg p-1.5 text-left transition-colors hover:bg-stone-50 sm:gap-3 sm:p-2"
+              >
+                <div className="relative shrink-0">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-stone-200 text-xs font-medium text-stone-700 sm:size-8">
+                    {alert.initials}
+                  </div>
+                  <div
+                    className={`absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-white sm:size-2.5 ${
+                      alert.priority === 'high'
+                        ? 'bg-red-600'
+                        : alert.priority === 'medium'
+                          ? 'bg-yellow-600'
+                          : 'bg-green-600'
+                    }`}
+                  />
                 </div>
-                {alert.priority === 'info' && (
-                  <CheckCircle2Icon className="size-4 shrink-0 text-green-600 dark:text-green-500" />
-                )}
-              </div>
+                <div className="flex-1 space-y-0.5">
+                  <p className="text-xs font-medium text-stone-900 sm:text-sm">{alert.student}</p>
+                  <p className="text-xs text-stone-600 sm:text-sm">{alert.message}</p>
+                </div>
+              </button>
             ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">245</div>
-            <p className="mt-1 text-xs text-muted-foreground">+12 from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Courses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">8</div>
-            <p className="mt-1 text-xs text-muted-foreground">Across 3 departments</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">32</div>
-            <p className="mt-1 text-xs text-muted-foreground">Due by end of week</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Edit Widgets Button */}
-      <div className="flex justify-center pt-4">
-        <button className="rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+      <div className="flex justify-center pt-2 sm:pt-4">
+        <button className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-xs font-medium text-stone-800 shadow-sm transition-all hover:bg-stone-50 hover:shadow-md sm:text-sm">
           Edit widgets
         </button>
       </div>
