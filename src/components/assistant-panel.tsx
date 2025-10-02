@@ -57,6 +57,40 @@ const promptShortcuts = [
   },
 ]
 
+// Helper function to get initials from name
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+// Helper function to get consistent color for avatar based on name
+const getAvatarColor = (name: string) => {
+  const colors = [
+    'bg-blue-100 text-blue-700',
+    'bg-green-100 text-green-700',
+    'bg-yellow-100 text-yellow-700',
+    'bg-purple-100 text-purple-700',
+    'bg-pink-100 text-pink-700',
+    'bg-indigo-100 text-indigo-700',
+    'bg-red-100 text-red-700',
+    'bg-orange-100 text-orange-700',
+    'bg-teal-100 text-teal-700',
+    'bg-cyan-100 text-cyan-700',
+  ]
+
+  // Generate a consistent hash from the name
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+
+  return colors[Math.abs(hash) % colors.length]
+}
+
 function PTMResponseContent() {
   return (
     <div className="flex flex-col gap-4">
@@ -68,13 +102,15 @@ function PTMResponseContent() {
       {/* Student 1 */}
       <div className="flex flex-col gap-3 rounded-lg border bg-background p-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <span className="text-sm font-medium">👧</span>
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Wei Zhao Chen')}`}>
+            {getInitials('Wei Zhao Chen')}
           </div>
-          <div className="flex flex-1 flex-col">
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">S</span>
-              <span className="font-semibold">Wei Zhao Chen</span>
+          <div className="flex flex-1 flex-col gap-1">
+            <span className="font-semibold">Wei Zhao Chen</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Average</span>
+              <span>•</span>
+              <span>SEN</span>
             </div>
           </div>
         </div>
@@ -86,13 +122,15 @@ function PTMResponseContent() {
       {/* Student 2 */}
       <div className="flex flex-col gap-3 rounded-lg border bg-background p-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <span className="text-sm font-medium">👦</span>
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Chris Lim')}`}>
+            {getInitials('Chris Lim')}
           </div>
-          <div className="flex flex-1 flex-col">
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">S</span>
-              <span className="font-semibold">Chris Lim</span>
+          <div className="flex flex-1 flex-col gap-1">
+            <span className="font-semibold">Chris Lim</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Above average</span>
+              <span>•</span>
+              <span>SEN</span>
             </div>
           </div>
         </div>
