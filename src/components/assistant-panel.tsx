@@ -62,6 +62,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [filteredShortcuts, setFilteredShortcuts] = useState(promptShortcuts)
+  const [selectedShortcutIndex, setSelectedShortcutIndex] = useState(0)
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
@@ -101,6 +102,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
     // Check if user is typing a slash command
     if (value.startsWith('/')) {
       setShowShortcuts(true)
+      setSelectedShortcutIndex(0)
       const search = value.slice(1).toLowerCase()
       const filtered = promptShortcuts.filter(
         shortcut =>
@@ -119,13 +121,27 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (!showShortcuts) {
-        handleSendMessage()
+    if (showShortcuts && filteredShortcuts.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedShortcutIndex((prev) =>
+          prev < filteredShortcuts.length - 1 ? prev + 1 : 0
+        )
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedShortcutIndex((prev) =>
+          prev > 0 ? prev - 1 : filteredShortcuts.length - 1
+        )
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        handleShortcutSelect(filteredShortcuts[selectedShortcutIndex])
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setShowShortcuts(false)
       }
-    } else if (e.key === 'Escape' && showShortcuts) {
-      setShowShortcuts(false)
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
     }
   }
 
@@ -166,12 +182,15 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
         <div className="relative">
           {showShortcuts && filteredShortcuts.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 z-10 mb-2 overflow-hidden rounded-lg border bg-background shadow-lg">
-              {filteredShortcuts.map((shortcut) => (
+              {filteredShortcuts.map((shortcut, index) => (
                 <button
                   key={shortcut.command}
                   type="button"
                   onClick={() => handleShortcutSelect(shortcut)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent"
+                  className={cn(
+                    'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent',
+                    index === selectedShortcutIndex && 'bg-accent'
+                  )}
                 >
                   <div className="flex flex-1 flex-col gap-1">
                     <div className="flex items-center gap-2">
