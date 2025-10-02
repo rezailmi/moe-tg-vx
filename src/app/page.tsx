@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button'
 import { HomeContent } from '@/components/home-content'
 import { RoundupContent } from '@/components/roundup-content'
 import { ClassView } from '@/components/class-view'
+import { StudentProfile } from '@/components/student-profile'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,8 +93,9 @@ const assistantTabConfig = {
 type PrimaryPageKey = (typeof primaryPages)[number]['key']
 type ProfileTabKey = typeof profileTabConfig['key']
 type AssistantTabKey = typeof assistantTabConfig['key']
+type StudentProfileTabKey = `student-${string}` // Dynamic student profile tabs
 type PageKey = PrimaryPageKey | ProfileTabKey
-type ClosableTabKey = PageKey | AssistantTabKey
+type ClosableTabKey = PageKey | AssistantTabKey | StudentProfileTabKey
 type TabKey = typeof newTabConfig['key'] | ClosableTabKey
 type PageConfig = (typeof primaryPages)[number] | typeof profileTabConfig
 type TabConfig = PageConfig | typeof newTabConfig | typeof assistantTabConfig
@@ -219,9 +221,10 @@ export default function Home() {
   const [draggedTab, setDraggedTab] = useState<ClosableTabKey | null>(null)
   const [dragOverTab, setDragOverTab] = useState<ClosableTabKey | null>(null)
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+  const [studentProfileTabs, setStudentProfileTabs] = useState<Map<string, string>>(new Map()) // Map of tab key to student name
 
-  const currentState = emptyStates[activeTab]
-  const ActiveIcon = currentState.icon
+  const currentState = emptyStates[activeTab as keyof typeof emptyStates]
+  const ActiveIcon = currentState?.icon
   const isNewTabActive = activeTab === newTabConfig.key
   const isProfileActive = activeTab === profileTabConfig.key
   const isAssistantTabActive = activeTab === assistantTabConfig.key
@@ -239,7 +242,8 @@ export default function Home() {
       if (
         tabs.length >= MAX_TABS &&
         tabKey !== profileTabConfig.key &&
-        tabKey !== assistantTabConfig.key
+        tabKey !== assistantTabConfig.key &&
+        !tabKey.startsWith('student-')
       ) {
         setTabLimitReached(true)
         return tabs
@@ -250,6 +254,18 @@ export default function Home() {
       setActiveTab(tabKey)
       return nextTabs
     })
+  }
+
+  const handleOpenStudentProfile = (studentName: string) => {
+    const tabKey = `student-${studentName.toLowerCase().replace(/\s+/g, '-')}` as StudentProfileTabKey
+
+    setStudentProfileTabs((prev) => {
+      const updated = new Map(prev)
+      updated.set(tabKey, studentName)
+      return updated
+    })
+
+    handleNavigate(tabKey)
   }
 
   const handleCloseTab = useCallback((pageKey: TabKey) => {
@@ -538,13 +554,16 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                 <TooltipProvider delayDuration={150}>
                       {visibleTabs.map((tabKey, index) => {
-                    const tab = tabConfigMap[tabKey]
+                    const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
+                    const isStudentProfile = typeof tabKey === 'string' && tabKey.startsWith('student-')
+                    const studentName = isStudentProfile ? studentProfileTabs.get(tabKey) : undefined
 
-                    if (!tab) {
+                    if (!tab && !isStudentProfile) {
                       return null
                     }
 
-                    const Icon = tab.icon
+                    const Icon = tab?.icon ?? UserIcon
+                    const label = isStudentProfile ? studentName ?? 'Student' : tab?.label ?? ''
                     const isActive = activeTab === tabKey
                     const isDragging = draggedTab === tabKey
                     const isDragOver = dragOverTab === tabKey
@@ -579,7 +598,7 @@ export default function Home() {
                           <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
                         )}
                         <Icon className="size-4" />
-                        <span className="truncate">{tab.label}</span>
+                        <span className="truncate">{label}</span>
                         <div
                           role="button"
                           tabIndex={0}
@@ -595,7 +614,7 @@ export default function Home() {
                             }
                           }}
                           className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100"
-                          aria-label={`Close ${tab.label}`}
+                          aria-label={`Close ${label}`}
                         >
                           <XIcon className="size-3.5" />
                         </div>
@@ -644,9 +663,14 @@ export default function Home() {
                       </TooltipContent>
                     <DropdownMenuContent align="start" className="w-56">
                       {hiddenTabs.map((tabKey) => {
-                        const tab = tabConfigMap[tabKey]
-                        if (!tab) return null
-                        const Icon = tab.icon
+                        const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
+                        const isStudentProfile = typeof tabKey === 'string' && tabKey.startsWith('student-')
+                        const studentName = isStudentProfile ? studentProfileTabs.get(tabKey) : undefined
+
+                        if (!tab && !isStudentProfile) return null
+
+                        const Icon = tab?.icon ?? UserIcon
+                        const label = isStudentProfile ? studentName ?? 'Student' : tab?.label ?? ''
                         const isActive = activeTab === tabKey
 
                         return (
@@ -660,7 +684,7 @@ export default function Home() {
                           >
                             <div className="flex items-center gap-2">
                               <Icon className="size-4" />
-                              <span>{tab.label}</span>
+                              <span>{label}</span>
                             </div>
                             <button
                               onClick={(e) => {
@@ -668,7 +692,7 @@ export default function Home() {
                                 handleCloseTab(tabKey)
                               }}
                               className="ml-2 opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
-                              aria-label={`Close ${tab.label}`}
+                              aria-label={`Close ${label}`}
                             >
                               <XIcon className="size-3" />
                             </button>
@@ -708,7 +732,11 @@ export default function Home() {
               <SidebarTrigger className="md:hidden" />
               <div className="hidden flex-1 md:flex">
                 <h1 className="text-lg font-semibold tracking-tight">
-                  {currentState ? currentState.heading : 'New Tab'}
+                  {typeof activeTab === 'string' && activeTab.startsWith('student-')
+                    ? 'Student Profile'
+                    : currentState
+                      ? currentState.heading
+                      : 'New Tab'}
                 </h1>
               </div>
               <div className="flex items-center gap-2">
@@ -739,17 +767,26 @@ export default function Home() {
                         onModeChange={handleAssistantModeChange}
                         showBodyHeading={false}
                         showHeaderControls={false}
+                        onStudentClick={handleOpenStudentProfile}
                       />
                     ) : (
-                      <AssistantBody showHeading={false} />
+                      <AssistantBody showHeading={false} onStudentClick={handleOpenStudentProfile} />
                     )}
                   </div>
                 ) : isHomeActive ? (
                   <HomeContent onNavigateToClassroom={() => handleNavigate('classroom')} />
                 ) : activeTab === 'roundup' ? (
-                  <RoundupContent />
+                  <RoundupContent onPrepForMeeting={() => handleNavigate('classroom')} />
                 ) : activeTab === 'classroom' ? (
-                  <ClassView />
+                  <ClassView onStudentClick={handleOpenStudentProfile} />
+                ) : typeof activeTab === 'string' && activeTab.startsWith('student-') ? (
+                  <StudentProfile
+                    studentName={studentProfileTabs.get(activeTab) ?? 'Unknown Student'}
+                    onBack={() => {
+                      handleCloseTab(activeTab)
+                      handleNavigate('classroom')
+                    }}
+                  />
                 ) : currentState ? (
                   <div className="flex flex-1 flex-col items-center justify-center text-center">
                     <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
@@ -869,6 +906,7 @@ export default function Home() {
                   onOpenChange={setIsAssistantOpen}
                   onModeChange={handleAssistantModeChange}
                   className="flex h-full w-full flex-col"
+                  onStudentClick={handleOpenStudentProfile}
                 />
               </div>
             </div>
@@ -882,6 +920,7 @@ export default function Home() {
             isOpen={isAssistantOpen}
             onOpenChange={setIsAssistantOpen}
             onModeChange={handleAssistantModeChange}
+            onStudentClick={handleOpenStudentProfile}
           />
         )}
       </div>

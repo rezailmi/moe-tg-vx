@@ -25,10 +25,12 @@ type AssistantPanelProps = {
   className?: string
   showBodyHeading?: boolean
   showHeaderControls?: boolean
+  onStudentClick?: (studentName: string) => void
 }
 
 type AssistantBodyProps = {
   showHeading?: boolean
+  onStudentClick?: (studentName: string) => void
 }
 
 type Message = {
@@ -91,7 +93,77 @@ const getAvatarColor = (name: string) => {
   return colors[Math.abs(hash) % colors.length]
 }
 
-function PTMResponseContent() {
+function PTMResponseContent({ onStudentClick }: { onStudentClick?: (studentName: string) => void }) {
+  const [currentPage, setCurrentPage] = useState(0)
+
+  const topStudents = [
+    {
+      name: 'Sarah Johnson',
+      grade: 'Excellent',
+      tags: ['Top performer'],
+      description: 'Consistently achieves high grades across all subjects. Shows strong leadership skills and actively participates in class discussions.'
+    },
+    {
+      name: 'Marcus Lee',
+      grade: 'Above average',
+      tags: ['Improved'],
+      description: 'Has shown significant improvement this semester. Particularly strong in mathematics and science subjects.'
+    },
+    {
+      name: 'Emily Wong',
+      grade: 'Excellent',
+      tags: ['Top performer'],
+      description: 'Excels in creative subjects and demonstrates exceptional critical thinking abilities. Active in extracurricular activities.'
+    },
+    {
+      name: 'Daniel Rodriguez',
+      grade: 'Above average',
+      tags: ['Consistent'],
+      description: 'Maintains steady performance across all subjects. Shows good time management and organizational skills.'
+    },
+    {
+      name: 'Aisha Patel',
+      grade: 'Above average',
+      tags: ['Creative'],
+      description: 'Demonstrates strong creative abilities and innovative problem-solving approaches. Excellent collaboration skills.'
+    }
+  ]
+
+  const otherStudents = [
+    {
+      name: 'James Wilson',
+      grade: 'Average',
+      tags: ['Steady'],
+      description: 'Maintains consistent performance. Would benefit from additional support in reading comprehension.'
+    },
+    {
+      name: 'Olivia Martinez',
+      grade: 'Above average',
+      tags: ['Engaged'],
+      description: 'Shows enthusiasm in class and actively seeks help when needed. Strong in group work.'
+    },
+    {
+      name: 'Ryan Kim',
+      grade: 'Average',
+      tags: ['Improving'],
+      description: 'Recent improvement noted. Responds well to one-on-one attention and feedback.'
+    },
+    {
+      name: 'Sophie Taylor',
+      grade: 'Below average',
+      tags: ['Needs support'],
+      description: 'Struggling with core concepts. Would benefit from additional tutoring and parental involvement.'
+    },
+    {
+      name: 'Michael Brown',
+      grade: 'Average',
+      tags: ['Potential'],
+      description: 'Shows potential but lacks focus. Encouragement and structured study time recommended.'
+    }
+  ]
+
+  const studentsToShow = currentPage === 0 ? [] : currentPage === 1 ? topStudents : otherStudents
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm">
@@ -99,50 +171,116 @@ function PTMResponseContent() {
       </p>
       <p className="text-sm font-medium">Here are the two students you might want to focus on.</p>
 
-      {/* Student 1 */}
-      <div className="flex flex-col gap-3 rounded-lg border bg-background p-4">
+      {/* Student 1 - Alice Wong */}
+      <div
+        className={cn(
+          "flex flex-col gap-3 rounded-lg border bg-background p-4",
+          onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
+        )}
+        onClick={() => onStudentClick?.('Alice Wong')}
+      >
         <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Wei Zhao Chen')}`}>
-            {getInitials('Wei Zhao Chen')}
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Alice Wong')}`}>
+            {getInitials('Alice Wong')}
           </div>
-          <div className="flex flex-1 flex-col gap-1">
-            <span className="font-semibold">Wei Zhao Chen</span>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Average</span>
-              <span>•</span>
-              <span>SEN</span>
+          <div className="flex flex-1 flex-col gap-1.5">
+            <span className="font-semibold">Alice Wong</span>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                Excellent
+              </span>
+              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                Consistent and hardworking
+              </span>
             </div>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          This student is with special educational needs (SEN), which affects her learning. Specifically she has dyslexia and difficulties with reading. Her academic performance is currently at an average level.
+          Alice recently scored an A in her latest assessment, a significant improvement from her consistent B grades. This positive trend demonstrates her dedication and hard work, making it a meaningful achievement to celebrate with her parents.
         </p>
       </div>
 
-      {/* Student 2 */}
-      <div className="flex flex-col gap-3 rounded-lg border bg-background p-4">
+      {/* Student 2 - Reza Halim */}
+      <div
+        className={cn(
+          "flex flex-col gap-3 rounded-lg border bg-background p-4",
+          onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
+        )}
+        onClick={() => onStudentClick?.('Reza Halim')}
+      >
         <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Chris Lim')}`}>
-            {getInitials('Chris Lim')}
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Reza Halim')}`}>
+            {getInitials('Reza Halim')}
           </div>
-          <div className="flex flex-1 flex-col gap-1">
-            <span className="font-semibold">Chris Lim</span>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Above average</span>
-              <span>•</span>
-              <span>SEN</span>
+          <div className="flex flex-1 flex-col gap-1.5">
+            <span className="font-semibold">Reza Halim</span>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                Above average
+              </span>
+              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                Improved behavior
+              </span>
             </div>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          This student has special educational needs (SEN), which impact her learning. In addition to dyslexia, she also has ADHD which affects her focus and attention in class.
+          Reza has shown remarkable growth and improvement since his last discipline case. The Case Management team's observations reveal a clear positive trajectory in both his behavior and academic engagement, a story worth celebrating with his parents.
         </p>
       </div>
+
+      {currentPage > 0 && (
+        <>
+          <p className="text-sm font-medium">{currentPage === 1 ? 'Top 5 students in priority' : 'Other 5 students'}</p>
+          {studentsToShow.map((student) => (
+            <div
+              key={student.name}
+              className={cn(
+                "flex flex-col gap-3 rounded-lg border bg-background p-4",
+                onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
+              )}
+              onClick={() => onStudentClick?.(student.name)}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor(student.name)}`}>
+                  {getInitials(student.name)}
+                </div>
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <span className="font-semibold">{student.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                      {student.grade}
+                    </span>
+                    {student.tags.map((tag) => (
+                      <span key={tag} className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {student.description}
+              </p>
+            </div>
+          ))}
+        </>
+      )}
+
+      {currentPage < 2 && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          {currentPage === 0 ? 'Show all summaries' : 'Show other 5'}
+        </Button>
+      )}
     </div>
   )
 }
 
-function AssistantBody({ showHeading = true }: AssistantBodyProps) {
+function AssistantBody({ showHeading = true, onStudentClick }: AssistantBodyProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -234,7 +372,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
       const assistantMessage: Message = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: shortcut.command === '/ptm' ? <PTMResponseContent /> : 'This is a simulated response. In a real implementation, this would connect to an AI service.',
+        content: shortcut.command === '/ptm' ? <PTMResponseContent onStudentClick={onStudentClick} /> : 'This is a simulated response. In a real implementation, this would connect to an AI service.',
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, assistantMessage])
@@ -276,7 +414,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
               className={cn(
                 'flex flex-col gap-1 text-sm',
                 message.role === 'user'
-                  ? 'ml-auto max-w-[85%] rounded-lg bg-primary p-3 text-primary-foreground'
+                  ? 'ml-auto max-w-[85%] rounded-lg bg-orange-500 p-3 text-white'
                   : message.isThinking
                     ? 'mr-auto flex-row items-center gap-2'
                     : 'mr-auto max-w-full',
@@ -459,11 +597,12 @@ export function AssistantPanel({
   className,
   showBodyHeading = true,
   showHeaderControls = true,
+  onStudentClick,
 }: AssistantPanelProps) {
   const content = (
     <div className={cn('flex h-full flex-col gap-4 px-2 pb-2 pt-2', className)}>
       {showHeaderControls && (
-        <div className="flex items-center justify-between gap-2 px-2">
+        <div className="flex items-center justify-between gap-2 px-2 py-0.5">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold leading-none">Assistant</h2>
           </div>
@@ -481,7 +620,7 @@ export function AssistantPanel({
           </div>
         </div>
       )}
-      <AssistantBody showHeading={showBodyHeading} />
+      <AssistantBody showHeading={showBodyHeading} onStudentClick={onStudentClick} />
     </div>
   )
 
