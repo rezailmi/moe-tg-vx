@@ -126,7 +126,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask the assistant anything... (Press Enter to send)"
+            placeholder="Ask the assistant anything..."
             className="min-h-[80px] resize-none pr-12"
             disabled={isLoading}
           />
@@ -139,10 +139,6 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
             <SendIcon className="size-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Press <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono">Enter</kbd> to send,{' '}
-          <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono">Shift+Enter</kbd> for new line
-        </p>
       </div>
     </div>
   )
