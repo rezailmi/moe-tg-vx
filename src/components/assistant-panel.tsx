@@ -229,7 +229,7 @@ export function AssistantPanel({
   showHeaderControls = true,
 }: AssistantPanelProps) {
   const content = (
-    <div className={cn('flex h-full flex-col gap-4 p-6', className)}>
+    <div className={cn('flex h-full flex-col gap-4 p-4', className)}>
       {showHeaderControls && (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
