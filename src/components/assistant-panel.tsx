@@ -147,7 +147,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-lg border bg-muted/20 p-4">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-lg bg-muted/20">
           {messages.map((message) => (
             <div
               key={message.id}
