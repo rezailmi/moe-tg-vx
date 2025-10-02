@@ -88,7 +88,7 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {showHeading && (
         <div className="flex items-center gap-2">
           <SparklesIcon className="size-5 text-primary" />
@@ -260,7 +260,7 @@ export function AssistantPanel({
   showHeaderControls = true,
 }: AssistantPanelProps) {
   const content = (
-    <div className={cn('flex h-full flex-col gap-4 p-4 transition-all duration-300 ease-in-out', className)}>
+    <div className={cn('flex h-full flex-col gap-4 p-6', className)}>
       {showHeaderControls && (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -289,11 +289,7 @@ export function AssistantPanel({
       return null
     }
 
-    return (
-      <div className="animate-in slide-in-from-right duration-300">
-        {content}
-      </div>
-    )
+    return content
   }
 
   return (

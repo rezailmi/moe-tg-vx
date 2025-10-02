@@ -214,8 +214,8 @@ export default function Home() {
   const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>(['roundup'])
   const [activeTab, setActiveTab] = useState<TabKey>('roundup')
   const [tabLimitReached, setTabLimitReached] = useState(false)
-  const [assistantMode, setAssistantMode] = useState<AssistantMode>('floating')
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [assistantMode, setAssistantMode] = useState<AssistantMode>('sidebar')
+  const [isAssistantOpen, setIsAssistantOpen] = useState(true)
   const [draggedTab, setDraggedTab] = useState<ClosableTabKey | null>(null)
   const [dragOverTab, setDragOverTab] = useState<ClosableTabKey | null>(null)
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
@@ -724,7 +724,6 @@ export default function Home() {
                 className={cn(
                   'flex flex-1 flex-col overflow-y-auto',
                   activeTab === 'roundup' ? '' : 'px-8 py-10',
-                  isAssistantSidebarOpen && 'lg:pr-6',
                 )}
               >
                 {isAssistantTabActive ? (
@@ -835,14 +834,14 @@ export default function Home() {
               {assistantMode === 'sidebar' && isAssistantOpen && (
                 <div
                   id="assistant-panel"
-                  className="hidden w-full max-w-xs shrink-0 border-l bg-background sm:flex"
+                  className="relative flex w-full max-w-sm shrink-0 flex-col border-l bg-background"
                 >
                   <AssistantPanel
                     mode="sidebar"
                     isOpen={isAssistantOpen}
                     onOpenChange={setIsAssistantOpen}
                     onModeChange={handleAssistantModeChange}
-                    className="h-full w-full"
+                    className="flex h-full w-full flex-col"
                   />
                 </div>
               )}
