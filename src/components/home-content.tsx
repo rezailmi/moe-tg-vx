@@ -60,7 +60,7 @@ export function HomeContent() {
           <Input
             type="text"
             placeholder="Ask me about students, assignments, or lesson plans..."
-            className="shimmer-input relative h-14 rounded-lg border-stone-200 bg-white pl-14 pr-6 text-sm shadow-sm transition-all placeholder:text-stone-400 hover:shadow-md focus-visible:border-stone-300 focus-visible:shadow-md sm:h-16 sm:text-base"
+            className="shimmer-input relative h-14 rounded-lg border-stone-200 bg-white pl-14 pr-6 text-sm transition-all placeholder:text-stone-400 hover:shadow-md focus-visible:border-stone-300 focus-visible:shadow-md sm:h-16 sm:text-base"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600">
