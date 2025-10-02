@@ -5,10 +5,11 @@ import {
   SparklesIcon,
   BookOpenIcon,
   MessageSquareIcon,
-  CheckCircle2Icon,
+  ArrowRightIcon,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 const actionButtons = [
   { key: 'marking', label: 'Marking', icon: Edit2Icon },
@@ -48,7 +49,11 @@ const studentAlertsData = [
   { id: 3, student: 'Nur Aisyah', initials: 'NA', message: 'Excellent progress', priority: 'info' as const },
 ]
 
-export function HomeContent() {
+interface HomeContentProps {
+  onNavigateToClassroom?: () => void
+}
+
+export function HomeContent({ onNavigateToClassroom }: HomeContentProps = {}) {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 pb-16 sm:space-y-8">
       {/* Assistant Input */}
@@ -138,6 +143,17 @@ export function HomeContent() {
                 {attendanceData.absent} students absent
               </p>
             </div>
+            {onNavigateToClassroom && (
+              <Button
+                onClick={onNavigateToClassroom}
+                variant="outline"
+                size="sm"
+                className="mt-3 w-fit gap-2 text-stone-700 hover:text-stone-900"
+              >
+                My Classroom
+                <ArrowRightIcon className="h-3 w-3" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 

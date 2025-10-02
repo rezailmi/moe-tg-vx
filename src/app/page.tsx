@@ -11,10 +11,12 @@ import {
   HomeIcon,
   InboxIcon,
   MessageSquareIcon,
+  MoreHorizontalIcon,
   NewspaperIcon,
   PieChartIcon,
   PlusIcon,
   UserIcon,
+  UsersIcon,
   XIcon,
 } from 'lucide-react'
 
@@ -27,6 +29,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { HomeContent } from '@/components/home-content'
 import { RoundupContent } from '@/components/roundup-content'
+import { ClassView } from '@/components/class-view'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -52,6 +61,7 @@ import {
 const primaryPages = [
   { key: 'roundup', label: 'Round-up', icon: NewspaperIcon, tooltip: 'Round-up' },
   { key: 'home', label: 'Home', icon: HomeIcon, tooltip: 'Home' },
+  { key: 'classroom', label: 'Classroom', icon: UsersIcon, tooltip: 'Classroom' },
   { key: 'draft', label: 'Draft', icon: FilePenIcon, tooltip: 'Drafts' },
   { key: 'calendar', label: 'Calendar', icon: CalendarDaysIcon, tooltip: 'Calendar' },
   { key: 'analysis', label: 'Analysis', icon: PieChartIcon, tooltip: 'Analysis' },
@@ -115,12 +125,21 @@ const emptyStates: Record<TabKey, EmptyState> = {
   },
   home: {
     heading: 'Home',
-    title: 'You’re all set to begin',
+    title: "You're all set to begin",
     description:
       'Start exploring your workspace or jump into a project to keep momentum going.',
     icon: HomeIcon,
     primaryAction: 'Create reminder',
     secondaryAction: 'Invite a teammate',
+  },
+  classroom: {
+    heading: 'Classroom',
+    title: 'Your classroom view',
+    description:
+      'View and manage your students, track attendance, grades, and conduct.',
+    icon: UsersIcon,
+    primaryAction: 'Add student',
+    secondaryAction: 'Export data',
   },
   draft: {
     heading: 'Drafts',
@@ -199,6 +218,7 @@ export default function Home() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [draggedTab, setDraggedTab] = useState<ClosableTabKey | null>(null)
   const [dragOverTab, setDragOverTab] = useState<ClosableTabKey | null>(null)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
 
   const currentState = emptyStates[activeTab]
   const ActiveIcon = currentState.icon
@@ -262,6 +282,44 @@ export default function Home() {
       setTabLimitReached(false)
     }
   }, [openTabs])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Calculate visible tab count based on screen width
+  const getVisibleTabCount = () => {
+    if (windowWidth < 640) return 2  // Mobile
+    if (windowWidth < 768) return 3  // Small tablet
+    if (windowWidth < 1024) return 4 // Tablet
+    if (windowWidth < 1280) return 5 // Laptop
+    return 6 // Desktop
+  }
+
+  const visibleTabCount = getVisibleTabCount()
+
+  // Ensure active tab is always visible
+  let visibleTabs = [...openTabs]
+  let hiddenTabs: ClosableTabKey[] = []
+
+  if (openTabs.length > visibleTabCount) {
+    const activeIndex = openTabs.indexOf(activeTab as ClosableTabKey)
+
+    if (activeIndex >= visibleTabCount) {
+      // If active tab is hidden, swap it with the last visible tab
+      visibleTabs = [...openTabs]
+      ;[visibleTabs[visibleTabCount - 1], visibleTabs[activeIndex]] =
+        [visibleTabs[activeIndex], visibleTabs[visibleTabCount - 1]]
+    }
+
+    hiddenTabs = visibleTabs.slice(visibleTabCount)
+    visibleTabs = visibleTabs.slice(0, visibleTabCount)
+  }
 
   const handleNewTab = () => {
     setActiveTab(newTabConfig.key)
@@ -377,7 +435,7 @@ export default function Home() {
           <SidebarGroup className="gap-3">
             <div className="flex h-8 w-full items-center justify-between px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
               <SidebarGroupLabel className="flex-1 truncate px-0 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/60 group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:hidden">
-                Reza’s Space
+                Ah Meng&apos;s Space
               </SidebarGroupLabel>
               <SidebarTrigger className="size-7 shrink-0" />
             </div>
@@ -448,7 +506,7 @@ export default function Home() {
                         isProfileActive && 'bg-sidebar-accent-foreground/20 text-sidebar-accent-foreground',
                       )}
                     >
-                      RI
+                      TA
                     </div>
                     <span
                       className={cn(
@@ -456,7 +514,7 @@ export default function Home() {
                         isProfileActive && 'text-sidebar-accent-foreground',
                       )}
                     >
-                      Reza Ilmi
+                      Tan Ah Meng
                     </span>
                   </Button>
                 </TooltipTrigger>
@@ -473,10 +531,10 @@ export default function Home() {
         <div className="flex flex-1 flex-col">
           <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
             <div className="border-b border-border/70 bg-muted/20 px-4 backdrop-blur-sm">
-              <div className="tab-scrollbar-hidden -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-2">
-                <div className="flex flex-1 items-center gap-2">
+              <div className="flex items-center gap-2 py-2">
+                <div className="flex items-center gap-2">
                 <TooltipProvider delayDuration={150}>
-                  {openTabs.map((tabKey, index) => {
+                      {visibleTabs.map((tabKey, index) => {
                     const tab = tabConfigMap[tabKey]
 
                     if (!tab) {
@@ -487,7 +545,7 @@ export default function Home() {
                     const isActive = activeTab === tabKey
                     const isDragging = draggedTab === tabKey
                     const isDragOver = dragOverTab === tabKey
-                    const draggedIndex = draggedTab ? openTabs.indexOf(draggedTab) : -1
+                    const draggedIndex = draggedTab ? visibleTabs.indexOf(draggedTab) : -1
                     const showIndicatorLeft = isDragOver && draggedIndex > index
                     const showIndicatorRight = isDragOver && draggedIndex < index
                     
@@ -563,19 +621,77 @@ export default function Home() {
                     <TooltipContent side="bottom">New Tab</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+
+                {/* More dropdown for hidden tabs */}
+                {hiddenTabs.length > 0 && (
+                  <Tooltip>
+                    <DropdownMenu>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            aria-label={`${hiddenTabs.length} more tabs`}
+                          >
+                            <MoreHorizontalIcon className="size-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {hiddenTabs.length} more {hiddenTabs.length === 1 ? 'tab' : 'tabs'}
+                      </TooltipContent>
+                    <DropdownMenuContent align="start" className="w-56">
+                      {hiddenTabs.map((tabKey) => {
+                        const tab = tabConfigMap[tabKey]
+                        if (!tab) return null
+                        const Icon = tab.icon
+                        const isActive = activeTab === tabKey
+
+                        return (
+                          <DropdownMenuItem
+                            key={tabKey}
+                            className={cn(
+                              "flex items-center justify-between",
+                              isActive && "bg-accent"
+                            )}
+                            onClick={() => setActiveTab(tabKey)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="size-4" />
+                              <span>{tab.label}</span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleCloseTab(tabKey)
+                              }}
+                              className="ml-2 opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+                              aria-label={`Close ${tab.label}`}
+                            >
+                              <XIcon className="size-3" />
+                            </button>
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Tooltip>
+                )}
                 </div>
+
                 {!isAssistantTabActive && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleAssistantButtonClick}
-                    aria-expanded={isAssistantOpen}
-                    aria-controls="assistant-panel"
-                  >
-                    <MessageSquareIcon className="size-4" />
-                    Assistant
-                  </Button>
+                  <div className="ml-auto">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={handleAssistantButtonClick}
+                      aria-expanded={isAssistantOpen}
+                      aria-controls="assistant-panel"
+                    >
+                      <MessageSquareIcon className="size-4" />
+                      Assistant
+                    </Button>
+                  </div>
                 )}
               </div>
               {tabLimitReached && (
@@ -627,9 +743,11 @@ export default function Home() {
                     )}
                   </div>
                 ) : isHomeActive ? (
-                  <HomeContent />
+                  <HomeContent onNavigateToClassroom={() => handleNavigate('classroom')} />
                 ) : activeTab === 'roundup' ? (
                   <RoundupContent />
+                ) : activeTab === 'classroom' ? (
+                  <ClassView />
                 ) : currentState ? (
                   <div className="flex flex-1 flex-col items-center justify-center text-center">
                     <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
@@ -660,10 +778,10 @@ export default function Home() {
                         <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
                           <div className="flex items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
-                              RI
+                              TA
                             </div>
                             <div className="flex flex-1 flex-col">
-                              <h3 className="text-base font-semibold">Reza Ilmi</h3>
+                              <h3 className="text-base font-semibold">Tan Ah Meng</h3>
                               <p className="text-muted-foreground text-sm">
                                 Product Strategist · Ready to collaborate
                               </p>
