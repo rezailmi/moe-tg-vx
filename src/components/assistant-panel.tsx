@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, MonitorIcon, PanelRightIcon, SendIcon, SparklesIcon, SquareIcon, XIcon } from 'lucide-react'
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, MonitorIcon, PanelRightIcon, SendIcon, SquareIcon, XIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -167,7 +167,7 @@ function PTMResponseContent({ onStudentClick }: { onStudentClick?: (studentName:
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm">
-        On October 14, 2025, you'll be meeting with six parents, and there are two important pieces of information regarding two students that you should keep in mind.
+        On October 14, 2025, you&apos;ll be meeting with six parents, and there are two important pieces of information regarding two students that you should keep in mind.
       </p>
       <p className="text-sm font-medium">Here are the two students you might want to focus on.</p>
 
@@ -225,7 +225,7 @@ function PTMResponseContent({ onStudentClick }: { onStudentClick?: (studentName:
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Reza has shown remarkable growth and improvement since his last discipline case. The Case Management team's observations reveal a clear positive trajectory in both his behavior and academic engagement, a story worth celebrating with his parents.
+          Reza has shown remarkable growth and improvement since his last discipline case. The Case Management team&apos;s observations reveal a clear positive trajectory in both his behavior and academic engagement, a story worth celebrating with his parents.
         </p>
       </div>
 
@@ -280,7 +280,7 @@ function PTMResponseContent({ onStudentClick }: { onStudentClick?: (studentName:
   )
 }
 
-function AssistantBody({ showHeading = true, onStudentClick }: AssistantBodyProps) {
+function AssistantBody({ onStudentClick }: AssistantBodyProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -313,10 +313,6 @@ function AssistantBody({ showHeading = true, onStudentClick }: AssistantBodyProp
       setMessages((prev) => [...prev, assistantMessage])
       setIsLoading(false)
     }, 1000)
-  }
-
-  const handleQuickAction = (prompt: string) => {
-    setInput(prompt)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

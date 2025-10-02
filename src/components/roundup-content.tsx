@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SparklesIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 interface RoundupContentProps {
   onPrepForMeeting?: () => void
