@@ -115,9 +115,32 @@ function AssistantBody({ showHeading = true }: AssistantBodyProps) {
     }
   }
 
-  const handleShortcutSelect = (shortcut: typeof promptShortcuts[0]) => {
-    setInput(shortcut.command)
+  const handleShortcutSelect = async (shortcut: typeof promptShortcuts[0]) => {
     setShowShortcuts(false)
+    setInput('')
+
+    // Send the shortcut command as a message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: shortcut.command,
+      timestamp: new Date(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setIsLoading(true)
+
+    // Simulate assistant response
+    setTimeout(() => {
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'This is a simulated response. In a real implementation, this would connect to an AI service.',
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+      setIsLoading(false)
+    }, 1000)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
