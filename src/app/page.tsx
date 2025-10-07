@@ -1,23 +1,24 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { LucideIcon } from 'lucide-react'
 import {
   BotIcon,
   CalendarDaysIcon,
+  ClipboardListIcon,
   FilePenIcon,
   FolderIcon,
   HomeIcon,
   InboxIcon,
   MessageSquareIcon,
   MoreHorizontalIcon,
-  NewspaperIcon,
   PieChartIcon,
   PlusIcon,
   UserIcon,
   UsersIcon,
   XIcon,
+  ZapIcon,
 } from 'lucide-react'
 
 import {
@@ -31,6 +32,8 @@ import { HomeContent } from '@/components/home-content'
 import { RoundupContent } from '@/components/roundup-content'
 import { ClassView } from '@/components/class-view'
 import { StudentProfile } from '@/components/student-profile'
+import { RecordsContent } from '@/components/records-content'
+import { ThemeSwitcher } from '@/components/theme-switcher'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,9 +63,10 @@ import {
 } from '@/components/ui/tooltip'
 
 const primaryPages = [
-  { key: 'roundup', label: 'Round-up', icon: NewspaperIcon, tooltip: 'Round-up' },
+  { key: 'roundup', label: 'Pulse', icon: ZapIcon, tooltip: 'Pulse' },
   { key: 'home', label: 'Home', icon: HomeIcon, tooltip: 'Home' },
   { key: 'classroom', label: 'Classroom', icon: UsersIcon, tooltip: 'Classroom' },
+  { key: 'records', label: 'Records', icon: ClipboardListIcon, tooltip: 'Records' },
   { key: 'draft', label: 'Draft', icon: FilePenIcon, tooltip: 'Drafts' },
   { key: 'calendar', label: 'Calendar', icon: CalendarDaysIcon, tooltip: 'Calendar' },
   { key: 'analysis', label: 'Analysis', icon: PieChartIcon, tooltip: 'Analysis' },
@@ -118,11 +122,11 @@ const emptyStates: Record<TabKey, EmptyState> = {
     icon: PlusIcon,
   },
   roundup: {
-    heading: 'Round-up',
+    heading: 'Pulse',
     title: 'No highlights yet',
     description:
       'Summaries and noteworthy updates from your team will appear here once activity picks up.',
-    icon: NewspaperIcon,
+    icon: ZapIcon,
     primaryAction: 'Share an update',
   },
   home: {
@@ -142,6 +146,14 @@ const emptyStates: Record<TabKey, EmptyState> = {
     icon: UsersIcon,
     primaryAction: 'Add student',
     secondaryAction: 'Export data',
+  },
+  records: {
+    heading: 'Records',
+    title: 'No records yet',
+    description:
+      'Track attendance, results, and case management for your students.',
+    icon: ClipboardListIcon,
+    primaryAction: 'Create record',
   },
   draft: {
     heading: 'Drafts',
@@ -213,16 +225,17 @@ const MAX_TABS = 8
 
 export default function Home() {
   const { state: sidebarState } = useSidebar()
-  const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>(['roundup'])
-  const [activeTab, setActiveTab] = useState<TabKey>('roundup')
+  const [openTabs, setOpenTabs] = useState<ClosableTabKey[]>(['home'])
+  const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [tabLimitReached, setTabLimitReached] = useState(false)
   const [assistantMode, setAssistantMode] = useState<AssistantMode>('sidebar')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [draggedTab, setDraggedTab] = useState<ClosableTabKey | null>(null)
   const [dragOverTab, setDragOverTab] = useState<ClosableTabKey | null>(null)
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+  const [containerWidth, setContainerWidth] = useState(0)
   const [studentProfileTabs, setStudentProfileTabs] = useState<Map<string, string>>(new Map()) // Map of tab key to student name
   const [pendingAssistantMessage, setPendingAssistantMessage] = useState<string | null>(null)
+  const tabContainerRef = useRef<HTMLDivElement>(null)
 
   const currentState = emptyStates[activeTab as keyof typeof emptyStates]
   const ActiveIcon = currentState?.icon
@@ -312,22 +325,56 @@ export default function Home() {
     }
   }, [openTabs])
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
+  // Measure tab container width
+  useLayoutEffect(() => {
+    const container = tabContainerRef.current
+    if (!container) return
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width)
+      }
+    })
+
+    resizeObserver.observe(container)
+    return () => resizeObserver.disconnect()
   }, [])
 
-  // Calculate visible tab count based on screen width
+  // Calculate visible tab count based on actual available space
   const getVisibleTabCount = () => {
-    if (windowWidth < 640) return 2  // Mobile
-    if (windowWidth < 768) return 3  // Small tablet
-    if (windowWidth < 1024) return 4 // Tablet
-    if (windowWidth < 1280) return 5 // Laptop
-    return 6 // Desktop
+    if (containerWidth === 0) return openTabs.length // Show all by default until measured
+
+    // Constants for UI elements (measuring actual widths from DOM)
+    const GAP = 8 // gap-2 (0.5rem = 8px)
+    const NEW_TAB_BUTTON_WIDTH = isNewTabActive ? 100 : 36
+    const MORE_DROPDOWN_WIDTH = 36 // Only add when we know we'll have overflow
+    const ASSISTANT_BUTTON_WIDTH = (!isAssistantTabActive && !isAssistantSidebarOpen) ? 120 : 0
+
+    // Average tab width based on current calculation
+    const getTabWidth = (count: number) => {
+      if (count <= 2) return 192 // 12rem = 192px
+      if (count <= 4) return 144 // 9rem = 144px
+      if (count <= 6) return 120 // 7.5rem = 120px
+      return 104 // 6.5rem = 104px
+    }
+
+    // Start with all tabs and work backwards
+    let testCount = openTabs.length
+
+    while (testCount > 0) {
+      const tabWidth = getTabWidth(testCount)
+      const tabsSpace = testCount * tabWidth + (testCount - 1) * GAP
+      const extraSpace = MORE_DROPDOWN_WIDTH + (testCount < openTabs.length ? 0 : -MORE_DROPDOWN_WIDTH)
+      const totalRequired = tabsSpace + NEW_TAB_BUTTON_WIDTH + ASSISTANT_BUTTON_WIDTH + extraSpace + (GAP * 3)
+
+      if (totalRequired <= containerWidth) {
+        return testCount
+      }
+
+      testCount--
+    }
+
+    return Math.max(1, openTabs.length) // Always show at least 1 tab
   }
 
   const visibleTabCount = getVisibleTabCount()
@@ -467,7 +514,7 @@ export default function Home() {
           <SidebarGroup className="gap-3">
             <div className="flex h-8 w-full items-center justify-between px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
               <SidebarGroupLabel className="flex-1 truncate px-0 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/60 group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:hidden">
-                Ah Meng&apos;s Space
+                Tan&apos;s Space
               </SidebarGroupLabel>
               <SidebarTrigger className="size-7 shrink-0" />
             </div>
@@ -490,21 +537,6 @@ export default function Home() {
                     </SidebarMenuItem>
                   )
                 })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup className="gap-3">
-            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/60">
-              Folders
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="2025">
-                    <FolderIcon className="size-4" />
-                    <span>2025</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -538,7 +570,7 @@ export default function Home() {
                         isProfileActive && 'bg-sidebar-accent-foreground/20 text-sidebar-accent-foreground',
                       )}
                     >
-                      TA
+                      DT
                     </div>
                     <span
                       className={cn(
@@ -546,7 +578,7 @@ export default function Home() {
                         isProfileActive && 'text-sidebar-accent-foreground',
                       )}
                     >
-                      Tan Ah Meng
+                      Daniel Tan
                     </span>
                   </Button>
                 </TooltipTrigger>
@@ -563,7 +595,7 @@ export default function Home() {
         <div className="flex flex-1 flex-col">
           <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
             <div className="border-b border-border/70 bg-muted/20 px-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 py-2">
+              <div ref={tabContainerRef} className="flex items-center gap-2 py-2">
                 <div className="flex items-center gap-2">
                 <TooltipProvider delayDuration={150}>
                       {visibleTabs.map((tabKey, index) => {
@@ -584,6 +616,10 @@ export default function Home() {
                     const showIndicatorLeft = isDragOver && draggedIndex > index
                     const showIndicatorRight = isDragOver && draggedIndex < index
                     
+                    // Calculate dynamic tab width based on available space
+                    const tabCount = visibleTabs.length
+                    const maxTabWidth = tabCount <= 2 ? '12rem' : tabCount <= 4 ? '9rem' : tabCount <= 6 ? '7.5rem' : '6.5rem'
+
                     return (
                       <button
                         key={tabKey}
@@ -596,8 +632,9 @@ export default function Home() {
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, tabKey)}
                         onClick={() => setActiveTab(tabKey)}
+                        style={{ maxWidth: maxTabWidth }}
                         className={cn(
-                          'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200',
+                          'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 min-w-[4rem]',
                         isActive
                           ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -610,8 +647,17 @@ export default function Home() {
                         {showIndicatorRight && (
                           <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
                         )}
-                        <Icon className="size-4" />
-                        <span className="truncate">{label}</span>
+                        <Icon className="size-4 shrink-0" />
+                        <span className="truncate flex-1 min-w-0">{label}</span>
+                        {/* Gradient overlay on hover - adapts to active/inactive state */}
+                        <div
+                          className={cn(
+                            "absolute inset-y-0 right-0 w-12 bg-gradient-to-l pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 rounded-md",
+                            isActive
+                              ? "from-background via-background/80 to-transparent"
+                              : "from-accent via-accent/80 to-transparent"
+                          )}
+                        />
                         <div
                           role="button"
                           tabIndex={0}
@@ -626,7 +672,11 @@ export default function Home() {
                               handleCloseTab(tabKey)
                             }
                           }}
-                          className="text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 group-[.ring-1]:opacity-100"
+                          className={cn(
+                            "absolute right-1 flex size-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 z-10",
+                            "text-muted-foreground/80 hover:text-foreground focus-visible:text-foreground",
+                            isActive ? "bg-background/95 rounded-md" : "bg-accent/95 rounded-md"
+                          )}
                           aria-label={`Close ${label}`}
                         >
                           <XIcon className="size-3.5" />
@@ -634,6 +684,67 @@ export default function Home() {
                       </button>
                     )
                   })}
+
+                  {/* More dropdown for hidden tabs */}
+                  {hiddenTabs.length > 0 && (
+                    <Tooltip>
+                      <DropdownMenu>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                              aria-label={`${hiddenTabs.length} more tabs`}
+                            >
+                              <MoreHorizontalIcon className="size-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          {hiddenTabs.length} more {hiddenTabs.length === 1 ? 'tab' : 'tabs'}
+                        </TooltipContent>
+                      <DropdownMenuContent align="start" className="w-56">
+                        {hiddenTabs.map((tabKey) => {
+                          const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
+                          const isStudentProfile = typeof tabKey === 'string' && tabKey.startsWith('student-')
+                          const studentName = isStudentProfile ? studentProfileTabs.get(tabKey) : undefined
+
+                          if (!tab && !isStudentProfile) return null
+
+                          const Icon = tab?.icon ?? UserIcon
+                          const label = isStudentProfile ? studentName ?? 'Student' : tab?.label ?? ''
+                          const isActive = activeTab === tabKey
+
+                          return (
+                            <DropdownMenuItem
+                              key={tabKey}
+                              className={cn(
+                                "flex items-center justify-between",
+                                isActive && "bg-accent"
+                              )}
+                              onClick={() => setActiveTab(tabKey)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Icon className="size-4" />
+                                <span>{label}</span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCloseTab(tabKey)
+                                }}
+                                className="ml-2 opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+                                aria-label={`Close ${label}`}
+                              >
+                                <XIcon className="size-3" />
+                              </button>
+                            </DropdownMenuItem>
+                          )
+                        })}
+                      </DropdownMenuContent>
+                      </DropdownMenu>
+                    </Tooltip>
+                  )}
+
                   <Tooltip disableHoverableContent>
                     <TooltipTrigger asChild>
                       <button
@@ -656,66 +767,6 @@ export default function Home() {
                     <TooltipContent side="bottom">New Tab</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
-                {/* More dropdown for hidden tabs */}
-                {hiddenTabs.length > 0 && (
-                  <Tooltip>
-                    <DropdownMenu>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label={`${hiddenTabs.length} more tabs`}
-                          >
-                            <MoreHorizontalIcon className="size-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        {hiddenTabs.length} more {hiddenTabs.length === 1 ? 'tab' : 'tabs'}
-                      </TooltipContent>
-                    <DropdownMenuContent align="start" className="w-56">
-                      {hiddenTabs.map((tabKey) => {
-                        const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
-                        const isStudentProfile = typeof tabKey === 'string' && tabKey.startsWith('student-')
-                        const studentName = isStudentProfile ? studentProfileTabs.get(tabKey) : undefined
-
-                        if (!tab && !isStudentProfile) return null
-
-                        const Icon = tab?.icon ?? UserIcon
-                        const label = isStudentProfile ? studentName ?? 'Student' : tab?.label ?? ''
-                        const isActive = activeTab === tabKey
-
-                        return (
-                          <DropdownMenuItem
-                            key={tabKey}
-                            className={cn(
-                              "flex items-center justify-between",
-                              isActive && "bg-accent"
-                            )}
-                            onClick={() => setActiveTab(tabKey)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon className="size-4" />
-                              <span>{label}</span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleCloseTab(tabKey)
-                              }}
-                              className="ml-2 opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
-                              aria-label={`Close ${label}`}
-                            >
-                              <XIcon className="size-3" />
-                            </button>
-                          </DropdownMenuItem>
-                        )
-                      })}
-                    </DropdownMenuContent>
-                    </DropdownMenu>
-                  </Tooltip>
-                )}
                 </div>
 
                 {!isAssistantTabActive && !isAssistantSidebarOpen && (
@@ -796,6 +847,8 @@ export default function Home() {
                   <RoundupContent onPrepForMeeting={() => handleNavigate('classroom')} />
                 ) : activeTab === 'classroom' ? (
                   <ClassView onStudentClick={handleOpenStudentProfile} />
+                ) : activeTab === 'records' ? (
+                  <RecordsContent />
                 ) : typeof activeTab === 'string' && activeTab.startsWith('student-') ? (
                   <StudentProfile
                     studentName={studentProfileTabs.get(activeTab) ?? 'Unknown Student'}
@@ -834,12 +887,12 @@ export default function Home() {
                         <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
                           <div className="flex items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
-                              TA
+                              DT
                             </div>
                             <div className="flex flex-1 flex-col">
-                              <h3 className="text-base font-semibold">Tan Ah Meng</h3>
+                              <h3 className="text-base font-semibold">Daniel Tan</h3>
                               <p className="text-muted-foreground text-sm">
-                                Product Strategist · Ready to collaborate
+                                Math Teacher · Ready to collaborate
                               </p>
                             </div>
                           </div>
@@ -853,11 +906,14 @@ export default function Home() {
                               <p className="mt-1 font-medium">Set your schedule</p>
                             </div>
                           </div>
-                          <div className="mt-6 flex flex-wrap gap-2">
+                          <div className="mt-6 flex flex-wrap items-center gap-2">
                             <Button size="sm">Preview profile</Button>
                             <Button size="sm" variant="ghost">
                               Share profile link
                             </Button>
+                            <div className="ml-auto">
+                              <ThemeSwitcher />
+                            </div>
                           </div>
                         </div>
                       </div>

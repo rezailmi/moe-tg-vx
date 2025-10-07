@@ -3,6 +3,7 @@
 import { ArrowLeftIcon, MailIcon, PhoneIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CaseManagementTable } from '@/components/case-management-table'
 import { cn } from '@/lib/utils'
 
 // Helper function to get initials from name
@@ -368,14 +369,11 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
         </Card>
       </div>
 
-      {/* Case Management */}
+      {/* Student Needs Summary */}
       <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Case Management</h2>
+        <h2 className="mb-4 text-base font-semibold text-stone-900">Behavioral & Wellness</h2>
         <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle className="text-base font-medium text-stone-900">Behavioral & Wellness</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid gap-3 md:grid-cols-3 mb-4">
               <div className="flex items-center gap-2">
                 <span className={cn(
@@ -416,6 +414,12 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Case Management */}
+      <div>
+        <h2 className="mb-4 text-base font-semibold text-stone-900">Case Management</h2>
+        <CaseManagementTable studentFilter={student.name} />
       </div>
     </div>
   )
