@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDownIcon, MoreHorizontalIcon, BarChart3Icon, CalendarDaysIcon } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { ChevronDownIcon, MoreHorizontalIcon, BarChart3Icon, CalendarDaysIcon, SearchIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -111,6 +112,7 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -137,12 +139,20 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
     }
   }
 
-  const filteredStudents = allStudents.filter(student => {
-    if (filterStatus === 'all') return true
-    return student.status === filterStatus
-  })
+  const filteredStudents = useMemo(() => {
+    return allStudents.filter(student => {
+      // Filter by search query
+      const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase())
 
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
+      // Filter by status
+      const matchesStatus = filterStatus === 'all' || student.status === filterStatus
+
+      return matchesSearch && matchesStatus
+    })
+  }, [searchQuery, filterStatus])
+
+  const sortedStudents = useMemo(() => {
+    return [...filteredStudents].sort((a, b) => {
     let compareValue = 0
 
     switch (sortField) {
@@ -160,8 +170,9 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
         break
     }
 
-    return sortOrder === 'asc' ? compareValue : -compareValue
-  })
+      return sortOrder === 'asc' ? compareValue : -compareValue
+    })
+  }, [filteredStudents, sortField, sortOrder])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,6 +199,26 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
         return 'text-stone-600'
     }
   }
+
+  // Calculate insights from real student data
+  const insights = useMemo(() => {
+    const senStudents = filteredStudents.filter(s => s.status === 'SEN')
+    const lowMathStudents = filteredStudents.filter(s => s.math < 70)
+    const lowAttendanceStudents = filteredStudents.filter(s => s.present < 90)
+    const avgAttendance = Math.round(
+      filteredStudents.reduce((sum, s) => sum + s.present, 0) / filteredStudents.length
+    )
+
+    return {
+      senCount: senStudents.length,
+      senNames: senStudents.slice(0, 3).map(s => s.name.split(' ')[0] + ' ' + s.name.split(' ').slice(-1)[0].charAt(0) + '.'),
+      lowMathCount: lowMathStudents.length,
+      lowMathNames: lowMathStudents.slice(0, 3).map(s => s.name.split(' ')[0] + ' ' + s.name.split(' ').slice(-1)[0].charAt(0) + '.'),
+      avgAttendance,
+      lowAttendanceCount: lowAttendanceStudents.length,
+      lowAttendanceNames: lowAttendanceStudents.slice(0, 3).map(s => s.name.split(' ')[0] + ' ' + s.name.split(' ').slice(-1)[0].charAt(0) + '.')
+    }
+  }, [filteredStudents])
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
@@ -228,12 +259,18 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-red-600">●</span>
                   <CardTitle className="text-sm font-medium text-stone-600">SEN</CardTitle>
-                  <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Attention</span>
+                  <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${insights.senCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
+                    {insights.senCount > 0 ? 'Attention' : 'On track'}
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold text-stone-900">2 students need extra attention</p>
-                <p className="text-sm text-stone-600 mt-1">Sarah M., James K., and Lisa T. scored below 70% on recent assessment.</p>
+                <p className="text-lg font-semibold text-stone-900">
+                  {insights.senCount === 0 ? 'No students need extra attention' : `${insights.senCount} student${insights.senCount > 1 ? 's' : ''} need extra attention`}
+                </p>
+                <p className="text-sm text-stone-600 mt-1">
+                  {insights.senCount > 0 ? `${insights.senNames.join(', ')} require special education support.` : 'All students are progressing well.'}
+                </p>
               </CardContent>
             </Card>
 
@@ -242,26 +279,40 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-amber-600">●</span>
                   <CardTitle className="text-sm font-medium text-stone-600">Nurture</CardTitle>
-                  <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Attention</span>
+                  <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${insights.lowMathCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
+                    {insights.lowMathCount > 0 ? 'Attention' : 'On track'}
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold text-stone-900">3 students need math support</p>
-                <p className="text-sm text-stone-600 mt-1">Sarah M., James K., and Lisa T. scored below 70% on recent assessment.</p>
+                <p className="text-lg font-semibold text-stone-900">
+                  {insights.lowMathCount === 0 ? 'All students performing well in math' : `${insights.lowMathCount} student${insights.lowMathCount > 1 ? 's' : ''} need math support`}
+                </p>
+                <p className="text-sm text-stone-600 mt-1">
+                  {insights.lowMathCount > 0 ? `${insights.lowMathNames.join(', ')} scored below 70% in math.` : 'No students scored below 70%.'}
+                </p>
               </CardContent>
             </Card>
 
             <Card className="border-stone-200">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-green-600">✓</span>
-                  <CardTitle className="text-sm font-medium text-stone-600">Record</CardTitle>
-                  <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">On track</span>
+                  <span className={insights.avgAttendance >= 90 ? 'text-green-600' : 'text-amber-600'}>●</span>
+                  <CardTitle className="text-sm font-medium text-stone-600">Attendance</CardTitle>
+                  <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${insights.avgAttendance >= 90 ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {insights.avgAttendance >= 90 ? 'On track' : 'Attention'}
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold text-stone-900">100% students attended today!</p>
-                <p className="text-sm text-stone-600 mt-1">Sarah M., James K., and Lisa T. scored below 70% on recent assessment.</p>
+                <p className="text-lg font-semibold text-stone-900">
+                  {insights.avgAttendance}% average attendance
+                </p>
+                <p className="text-sm text-stone-600 mt-1">
+                  {insights.lowAttendanceCount > 0
+                    ? `${insights.lowAttendanceCount} student${insights.lowAttendanceCount > 1 ? 's' : ''} below 90%: ${insights.lowAttendanceNames.join(', ')}.`
+                    : 'All students have excellent attendance!'}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -270,8 +321,18 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
           <Card className="border-stone-200">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-stone-900">34 students</CardTitle>
+                <CardTitle className="text-lg font-semibold text-stone-900">{sortedStudents.length} student{sortedStudents.length !== 1 ? 's' : ''}</CardTitle>
                 <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <SearchIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+                    <Input
+                      type="search"
+                      placeholder="Search students..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-9 w-64 pl-8"
+                    />
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="gap-1">
@@ -309,7 +370,7 @@ export function ClassView({ onStudentClick }: ClassViewProps) {
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedStudents.length === sortedStudents.length}
+                        checked={selectedStudents.length === sortedStudents.length && sortedStudents.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                     </TableHead>
