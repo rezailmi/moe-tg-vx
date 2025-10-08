@@ -128,11 +128,13 @@ function ClassCard({ classData, isFormClass, onClassClick }: ClassCardProps) {
 
       <CardContent>
         <div className="space-y-3">
-          {/* Subject */}
-          <div>
-            <p className="text-xs text-stone-500 uppercase tracking-wide">Subject</p>
-            <p className="text-sm font-medium text-stone-900">{classData.subject}</p>
-          </div>
+          {/* Subject - only show for non-form classes */}
+          {!isFormClass && (
+            <div>
+              <p className="text-xs text-stone-500 uppercase tracking-wide">Subject</p>
+              <p className="text-sm font-medium text-stone-900">{classData.subject}</p>
+            </div>
+          )}
 
           {/* Student Count */}
           <div>
