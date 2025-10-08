@@ -1,9 +1,18 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronRightIcon, HomeIcon, ArrowLeftIcon } from 'lucide-react'
+import { HomeIcon, ArrowLeftIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem as ShadcnBreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from '@/components/ui/breadcrumb'
 import type { BreadcrumbItem } from '@/hooks/use-breadcrumbs'
 
 export interface BreadcrumbsProps {
@@ -44,15 +53,11 @@ export function Breadcrumbs({
     return truncated
   }, [items, maxItems])
 
-  const separatorElement = separator || (
-    <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
-  )
-
   // Check if we should show a back button (for 2nd level and deeper)
   const showBackButton = items.length > 1
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center gap-3', className)}>
+    <div className={cn('flex items-center gap-3', className)}>
       {/* Back button for 2nd level and deeper pages */}
       {showBackButton && (
         <Button
@@ -66,123 +71,63 @@ export function Breadcrumbs({
         </Button>
       )}
 
-      <ol className="flex items-center gap-2 text-sm">
-        {displayItems.map((item, index) => {
-          if (item === 'ellipsis') {
+      <Breadcrumb>
+        <BreadcrumbList>
+          {displayItems.map((item, index) => {
+            if (item === 'ellipsis') {
+              return (
+                <React.Fragment key={`ellipsis-${index}`}>
+                  {index > 0 && <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>}
+                  <ShadcnBreadcrumbItem>
+                    <BreadcrumbEllipsis />
+                  </ShadcnBreadcrumbItem>
+                </React.Fragment>
+              )
+            }
+
+            const isHome = item.label === 'Home'
+            const isLast = index === displayItems.length - 1
+            // Don't show Home icon when we have a back button
+            const shouldShowHomeIcon = isHome && showHomeIcon && !showBackButton
+
             return (
-              <React.Fragment key={`ellipsis-${index}`}>
-                {index > 0 && (
-                  <li aria-hidden="true" className="flex items-center">
-                    {separatorElement}
-                  </li>
-                )}
-                <li className="flex items-center">
-                  <span className="text-muted-foreground">...</span>
-                </li>
+              <React.Fragment key={item.path}>
+                {index > 0 && <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>}
+                <ShadcnBreadcrumbItem>
+                  {item.isActive ? (
+                    <BreadcrumbPage className={shouldShowHomeIcon ? 'flex items-center gap-1' : ''}>
+                      {shouldShowHomeIcon && (
+                        <HomeIcon className="h-4 w-4" />
+                      )}
+                      {item.label}
+                    </BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink
+                      onClick={(e) => {
+                        e.preventDefault()
+                        item.onClick?.()
+                      }}
+                      className={cn(
+                        'cursor-pointer',
+                        shouldShowHomeIcon && 'flex items-center gap-1'
+                      )}
+                    >
+                      {shouldShowHomeIcon && (
+                        <HomeIcon className="h-4 w-4" />
+                      )}
+                      {item.label}
+                    </BreadcrumbLink>
+                  )}
+                </ShadcnBreadcrumbItem>
               </React.Fragment>
             )
-          }
-
-          const isHome = item.label === 'Home'
-          const isLast = index === displayItems.length - 1
-          // Don't show Home icon when we have a back button
-          const shouldShowHomeIcon = isHome && showHomeIcon && !showBackButton
-
-          return (
-            <React.Fragment key={item.path}>
-              {index > 0 && (
-                <li aria-hidden="true" className="flex items-center">
-                  {separatorElement}
-                </li>
-              )}
-              <li className="flex items-center">
-                {item.isActive ? (
-                  <span
-                    className={cn(
-                      'font-medium text-foreground',
-                      shouldShowHomeIcon && 'flex items-center gap-1'
-                    )}
-                    aria-current="page"
-                  >
-                    {shouldShowHomeIcon && (
-                      <HomeIcon className="h-4 w-4" />
-                    )}
-                    {item.label}
-                  </span>
-                ) : (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={item.onClick}
-                    className={cn(
-                      'h-auto p-0 font-normal text-muted-foreground hover:text-foreground',
-                      shouldShowHomeIcon && 'flex items-center gap-1'
-                    )}
-                  >
-                    {shouldShowHomeIcon && (
-                      <HomeIcon className="h-4 w-4" />
-                    )}
-                    {item.label}
-                  </Button>
-                )}
-              </li>
-            </React.Fragment>
-          )
-        })}
-      </ol>
-    </nav>
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
   )
 }
 
-// Breadcrumb Item component for more control
-export function BreadcrumbItem({
-  children,
-  isActive = false,
-  onClick,
-  className,
-}: {
-  children: React.ReactNode
-  isActive?: boolean
-  onClick?: () => void
-  className?: string
-}) {
-  if (isActive) {
-    return (
-      <span
-        className={cn('font-medium text-foreground', className)}
-        aria-current="page"
-      >
-        {children}
-      </span>
-    )
-  }
-
-  return (
-    <Button
-      variant="link"
-      size="sm"
-      onClick={onClick}
-      className={cn(
-        'h-auto p-0 font-normal text-muted-foreground hover:text-foreground',
-        className
-      )}
-    >
-      {children}
-    </Button>
-  )
-}
-
-// Breadcrumb Separator component
-export function BreadcrumbSeparator({
-  children,
-  className,
-}: {
-  children?: React.ReactNode
-  className?: string
-}) {
-  return (
-    <span aria-hidden="true" className={cn('text-muted-foreground', className)}>
-      {children || <ChevronRightIcon className="h-4 w-4" />}
-    </span>
-  )
-}
+// Re-export the renamed component for backward compatibility
+export { ShadcnBreadcrumbItem as BreadcrumbItem }
+export { BreadcrumbSeparator }
