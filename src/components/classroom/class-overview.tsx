@@ -226,10 +226,10 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
         </DialogContent>
       </Dialog>
 
-      {/* Today's Snapshot - Natural Language Summary */}
+      {/* Quick pulse - Natural Language Summary */}
       {stats && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-900">Today&apos;s Snapshot</h2>
+          <h2 className="text-lg font-semibold text-stone-900">Quick pulse</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Attendance */}
             <Card className="border-stone-200">
