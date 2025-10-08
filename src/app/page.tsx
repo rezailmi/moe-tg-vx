@@ -32,6 +32,7 @@ import { HomeContent } from '@/components/home-content'
 import { RoundupContent } from '@/components/roundup-content'
 import { MyClasses } from '@/components/classroom/my-classes'
 import { ClassOverview } from '@/components/classroom/class-overview'
+import { StudentList } from '@/components/classroom/student-list'
 import { StudentProfile } from '@/components/student-profile'
 import { RecordsContent } from '@/components/records-content'
 import { ExploreContent } from '@/components/explore-content'
@@ -290,6 +291,18 @@ export default function Home() {
     setClassroomTabs((prev) => {
       const updated = new Map(prev)
       updated.set(tabKey, classId)
+      return updated
+    })
+
+    handleNavigate(tabKey)
+  }
+
+  const handleOpenStudentList = (classId: string) => {
+    const tabKey = `classroom-${classId}/students` as ClassroomTabKey
+
+    setClassroomTabs((prev) => {
+      const updated = new Map(prev)
+      updated.set(tabKey, `${classId}/students`)
       return updated
     })
 
@@ -640,6 +653,7 @@ export default function Home() {
 
                     const Icon = tab?.icon ?? (isClassroom ? Users : User)
                     const label = isStudentProfile ? studentName ?? 'Student' :
+                                 isClassroom && classId?.includes('/students') ? `${classId.split('-').pop()?.split('/')[0].toUpperCase()} Students` :
                                  isClassroom ? `Class ${classId?.split('-').pop()?.toUpperCase() ?? ''}` :
                                  tab?.label ?? ''
                     const isActive = activeTab === tabKey
@@ -747,6 +761,7 @@ export default function Home() {
 
                           const Icon = tab?.icon ?? (isClassroom ? Users : User)
                           const label = isStudentProfile ? studentName ?? 'Student' :
+                                       isClassroom && classId?.includes('/students') ? `${classId.split('-').pop()?.split('/')[0].toUpperCase()} Students` :
                                        isClassroom ? `Class ${classId?.split('-').pop()?.toUpperCase() ?? ''}` :
                                        tab?.label ?? ''
                           const isActive = activeTab === tabKey
@@ -827,6 +842,8 @@ export default function Home() {
                 <h1 className="text-lg font-semibold tracking-tight">
                   {typeof activeTab === 'string' && activeTab.startsWith('student-')
                     ? 'Student Profile'
+                    : typeof activeTab === 'string' && activeTab.startsWith('classroom-') && classroomTabs.get(activeTab)?.includes('/students')
+                      ? 'Students'
                     : typeof activeTab === 'string' && activeTab.startsWith('classroom-')
                       ? `Class ${classroomTabs.get(activeTab)?.split('-').pop()?.toUpperCase() ?? ''}`
                     : currentState
@@ -883,6 +900,16 @@ export default function Home() {
                   <MyClasses onClassClick={handleOpenClassroom} />
                 ) : activeTab === 'records' ? (
                   <RecordsContent />
+                ) : typeof activeTab === 'string' && activeTab.startsWith('classroom-') && activeTab.includes('/students') ? (
+                  <StudentList
+                    classId={classroomTabs.get(activeTab)?.replace('/students', '') ?? ''}
+                    onBack={() => {
+                      handleCloseTab(activeTab)
+                      const classId = classroomTabs.get(activeTab)?.replace('/students', '')
+                      if (classId) handleOpenClassroom(classId)
+                    }}
+                    onStudentClick={handleOpenStudentProfile}
+                  />
                 ) : typeof activeTab === 'string' && activeTab.startsWith('classroom-') ? (
                   <ClassOverview
                     classId={classroomTabs.get(activeTab) ?? ''}
@@ -890,6 +917,7 @@ export default function Home() {
                       handleCloseTab(activeTab)
                       handleNavigate('classroom')
                     }}
+                    onNavigateToStudents={handleOpenStudentList}
                   />
                 ) : typeof activeTab === 'string' && activeTab.startsWith('student-') ? (
                   <StudentProfile

@@ -27,9 +27,10 @@ import { cn } from '@/lib/utils'
 interface ClassOverviewProps {
   classId: string
   onBack?: () => void
+  onNavigateToStudents?: (classId: string) => void
 }
 
-export function ClassOverview({ classId, onBack }: ClassOverviewProps) {
+export function ClassOverview({ classId, onBack, onNavigateToStudents }: ClassOverviewProps) {
   const classData = getClassById(classId)
   const stats = getClassOverviewStats(classId)
   const activities = getActivityLogByClassId(classId).slice(0, 5)
@@ -192,7 +193,12 @@ export function ClassOverview({ classId, onBack }: ClassOverviewProps) {
             <FileTextIcon className="h-5 w-5" />
             <span className="text-xs">Create Record</span>
           </Button>
-          <Button variant="outline" className="w-full h-auto flex flex-col items-center gap-2 p-4" disabled>
+          <Button
+            variant="outline"
+            className="w-full h-auto flex flex-col items-center gap-2 p-4"
+            onClick={() => onNavigateToStudents?.(classId)}
+            disabled={!onNavigateToStudents}
+          >
             <UsersIcon className="h-5 w-5" />
             <span className="text-xs">View Students</span>
           </Button>
