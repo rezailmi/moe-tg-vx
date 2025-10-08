@@ -19,7 +19,7 @@ export function MyClasses({ onClassClick }: MyClassesProps) {
   const hasFormClass = currentUser.role === 'FormTeacher' && formClass
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full max-w-5xl space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
