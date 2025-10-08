@@ -35,14 +35,16 @@ export function PageLayout({
       {/* Simple Content Header - for pages that still need internal titles */}
       {(title || subtitle) && (
         <div className={cn('border-b bg-background', headerClassName)}>
-          <div className="flex flex-col px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                {/* Title and Subtitle */}
-                <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-                {subtitle && (
-                  <div className="text-sm text-muted-foreground">{subtitle}</div>
-                )}
+          <div className="px-6 py-4">
+            <div className="mx-auto w-full max-w-5xl">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  {/* Title and Subtitle */}
+                  <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+                  {subtitle && (
+                    <div className="text-sm text-muted-foreground">{subtitle}</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
