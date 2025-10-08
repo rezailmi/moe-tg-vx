@@ -3,6 +3,7 @@
 import { ArrowLeftIcon, MailIcon, PhoneIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseManagementTable } from '@/components/case-management-table'
 import { cn } from '@/lib/utils'
 
@@ -181,10 +182,18 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
         </CardContent>
       </Card>
 
-      {/* Overview Details */}
-      <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Overview Details</h2>
-        <div className="grid gap-6 md:grid-cols-2">
+      {/* Tabs Navigation */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="academic">Academic</TabsTrigger>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="wellness">Wellness</TabsTrigger>
+          <TabsTrigger value="cases">Cases</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
           {/* Parent/Guardian Information */}
           <Card className="border-stone-200">
             <CardHeader>
@@ -244,13 +253,10 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Academic */}
-      <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Academic</h2>
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Academic Tab */}
+        <TabsContent value="academic" className="space-y-6">
           {/* Academic Performance */}
           <Card className="border-stone-200">
             <CardHeader>
@@ -299,9 +305,7 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 mt-6">
           {/* Strengths */}
           <Card className="border-stone-200">
             <CardHeader>
@@ -335,92 +339,90 @@ export function StudentProfile({ studentName, onBack }: StudentProfileProps) {
               </ul>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Attendance */}
-      <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Attendance</h2>
-        <Card className="border-stone-200">
-          <CardContent className="pt-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Daily</h4>
+        {/* Attendance Tab */}
+        <TabsContent value="attendance" className="space-y-6">
+          <Card className="border-stone-200">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Attendance Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-stone-100">
+                <h4 className="text-sm font-medium text-stone-900">Daily</h4>
                 <p className="text-sm text-stone-600">{student.attendanceDetails.daily}</p>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Temperature</h4>
+              <div className="flex items-center justify-between py-2 border-b border-stone-100">
+                <h4 className="text-sm font-medium text-stone-900">Temperature</h4>
                 <p className="text-sm text-stone-600">{student.attendanceDetails.temperature}</p>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">CCA</h4>
+              <div className="flex items-center justify-between py-2 border-b border-stone-100">
+                <h4 className="text-sm font-medium text-stone-900">CCA</h4>
                 <p className="text-sm text-stone-600">{student.attendanceDetails.cca}</p>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">School Events</h4>
+              <div className="flex items-center justify-between py-2 border-b border-stone-100">
+                <h4 className="text-sm font-medium text-stone-900">School Events</h4>
                 <p className="text-sm text-stone-600">{student.attendanceDetails.schoolEvents}</p>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Early Dismissal</h4>
+              <div className="flex items-center justify-between py-2">
+                <h4 className="text-sm font-medium text-stone-900">Early Dismissal</h4>
                 <p className="text-sm text-stone-600">{student.attendanceDetails.earlyDismissal}</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Student Needs Summary */}
-      <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Behavioral & Wellness</h2>
-        <Card className="border-stone-200">
-          <CardContent className="pt-6">
-            <div className="grid gap-3 md:grid-cols-3 mb-4">
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded text-xs",
-                  student.studentNeeds.counselling ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                )}>
-                  {student.studentNeeds.counselling ? '!' : '✓'}
-                </span>
-                <span className="text-sm text-stone-900">Counselling / Monitoring</span>
+        {/* Behavioral & Wellness Tab */}
+        <TabsContent value="wellness" className="space-y-6">
+          <Card className="border-stone-200">
+            <CardContent className="pt-6">
+              <div className="grid gap-3 md:grid-cols-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded text-xs",
+                    student.studentNeeds.counselling ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
+                  )}>
+                    {student.studentNeeds.counselling ? '!' : '✓'}
+                  </span>
+                  <span className="text-sm text-stone-900">Counselling / Monitoring</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded text-xs",
+                    student.studentNeeds.disciplinary ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
+                  )}>
+                    {student.studentNeeds.disciplinary ? '!' : '✓'}
+                  </span>
+                  <span className="text-sm text-stone-900">Disciplinary Offences</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded text-xs",
+                    student.studentNeeds.sen ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
+                  )}>
+                    {student.studentNeeds.sen ? '!' : '✓'}
+                  </span>
+                  <span className="text-sm text-stone-900">Socio-emotional Needs (SEN)</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded text-xs",
-                  student.studentNeeds.disciplinary ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                )}>
-                  {student.studentNeeds.disciplinary ? '!' : '✓'}
-                </span>
-                <span className="text-sm text-stone-900">Disciplinary Offences</span>
+              {student.studentNeeds.senDetails && (
+                <div className="rounded-md bg-amber-50 p-3">
+                  <p className="text-sm text-amber-900">{student.studentNeeds.senDetails}</p>
+                </div>
+              )}
+              <div className="mt-4 pt-4 border-t">
+                <h4 className="text-sm font-medium text-stone-900 mb-2">Teacher Notes</h4>
+                <p className="text-sm text-stone-600">{student.notes}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded text-xs",
-                  student.studentNeeds.sen ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                )}>
-                  {student.studentNeeds.sen ? '!' : '✓'}
-                </span>
-                <span className="text-sm text-stone-900">Socio-emotional Needs (SEN)</span>
-              </div>
-            </div>
-            {student.studentNeeds.senDetails && (
-              <div className="rounded-md bg-amber-50 p-3">
-                <p className="text-sm text-amber-900">{student.studentNeeds.senDetails}</p>
-              </div>
-            )}
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="text-sm font-medium text-stone-900 mb-2">Teacher Notes</h4>
-              <p className="text-sm text-stone-600">{student.notes}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Case Management */}
-      <div>
-        <h2 className="mb-4 text-base font-semibold text-stone-900">Case Management</h2>
-        <CaseManagementTable studentFilter={student.name} />
-      </div>
+        {/* Case Management Tab */}
+        <TabsContent value="cases" className="space-y-6">
+          <CaseManagementTable studentFilter={student.name} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
