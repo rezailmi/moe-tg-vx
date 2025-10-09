@@ -121,8 +121,10 @@ type ProfileTabKey = typeof profileTabConfig['key']
 type AssistantTabKey = typeof assistantTabConfig['key']
 type StudentProfileTabKey = `student-${string}` // Dynamic student profile tabs (standalone)
 type ClassroomTabKey = `classroom/${string}` // Dynamic classroom tabs with forward slash
+type PulseTabKey = 'pulse' // Pulse is a child of Home
+type LegacyTabKey = 'records' | 'recents' // Legacy tab keys for backward compatibility
 type PageKey = PrimaryPageKey | ProfileTabKey
-type ClosableTabKey = PageKey | AssistantTabKey | StudentProfileTabKey | ClassroomTabKey
+type ClosableTabKey = PageKey | AssistantTabKey | StudentProfileTabKey | ClassroomTabKey | PulseTabKey | LegacyTabKey
 type TabKey = typeof newTabConfig['key'] | ClosableTabKey
 type PageConfig = (typeof primaryPages)[number] | typeof profileTabConfig
 type TabConfig = PageConfig | typeof newTabConfig | typeof assistantTabConfig
@@ -134,6 +136,23 @@ type EmptyState = {
   icon: LucideIcon
   primaryAction?: string
   secondaryAction?: string
+}
+
+type DropdownItem = {
+  label: string
+  icon: LucideIcon
+  onClick?: () => void
+  disabled?: boolean
+}
+
+type PageAction = {
+  label: string
+  icon: LucideIcon
+  onClick?: () => void
+  variant?: 'default' | 'destructive' | 'outline' | 'link' | 'secondary' | 'ghost'
+  disabled?: boolean
+  isDropdown?: boolean
+  dropdownItems?: DropdownItem[]
 }
 
 const emptyStates: Record<TabKey, EmptyState> = {
@@ -186,7 +205,7 @@ const emptyStates: Record<TabKey, EmptyState> = {
     icon: ClipboardList,
     primaryAction: 'Create record',
   },
-  draft: {
+  drafts: {
     heading: 'Drafts',
     title: 'No drafts on file',
     description:
@@ -270,7 +289,7 @@ const pageConfigMap: Record<PageKey, PageConfig> = primaryPages.reduce(
   { [profileTabConfig.key]: profileTabConfig } as Record<PageKey, PageConfig>,
 )
 
-const tabConfigMap: Record<TabKey, TabConfig> = {
+const tabConfigMap: Partial<Record<TabKey, TabConfig>> = {
   [newTabConfig.key]: newTabConfig,
   ...pageConfigMap,
   [assistantTabConfig.key]: assistantTabConfig,
@@ -463,8 +482,8 @@ export default function Home() {
   })
 
   // Get actions for current tab
-  const getPageActions = () => {
-    let actions: any[] = []
+  const getPageActions = (): PageAction[] => {
+    let actions: PageAction[] = []
 
     if (activeTab === 'home') {
       // Home page actions
@@ -843,7 +862,7 @@ export default function Home() {
     const storedStudentTabs = sessionStorage.getItem('studentProfileTabs')
     if (storedStudentTabs) {
       try {
-        const parsedMap = new Map(JSON.parse(storedStudentTabs))
+        const parsedMap = new Map<string, string>(JSON.parse(storedStudentTabs))
         setStudentProfileTabs(parsedMap)
         studentProfileTabsRef.current = parsedMap
       } catch (e) {
@@ -855,7 +874,7 @@ export default function Home() {
     const storedClassroomTabs = sessionStorage.getItem('classroomTabs')
     if (storedClassroomTabs) {
       try {
-        const parsedMap = new Map(JSON.parse(storedClassroomTabs))
+        const parsedMap = new Map<string, string>(JSON.parse(storedClassroomTabs))
         setClassroomTabs(parsedMap)
         classroomTabsRef.current = parsedMap
       } catch (e) {
