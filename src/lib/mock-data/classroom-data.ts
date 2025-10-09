@@ -111,16 +111,17 @@ export const mockStudents5A: Student[] = [
     student_id: 'student-001',
     name: 'Alice Wong',
     class_id: 'class-5a',
-    class_name: '5A',
-    year_level: 5,
-    status: 'None',
+    class_name: 'S2-A',
+    year_level: 8,
+    status: 'None', // Express stream
     conduct_grade: 'Excellent',
-    grades: { english: 92, math: 88, science: 90 },
+    grades: { english: 92, math: 88, science: 90, chinese: 85, humanities: 87 }, // Recent English A - major improvement
     attendance_rate: 98,
     parent_name: 'Mr. & Mrs. Wong',
     parent_email: 'wong.family@email.com',
     parent_phone: '+65 9123 4567',
-    friends: ['Emily Tan', 'Sarah Lee'],
+    family_background: 'Supportive parents, both working professionals. Younger sibling in primary school.',
+    friends: ['Emily Tan', 'Sarah Lee', 'Priya Krishnan'],
     has_medical_conditions: false,
     needs_counselling: false,
     has_disciplinary_issues: false,
@@ -303,19 +304,20 @@ export const mockStudents5A: Student[] = [
     student_id: 'student-011',
     name: 'Ryan Tan',
     class_id: 'class-5a',
-    class_name: '5A',
-    year_level: 5,
+    class_name: 'S3-A',
+    year_level: 9,
     status: 'None',
-    conduct_grade: 'Above average',
-    grades: { english: 82, math: 85, science: 80 },
-    attendance_rate: 93,
+    conduct_grade: 'Above average', // Showing improvement from earlier behavioral issues
+    grades: { english: 75, math: 78, science: 72, chinese: 70, humanities: 74 }, // Recent improvement after earlier dip
+    attendance_rate: 88, // Improved from earlier issues
     parent_name: 'Mr. Tan',
     parent_email: 'ryan.tan@email.com',
     parent_phone: '+65 9123 4567',
-    friends: [],
+    family_background: 'Single parent household. Father works long hours. Receives CMT support.',
+    friends: ['Nathan Goh', 'Lucas Ong'], // Building positive peer relationships
     has_medical_conditions: false,
-    needs_counselling: false,
-    has_disciplinary_issues: false,
+    needs_counselling: true, // Active CMT interventions
+    has_disciplinary_issues: true, // Past classroom disruption case, now showing growth
     has_sen: false,
   },
   {
@@ -678,6 +680,27 @@ export const mockStudents5A: Student[] = [
     needs_counselling: false,
     has_disciplinary_issues: false,
     has_sen: false,
+  },
+  {
+    student_id: 'student-031',
+    name: 'Eric Lim',
+    class_id: 'class-5a',
+    class_name: 'S2-A',
+    year_level: 8,
+    status: 'SEN', // SWAN - Student With Additional Needs
+    conduct_grade: 'Average',
+    grades: { english: 65, math: 68, science: 62, chinese: 60, humanities: 64 }, // Declining from previously strong performance
+    attendance_rate: 89, // Regular absences due to stress-related health issues
+    parent_name: 'Dr. & Mrs. Lim',
+    parent_email: 'lim.family@email.com',
+    parent_phone: '+65 9234 5678',
+    family_background: 'High-achieving family. Parents are both professionals with very high academic expectations. Older sibling excelling academically. Eric experiences constant comparison. Financial pressure mentioned. Limited emotional support at home.',
+    health_declaration: 'Frequent nurse visits with stress-related complaints (headaches, stomach aches). Under SEC monitoring for anxiety and social difficulties.',
+    friends: ['Daniel Koh'], // Small circle, feeling isolated
+    has_medical_conditions: false,
+    needs_counselling: true, // Active counseling sessions, termly check-ins
+    has_disciplinary_issues: false,
+    has_sen: true, // SWAN status for mental health support
   },
 ]
 

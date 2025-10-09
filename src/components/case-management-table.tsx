@@ -169,6 +169,27 @@ const mockCases: CaseData[] = [
       { type: 'Study skills workshop', remarks: 'Participating in weekly workshops focusing on time management and effective study techniques.' },
     ],
   },
+  {
+    id: '250815-00005',
+    createdOn: '15 Aug 2025',
+    createdBy: 'Daniel Tan',
+    studentName: 'Ryan Tan',
+    caseType: 'Disciplinary',
+    school: 'Unity Secondary School',
+    status: 'Open',
+    issues: [
+      { type: 'Initial incident - Classroom disruption', remarks: '[Aug 15] Repeatedly talking during lessons, distracting peers. Multiple verbal warnings given. Parent contacted.' },
+      { type: 'Incomplete homework pattern', remarks: '[Aug 20] Missing 5 out of 8 homework assignments over 2 weeks. Student cited difficulty focusing at home.' },
+      { type: 'Talking back to teacher', remarks: '[Aug 25] Responded disrespectfully when reminded about classroom rules. Referred to Year Head.' },
+      { type: 'CMT intervention initiated', remarks: '[Sep 1] Case referred to Care Management Team. Initial assessment conducted. Discovered challenging home situation - single parent household, father works long hours.' },
+      { type: 'Behavioral support plan', remarks: '[Sep 8] CMT meeting with student and parent. Agreed on check-in system and mentorship program. Student expressed willingness to improve.' },
+      { type: 'First positive observation - Ms. Lee', remarks: '[Sep 20] English teacher noted Ryan stayed back voluntarily to complete work. Engaged positively in group discussion.' },
+      { type: 'CMT progress update', remarks: '[Sep 25] Weekly check-ins showing consistent attendance. Ryan responding well to structured support. Building rapport with mentor teacher.' },
+      { type: 'Homework improvement noted', remarks: '[Oct 1] Math teacher reported 100% homework completion for 2 consecutive weeks. Quality of work also improving.' },
+      { type: 'Positive peer interaction - Mr. Kumar', remarks: '[Oct 5] Science teacher observed Ryan helping classmate with lab setup. Demonstrated leadership and patience.' },
+      { type: 'Recent CMT review', remarks: '[Oct 8] Significant behavioral improvement over past month. Student more engaged in class, respectful to teachers. Academic performance improving. Recommend continued monitoring with reduced intervention frequency.' },
+    ],
+  },
 ]
 
 interface CaseManagementTableProps {
