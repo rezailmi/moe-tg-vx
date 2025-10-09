@@ -39,13 +39,13 @@ export interface AttendanceData {
   notifyParent?: boolean
   followUpRequired?: boolean
   complaints?: string[]
-  vitals?: any
+  vitals?: Record<string, unknown>
   assessment?: string
   treatment?: string
   followUp?: string
   frequency?: string
   concernLevel?: string
-  [key: string]: any // Allow additional flexible properties
+  [key: string]: unknown // Allow additional flexible properties
 }
 
 // Performance Data
@@ -65,7 +65,7 @@ export interface PerformanceData {
   previousAverage?: number
   currentAverage?: number
   decline?: number
-  subjectsAffected?: any[]
+  subjectsAffected?: string[] | Array<Record<string, unknown>>
   possibleCauses?: string[]
   interventionPlan?: string
   concernLevel?: string
@@ -80,10 +80,10 @@ export interface PerformanceData {
   comparison?: string
   triggers?: string
   overallAverage?: number
-  results?: any[]
+  results?: Array<Record<string, unknown>>
   teacherComment?: string
   parentMeetingNotes?: string
-  [key: string]: any // Allow additional flexible properties
+  [key: string]: unknown // Allow additional flexible properties
 }
 
 // Profile Data
@@ -110,7 +110,7 @@ export interface ProfileData {
   areasToMonitor?: string[]
   initialConcernLevel?: string
   followUpPlan?: string
-  [key: string]: any // Allow additional flexible properties
+  [key: string]: unknown // Allow additional flexible properties
 }
 
 // Case Related Data
@@ -135,7 +135,7 @@ export interface CaseRelatedData {
   homeworkAssigned?: string
   concernLevel?: string
   severity?: 'low' | 'medium' | 'high' | 'low-medium' | 'medium-high' | 'Critical' | 'Medium'
-  supportPlan?: any
+  supportPlan?: Record<string, unknown>
   teamMembers?: string[]
   reviewDate?: string
   notes?: string[]
@@ -147,12 +147,12 @@ export interface CaseRelatedData {
   confidence?: string
   sentiment?: string
   complaints?: string[]
-  vitals?: any
+  vitals?: Record<string, unknown>
   assessment?: string
   treatment?: string
   followUp?: string
   frequency?: string
-  [key: string]: any // Allow additional flexible properties
+  [key: string]: unknown // Allow additional flexible properties
 }
 
 // Base Student Record
