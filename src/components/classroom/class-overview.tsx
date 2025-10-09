@@ -95,14 +95,14 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
   const [sortField, setSortField] = useState<'name' | 'attendanceRate' | 'overallAverage' | 'conductGrade'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
-  // Fetch class and student data from API
+  // Fetch class and student data from API (optimized single query)
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true)
         setError(null)
 
-        // Fetch class data
+        // Fetch class data with students in ONE request (optimized)
         const classRes = await fetch(`/api/classes/${classId}`)
         if (!classRes.ok) {
           if (classRes.status === 404) {
@@ -113,13 +113,10 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
         const classJson = await classRes.json()
         setClassData(classJson)
 
-        // Fetch students
-        const studentsRes = await fetch(`/api/classes/${classId}/students`)
-        if (!studentsRes.ok) {
-          throw new Error('Failed to fetch students')
+        // Extract students from the response (they're included now)
+        if (classJson.students) {
+          setStudents(classJson.students)
         }
-        const studentsJson = await studentsRes.json()
-        setStudents(studentsJson)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {

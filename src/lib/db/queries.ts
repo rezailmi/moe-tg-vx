@@ -44,6 +44,39 @@ export async function getAllClasses() {
   })
 }
 
+/**
+ * Optimized query that fetches class data with students and parents in ONE database query
+ * This replaces the waterfall of getClassById() + getStudentsByClassId()
+ */
+export async function getClassWithStudentsAndParents(classId: string) {
+  return await prisma.class.findUnique({
+    where: { id: classId },
+    include: {
+      teacher: true,
+      formTeacher: true,
+      schedules: true,
+      enrollments: {
+        include: {
+          student: {
+            include: {
+              parents: {
+                include: {
+                  parent: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          student: {
+            name: 'asc',
+          },
+        },
+      },
+    },
+  })
+}
+
 // ============================================
 // STUDENT QUERIES
 // ============================================
