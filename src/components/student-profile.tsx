@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseManagementTable } from '@/components/case-management-table'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
+import { StudentRecordsTimeline } from '@/components/records/student-records-timeline'
+import { ReportSlip } from '@/components/student/report-slip'
 
 interface StudentProfileProps {
   studentName: string
@@ -141,11 +143,13 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
 
       {/* Tabs Navigation */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="academic">Academic</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="wellness">Wellness</TabsTrigger>
+          <TabsTrigger value="records">Records</TabsTrigger>
+          <TabsTrigger value="report-slip">Report Slip</TabsTrigger>
           <TabsTrigger value="cases">Cases</TabsTrigger>
         </TabsList>
 
@@ -373,6 +377,23 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Records Tab */}
+        <TabsContent value="records" className="space-y-6">
+          <StudentRecordsTimeline
+            studentName={student.name}
+            studentId={student.id}
+          />
+        </TabsContent>
+
+        {/* Report Slip Tab */}
+        <TabsContent value="report-slip" className="space-y-6">
+          <ReportSlip
+            studentId={student.id}
+            studentName={student.name}
+            class={student.class}
+          />
         </TabsContent>
 
         {/* Case Management Tab */}

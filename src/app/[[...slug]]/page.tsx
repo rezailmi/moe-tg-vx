@@ -509,12 +509,6 @@ export default function Home() {
             isDropdown: true,
             dropdownItems: [
               {
-                label: 'Academic',
-                icon: Award,
-                onClick: undefined,
-                disabled: true,
-              },
-              {
                 label: 'Attendance',
                 icon: UserCheck,
                 onClick: undefined,
@@ -527,7 +521,7 @@ export default function Home() {
                 disabled: true,
               },
               {
-                label: 'Background',
+                label: 'Profile',
                 icon: UserCircle,
                 onClick: undefined,
                 disabled: true,
@@ -576,7 +570,7 @@ export default function Home() {
                 disabled: true,
               },
               {
-                label: 'Background',
+                label: 'Profile',
                 icon: UserCircle,
                 onClick: undefined,
                 disabled: true,
@@ -608,12 +602,6 @@ export default function Home() {
           isDropdown: true,
           dropdownItems: [
             {
-              label: 'Academic',
-              icon: Award,
-              onClick: undefined,
-              disabled: true,
-            },
-            {
               label: 'Attendance',
               icon: UserCheck,
               onClick: undefined,
@@ -626,7 +614,7 @@ export default function Home() {
               disabled: true,
             },
             {
-              label: 'Background',
+              label: 'Profile',
               icon: UserCircle,
               onClick: undefined,
               disabled: true,
