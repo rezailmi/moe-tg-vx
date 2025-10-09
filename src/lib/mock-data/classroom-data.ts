@@ -900,6 +900,20 @@ export function getStudentsByClassId(classId: string): Student[] {
   return []
 }
 
+// Helper function to get student by name
+export function getStudentByName(studentName: string): Student | undefined {
+  // Search across all student arrays
+  const allStudents = [...mockStudents5A] // Add other class arrays as they're created
+  return allStudents.find((student) => student.name === studentName)
+}
+
+// Helper function to get student by ID
+export function getStudentById(studentId: string): Student | undefined {
+  // Search across all student arrays
+  const allStudents = [...mockStudents5A] // Add other class arrays as they're created
+  return allStudents.find((student) => student.student_id === studentId)
+}
+
 // Helper function to get alerts by class ID
 export function getAlertsByClassId(classId: string): ClassAlert[] {
   return mockClassAlerts.filter((alert) => alert.class_id === classId && alert.status === 'Active')
