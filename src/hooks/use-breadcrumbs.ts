@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { getClassById } from '@/lib/mock-data/classroom-data'
+import { createClient } from '@/lib/supabase/client'
 
 export interface BreadcrumbItem {
   label: string
@@ -35,9 +35,46 @@ export function useBreadcrumbs({
 }: UseBreadcrumbsProps = {}): UseBreadcrumbsReturn {
   const router = useRouter()
   const pathname = usePathname()
+  const [classNames, setClassNames] = useState<Map<string, string>>(new Map())
+  const [isLoadingClassNames, setIsLoadingClassNames] = useState(false)
 
   // Use pathname if activeTab not provided
   const currentPath = activeTab || pathname.slice(1) || 'home'
+
+  // Fetch class name when navigating to a classroom route
+  useEffect(() => {
+    async function fetchClassName() {
+      if (!currentPath.startsWith('classroom/')) return
+
+      const segments = currentPath.split('/')
+      if (segments.length < 2) return
+
+      const classId = segments[1]
+
+      // Check if we already have this class name
+      if (classNames.has(classId)) return
+
+      setIsLoadingClassNames(true)
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('classes')
+          .select('name')
+          .eq('id', classId)
+          .single()
+
+        if (!error && data) {
+          setClassNames(prev => new Map(prev).set(classId, data.name))
+        }
+      } catch (err) {
+        console.error('Error fetching class name:', err)
+      } finally {
+        setIsLoadingClassNames(false)
+      }
+    }
+
+    fetchClassName()
+  }, [currentPath, classNames])
 
   const handleNavigate = useCallback((path: string, replaceTab: boolean = false) => {
     if (onNavigate) {
@@ -111,8 +148,7 @@ export function useBreadcrumbs({
 
       if (segments.length >= 2) {
         const classId = segments[1]
-        const classData = getClassById(classId)
-        const className = classData?.class_name || classroomTabs?.get(`classroom/${classId}`) || classId
+        const className = classNames.get(classId) || classroomTabs?.get(`classroom/${classId}`) || 'Loading...'
 
         // Check if this is a nested student view
         if (segments.length >= 4 && segments[2] === 'student') {
@@ -123,7 +159,7 @@ export function useBreadcrumbs({
 
           // Add class breadcrumb
           items.push({
-            label: `Class ${className}`,
+            label: className,
             path: `classroom/${classId}`,
             isActive: false,
             onClick: () => handleNavigate(`classroom/${classId}`, true),
@@ -138,7 +174,7 @@ export function useBreadcrumbs({
         } else if (segments.length >= 3 && segments[2] === 'students') {
           // classroom/{classId}/students
           items.push({
-            label: `Class ${className}`,
+            label: className,
             path: `classroom/${classId}`,
             isActive: false,
             onClick: () => handleNavigate(`classroom/${classId}`, true),
@@ -152,7 +188,7 @@ export function useBreadcrumbs({
         } else if (segments.length >= 3 && segments[2] === 'grades') {
           // classroom/{classId}/grades
           items.push({
-            label: `Class ${className}`,
+            label: className,
             path: `classroom/${classId}`,
             isActive: false,
             onClick: () => handleNavigate(`classroom/${classId}`, true),
@@ -166,7 +202,7 @@ export function useBreadcrumbs({
         } else if (segments.length >= 3 && segments[2] === 'attendance') {
           // classroom/{classId}/attendance
           items.push({
-            label: `Class ${className}`,
+            label: className,
             path: `classroom/${classId}`,
             isActive: false,
             onClick: () => handleNavigate(`classroom/${classId}`, true),
@@ -180,7 +216,7 @@ export function useBreadcrumbs({
         } else {
           // Just classroom/{classId}
           items.push({
-            label: `Class ${className}`,
+            label: className,
             path: currentPath,
             isActive: true,
           })
@@ -208,10 +244,10 @@ export function useBreadcrumbs({
     }
 
     return items
-  }, [currentPath, classroomTabs, studentProfileTabs, handleNavigate])
+  }, [currentPath, classNames, classroomTabs, studentProfileTabs, handleNavigate])
 
   return {
     breadcrumbs,
-    isLoading: false,
+    isLoading: isLoadingClassNames,
   }
 }
