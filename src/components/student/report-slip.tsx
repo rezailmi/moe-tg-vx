@@ -21,9 +21,9 @@ import {
   Send,
   Download,
   Eye,
+  Loader2,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { ReportSlip as ReportSlipType } from '@/types/student-records'
+import { useReportSlip } from '@/hooks/use-report-slip'
 
 interface ReportSlipProps {
   studentId: string
@@ -31,50 +31,28 @@ interface ReportSlipProps {
   class: string
 }
 
-// Mock data - in real app, fetch based on studentId
-const getMockReportSlip = (studentName: string, className: string): ReportSlipType => ({
-  id: 'rs-2025-t1-001',
-  studentId: 'student-001',
-  studentName,
-  class: className,
-  term: 'Term 1',
-  academicYear: '2025',
-  status: 'draft',
-  lastUpdated: '2025-09-28',
-
-  subjects: [
-    { subject: 'English', grade: 'A', score: 92, subjectTeacher: 'Ms. Lee' },
-    { subject: 'Mathematics', grade: 'B', score: 78, subjectTeacher: 'Mr. Tan' },
-    { subject: 'Science', grade: 'B+', score: 82, subjectTeacher: 'Mrs. Wong' },
-    { subject: 'Mother Tongue', grade: 'A', score: 88, subjectTeacher: 'Mr. Kumar' },
-    { subject: 'Humanities', grade: 'B', score: 75, subjectTeacher: 'Ms. Lim' },
-  ],
-
-  overallGrade: 'B+',
-  classPosition: 8,
-
-  conduct: 'Good',
-  attendance: {
-    percentage: 98,
-    daysPresent: 48,
-    daysAbsent: 1,
-    daysLate: 0,
-  },
-
-  teacherRemarks: `${studentName} has shown excellent improvement this term, particularly in English where she achieved an A grade. She demonstrates resilience, a growth mindset, and is always willing to help her peers. Her diligence and positive attitude are commendable. Continue to encourage her reading comprehension skills.`,
-
-  cceGrade: 'Good',
-  cceRemarks:
-    'Demonstrates strong character values and actively participates in class discussions.',
-
-  formTeacher: 'Mr. Daniel Tan',
-})
-
 export function ReportSlip({ studentId, studentName, class: className }: ReportSlipProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [reportSlip] = useState<ReportSlipType>(() =>
-    getMockReportSlip(studentName, className)
-  )
+  const { reportSlip, loading, error } = useReportSlip(studentName)
+
+  // Add dateApproved if status is approved
+  const dateApproved = reportSlip?.status === 'approved' ? reportSlip.lastUpdated : null
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-stone-400" />
+      </div>
+    )
+  }
+
+  if (error || !reportSlip) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-stone-600">Unable to load report slip.</p>
+      </div>
+    )
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -228,10 +206,12 @@ export function ReportSlip({ studentId, studentName, class: className }: ReportS
               <p className="mb-1 text-stone-500">Overall Grade</p>
               <p className="text-lg font-semibold">{reportSlip.overallGrade}</p>
             </div>
-            <div>
-              <p className="mb-1 text-stone-500">Class Position</p>
-              <p className="text-lg font-semibold">#{reportSlip.classPosition}</p>
-            </div>
+            {reportSlip.classPosition && (
+              <div>
+                <p className="mb-1 text-stone-500">Class Position</p>
+                <p className="text-lg font-semibold">#{reportSlip.classPosition}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -322,14 +302,14 @@ export function ReportSlip({ studentId, studentName, class: className }: ReportS
       </Card>
 
       {/* Approval Info */}
-      {reportSlip.status === 'approved' && reportSlip.dateApproved && (
+      {reportSlip.status === 'approved' && dateApproved && (
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-sm text-green-800">
               <CheckCircle2 className="h-5 w-5" />
               <span>
                 Approved on{' '}
-                {new Date(reportSlip.dateApproved).toLocaleDateString('en-SG', {
+                {new Date(dateApproved).toLocaleDateString('en-SG', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',

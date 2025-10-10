@@ -35,16 +35,19 @@ export function useStudents(classId: string) {
         if (queryError) throw queryError
 
         // Map to Student type
-        const mappedStudents = (enrollments || []).map((enrollment) => {
-          const student = enrollment.student
-          const classData = enrollment.class
+        const mappedStudents = (enrollments || [])
+          .filter(enrollment => typeof enrollment === 'object' && enrollment !== null && 'student' in enrollment && 'class' in enrollment)
+          .map((enrollment) => {
+            const typedEnrollment = enrollment as { student: { id: string; name: string; year_level?: string; primary_guardian?: unknown; form_teacher?: unknown; student_classes?: unknown[] }; class: { id: string; name: string } }
+            const student = typedEnrollment.student as Parameters<typeof mapSupabaseStudentToStudent>[0]
+            const classData = typedEnrollment.class
 
-          return mapSupabaseStudentToStudent(
-            student,
-            classData.id,
-            classData.name
-          )
-        })
+            return mapSupabaseStudentToStudent(
+              student,
+              classData.id,
+              classData.name
+            )
+          })
 
         setStudents(mappedStudents)
       } catch (err) {

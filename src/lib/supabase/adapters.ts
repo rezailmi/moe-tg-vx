@@ -146,7 +146,7 @@ function parseSchedule(schedule: unknown): ClassSchedule[] {
 
   try {
     const arr = Array.isArray(schedule) ? schedule : [schedule]
-    return arr.map((item: any) => ({
+    return arr.map((item: { day?: string; start_time?: string; end_time?: string; location?: string }) => ({
       day: item.day || '',
       start_time: item.start_time || '',
       end_time: item.end_time || '',

@@ -53,6 +53,12 @@ CREATE POLICY "DEV: Public read student_overview"
   TO anon, authenticated
   USING (true);
 
+-- Student Private Notes
+CREATE POLICY "DEV: Public read student_private_notes"
+  ON student_private_notes FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
 -- Attendance
 CREATE POLICY "DEV: Public read attendance"
   ON attendance FOR SELECT

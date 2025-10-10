@@ -32,9 +32,9 @@ export function useClassStats(classId: string) {
           .eq('class_id', classId)
           .eq('date', today)
 
-        const present = attendanceRecords?.filter((r) => r.status === 'present').length || 0
-        const absent = attendanceRecords?.filter((r) => r.status === 'absent').length || 0
-        const late = attendanceRecords?.filter((r) => r.status === 'late').length || 0
+        const present = attendanceRecords?.filter((r) => typeof r === 'object' && r !== null && 'status' in r && (r as { status: string }).status === 'present').length || 0
+        const absent = attendanceRecords?.filter((r) => typeof r === 'object' && r !== null && 'status' in r && (r as { status: string }).status === 'absent').length || 0
+        const late = attendanceRecords?.filter((r) => typeof r === 'object' && r !== null && 'status' in r && (r as { status: string }).status === 'late').length || 0
         const total = totalStudents || 0
         const attendanceRate = total > 0 ? Math.round((present / total) * 100) : 0
 

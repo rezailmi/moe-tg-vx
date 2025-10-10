@@ -26,8 +26,10 @@ export function useClassName(classId: string | undefined) {
         if (error) {
           console.error('Error fetching class name:', error)
           setClassName(null)
+        } else if (data && typeof data === 'object' && 'name' in data) {
+          setClassName((data as { name: string }).name)
         } else {
-          setClassName(data?.name || null)
+          setClassName(null)
         }
       } catch (err) {
         console.error('Error in useClassName:', err)

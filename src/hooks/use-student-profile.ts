@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { Json } from '@/types/database'
 
 export interface StudentProfileData {
   // Basic info
@@ -15,13 +16,13 @@ export interface StudentProfileData {
   // Overview data
   overview: {
     background: string | null
-    medical_conditions: any
-    health_declaration: any
-    mental_wellness: any
-    family: any
-    housing_finance: any
+    medical_conditions: Json | null
+    health_declaration: Json | null
+    mental_wellness: Json | null
+    family: Json | null
+    housing_finance: Json | null
     is_swan: boolean
-    swan_details: any
+    swan_details: Json | null
   } | null
 
   // Guardian info
@@ -43,7 +44,7 @@ export interface StudentProfileData {
     max_score: number | null
     percentage: number | null
     grade: string | null
-    remarks: any
+    remarks: string | null
   }>
 
   // Attendance
@@ -67,7 +68,7 @@ export interface StudentProfileData {
     id: string
     assessment_date: string
     assessment_type: string
-    metrics: any
+    metrics: Json
     overall_grade: string | null
     pass_status: boolean | null
   }>
@@ -101,6 +102,15 @@ export interface StudentProfileData {
     relationship_type: string | null
     closeness_level: string | null
     notes: string | null
+  }>
+
+  // Private notes
+  private_notes: Array<{
+    id: string
+    note: string
+    created_by: string
+    created_at: string
+    updated_at: string
   }>
 
   // Cases
@@ -150,7 +160,11 @@ export function useStudentProfile(studentName: string) {
           .single()
 
         if (studentError) throw studentError
-        if (!studentData) throw new Error('Student not found')
+        if (!studentData || typeof studentData !== 'object' || !('id' in studentData)) {
+          throw new Error('Student not found')
+        }
+
+        const typedStudentData = studentData as { id: string; name: string; student_id: string; year_level: string; parents_guardians?: { name: string; email: string; phone: string; relationship: string } | null }
 
         // 1b. Get form class through student_classes junction table
         const { data: formClassData } = await supabase
@@ -161,53 +175,53 @@ export function useStudentProfile(studentName: string) {
               name
             )
           `)
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .limit(1)
           .single()
 
-        const formClass = formClassData ? (formClassData as any).classes : null
+        const formClass = formClassData ? (formClassData as { classes: { id: string; name: string } }).classes : null
 
         // 2. Get student overview
         const { data: overviewData } = await supabase
           .from('student_overview')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .single()
 
         // 3. Get academic results
         const { data: academicData } = await supabase
           .from('academic_results')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('assessment_date', { ascending: false })
 
         // 4. Get attendance stats
         const { data: attendanceData } = await supabase
           .from('attendance')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('date', { ascending: false })
 
         // Calculate attendance stats
         const totalDays = attendanceData?.length || 0
-        const present = attendanceData?.filter(a => a.status === 'present').length || 0
-        const absent = attendanceData?.filter(a => a.status === 'absent').length || 0
-        const late = attendanceData?.filter(a => a.status === 'late').length || 0
-        const early_dismissal = attendanceData?.filter(a => a.status === 'early_dismissal').length || 0
+        const present = attendanceData?.filter(a => typeof a === 'object' && a !== null && 'status' in a && (a as { status: string }).status === 'present').length || 0
+        const absent = attendanceData?.filter(a => typeof a === 'object' && a !== null && 'status' in a && (a as { status: string }).status === 'absent').length || 0
+        const late = attendanceData?.filter(a => typeof a === 'object' && a !== null && 'status' in a && (a as { status: string }).status === 'late').length || 0
+        const early_dismissal = attendanceData?.filter(a => typeof a === 'object' && a !== null && 'status' in a && (a as { status: string }).status === 'early_dismissal').length || 0
         const attendance_rate = totalDays > 0 ? Math.round((present / totalDays) * 100) : 0
 
         // 5. Get physical fitness
         const { data: fitnessData } = await supabase
           .from('physical_fitness')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('assessment_date', { ascending: false })
 
         // 6. Get CCE results
         const { data: cceData } = await supabase
           .from('cce_results')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('academic_year', { ascending: false })
           .order('term', { ascending: false })
 
@@ -215,7 +229,7 @@ export function useStudentProfile(studentName: string) {
         const { data: behaviourData } = await supabase
           .from('behaviour_observations')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('observation_date', { ascending: false })
 
         // 8. Get friend relationships
@@ -229,25 +243,32 @@ export function useStudentProfile(studentName: string) {
             closeness_level,
             notes
           `)
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
 
-        // 9. Get cases
+        // 9. Get private notes
+        const { data: privateNotesData } = await supabase
+          .from('student_private_notes')
+          .select('*')
+          .eq('student_id', typedStudentData.id)
+          .order('updated_at', { ascending: false })
+
+        // 10. Get cases
         const { data: casesData } = await supabase
           .from('cases')
           .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', typedStudentData.id)
           .order('opened_date', { ascending: false })
 
         // Assemble the profile data
         const profileData: StudentProfileData = {
-          id: studentData.id,
-          student_id: studentData.student_id,
-          name: studentData.name,
+          id: typedStudentData.id,
+          student_id: typedStudentData.student_id,
+          name: typedStudentData.name,
           class_name: formClass?.name || 'N/A',
-          year_level: studentData.year_level,
+          year_level: typedStudentData.year_level,
           form_class_id: formClass?.id || null,
           overview: overviewData || null,
-          guardian: (studentData.parents_guardians as any) || null,
+          guardian: typedStudentData.parents_guardians || null,
           academic_results: academicData || [],
           attendance: {
             total_days: totalDays,
@@ -256,22 +277,28 @@ export function useStudentProfile(studentName: string) {
             late,
             early_dismissal,
             attendance_rate,
-            recent_records: (attendanceData || []).slice(0, 10).map(a => ({
-              date: a.date,
-              status: a.status,
-              type: a.type,
-              reason: a.reason,
-            })),
+            recent_records: (attendanceData || []).slice(0, 10)
+              .filter(a => typeof a === 'object' && a !== null)
+              .map(a => {
+                const record = a as { date?: string; status?: string; type?: string; reason?: string | null }
+                return {
+                  date: record.date || '',
+                  status: record.status || '',
+                  type: record.type || '',
+                  reason: record.reason || '',
+                }
+              }),
           },
           physical_fitness: fitnessData || [],
           cce_results: cceData || [],
           behaviour_observations: behaviourData || [],
-          friend_relationships: (friendsData || []).map((f: any) => ({
+          friend_relationships: (friendsData || []).map((f: { friend?: { name: string }; relationship_type: string | null; closeness_level: string | null; notes: string | null }) => ({
             friend_name: f.friend?.name || 'Unknown',
             relationship_type: f.relationship_type,
             closeness_level: f.closeness_level,
             notes: f.notes,
           })),
+          private_notes: privateNotesData || [],
           cases: casesData || [],
         }
 
