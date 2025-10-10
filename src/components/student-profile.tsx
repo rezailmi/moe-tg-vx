@@ -68,7 +68,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
     status: studentData.overview?.is_swan ? 'SWAN' : 'None',
     parentName: studentData.guardian?.name || 'N/A',
     parentEmail: studentData.guardian?.email || 'N/A',
-    parentPhone: studentData.guardian?.phone_number || 'N/A',
+    parentPhone: studentData.guardian?.phone || 'N/A',
   }
 
   const getStatusColor = (status: string) => {

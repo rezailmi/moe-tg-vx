@@ -28,7 +28,7 @@ export interface StudentProfileData {
   guardian: {
     name: string
     email: string
-    phone_number: string
+    phone: string
     relationship: string
   } | null
 
@@ -131,7 +131,7 @@ export function useStudentProfile(studentName: string) {
 
         const supabase = createClient()
 
-        // 1. Get basic student info
+        // 1. Get basic student info with guardian
         const { data: studentData, error: studentError } = await supabase
           .from('students')
           .select(`
@@ -139,14 +139,10 @@ export function useStudentProfile(studentName: string) {
             student_id,
             name,
             year_level,
-            form_class:classes!form_class_id(
-              id,
-              name
-            ),
-            primary_guardian:parents_guardians!primary_guardian_id(
+            parents_guardians:primary_guardian_id(
               name,
               email,
-              phone_number,
+              phone,
               relationship
             )
           `)
@@ -155,6 +151,21 @@ export function useStudentProfile(studentName: string) {
 
         if (studentError) throw studentError
         if (!studentData) throw new Error('Student not found')
+
+        // 1b. Get form class through student_classes junction table
+        const { data: formClassData } = await supabase
+          .from('student_classes')
+          .select(`
+            classes(
+              id,
+              name
+            )
+          `)
+          .eq('student_id', studentData.id)
+          .limit(1)
+          .single()
+
+        const formClass = formClassData ? (formClassData as any).classes : null
 
         // 2. Get student overview
         const { data: overviewData } = await supabase
@@ -232,11 +243,11 @@ export function useStudentProfile(studentName: string) {
           id: studentData.id,
           student_id: studentData.student_id,
           name: studentData.name,
-          class_name: (studentData.form_class as any)?.name || 'N/A',
+          class_name: formClass?.name || 'N/A',
           year_level: studentData.year_level,
-          form_class_id: studentData.id,
+          form_class_id: formClass?.id || null,
           overview: overviewData || null,
-          guardian: (studentData.primary_guardian as any) || null,
+          guardian: (studentData.parents_guardians as any) || null,
           academic_results: academicData || [],
           attendance: {
             total_days: totalDays,
