@@ -223,7 +223,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                 <div>
                   <h4 className="text-sm font-medium text-stone-900 mb-1">Mental Wellness</h4>
                   <p className="text-sm text-stone-600">
-                    Status: {studentData.overview.mental_wellness.status || 'N/A'} - {studentData.overview.mental_wellness.notes || 'No notes'}
+                    Status: {(studentData.overview.mental_wellness as { status?: string; notes?: string })?.status || 'N/A'} - {(studentData.overview.mental_wellness as { status?: string; notes?: string })?.notes || 'No notes'}
                   </p>
                 </div>
               )}
@@ -231,7 +231,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                 <div>
                   <h4 className="text-sm font-medium text-stone-900 mb-1">Family Background</h4>
                   <p className="text-sm text-stone-600">
-                    {studentData.overview.family.structure || 'N/A'} - {studentData.overview.family.notes || 'No additional notes'}
+                    {(studentData.overview.family as { structure?: string; notes?: string })?.structure || 'N/A'} - {(studentData.overview.family as { structure?: string; notes?: string })?.notes || 'No additional notes'}
                   </p>
                 </div>
               )}
@@ -256,6 +256,33 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                     Student is under SWAN (Student With Additional Needs) monitoring and receiving appropriate support.
                   </p>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Private Notes */}
+          <Card className="border-stone-200">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Private Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {studentData.private_notes.length > 0 ? (
+                studentData.private_notes.map((note) => (
+                  <div key={note.id} className="rounded-md bg-yellow-50 p-3 border border-yellow-200">
+                    <p className="text-sm text-stone-800 whitespace-pre-wrap">{note.note}</p>
+                    <p className="text-xs text-stone-500 mt-2">
+                      Last updated: {new Date(note.updated_at).toLocaleDateString('en-SG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-stone-500">No private notes recorded</p>
               )}
             </CardContent>
           </Card>
@@ -360,10 +387,10 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        {Object.entries(fitness.metrics).map(([key, value]) => (
+                        {Object.entries(fitness.metrics as Record<string, unknown>).map(([key, value]) => (
                           <div key={key}>
                             <span className="text-stone-500 capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
-                            <span className="font-medium text-stone-900">{value}</span>
+                            <span className="font-medium text-stone-900">{String(value)}</span>
                           </div>
                         ))}
                       </div>

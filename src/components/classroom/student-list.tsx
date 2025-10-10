@@ -44,7 +44,7 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
 
   // Find current class data
   const allClasses = [formClass, ...subjectClasses, ...ccaClasses].filter(Boolean)
-  const classData = allClasses.find(c => c?.class_id === classId)
+  const classData = allClasses.find(c => c && 'class_id' in c && c.class_id === classId)
 
   const loading = classesLoading || studentsLoading
 
@@ -130,7 +130,7 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
 
   if (loading) {
     return (
-      <PageLayout title="Loading..." onBack={onBack}>
+      <PageLayout title="Loading...">
         <div className="text-center py-12">
           <p className="text-stone-600">Loading students...</p>
         </div>
@@ -138,9 +138,9 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
     )
   }
 
-  if (!classData) {
+  if (!classData || !('class_name' in classData)) {
     return (
-      <PageLayout title="Class Not Found" onBack={onBack}>
+      <PageLayout title="Class Not Found">
         <div className="text-center py-12">
           <p className="text-red-600">Class not found</p>
         </div>

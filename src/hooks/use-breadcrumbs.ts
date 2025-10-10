@@ -63,8 +63,8 @@ export function useBreadcrumbs({
           .eq('id', classId)
           .single()
 
-        if (!error && data) {
-          setClassNames(prev => new Map(prev).set(classId, data.name))
+        if (!error && data && typeof data === 'object' && 'name' in data) {
+          setClassNames(prev => new Map(prev).set(classId, (data as { name: string }).name))
         }
       } catch (err) {
         console.error('Error fetching class name:', err)

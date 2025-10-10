@@ -65,7 +65,7 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
 
   // Find current class data
   const allClasses = [formClass, ...subjectClasses, ...ccaClasses].filter(Boolean)
-  const classData = allClasses.find(c => c?.class_id === classId)
+  const classData = allClasses.find(c => c && 'class_id' in c && c.class_id === classId)
 
   const loading = classesLoading || studentsLoading || statsLoading
   const [searchQuery, setSearchQuery] = useState('')
@@ -126,7 +126,7 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
 
   if (loading) {
     return (
-      <PageLayout title="Loading..." onBack={onBack}>
+      <PageLayout title="Loading...">
         <div className="text-center py-12">
           <p className="text-stone-600">Loading class data...</p>
         </div>
@@ -134,9 +134,9 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
     )
   }
 
-  if (!classData) {
+  if (!classData || !('class_name' in classData)) {
     return (
-      <PageLayout title="Class Not Found" onBack={onBack}>
+      <PageLayout title="Class Not Found">
         <div className="text-center py-12">
           <p className="text-red-600">Class not found</p>
         </div>
@@ -144,7 +144,7 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
     )
   }
 
-  const isFormClass = classData.is_form_class && classData.class_id === user?.form_class_id
+  const isFormClass = 'is_form_class' in classData && classData.is_form_class && classData.class_id === user?.form_class_id
 
   // Title with badge and info button
   const titleElement = (
