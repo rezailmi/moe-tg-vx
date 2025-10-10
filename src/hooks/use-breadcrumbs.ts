@@ -151,12 +151,20 @@ export function useBreadcrumbs({
 
       if (segments.length >= 2) {
         const classId = segments[1]
+        
+        // Parse classroomPath to extract encoded className (if available)
+        const classroomPath = classroomTabs?.get(`classroom/${classId}`)
+        const [, encodedClassName] = classroomPath?.includes(':') 
+          ? classroomPath.split(':', 2) 
+          : [classroomPath, null]
+        
         // Try multiple sources for the class name
+        // Never fall back to raw UUID - show skeleton instead
         const className =
           classroomNames?.get(classId) ||  // First check cached names from navigation
           classNames.get(classId) ||        // Then check async fetched names
-          classroomTabs?.get(`classroom/${classId}`) || // Fallback to tab path
-          null                               // Use null to indicate loading
+          encodedClassName ||                // From encoded path (not UUID)
+          null                               // Use null to indicate loading (shows skeleton)
 
         // Check if this is a nested student view
         if (segments.length >= 4 && segments[2] === 'student') {

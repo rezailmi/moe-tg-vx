@@ -32,6 +32,7 @@ import {
   UserCircle,
   Briefcase,
   ChevronDown,
+  RotateCcw,
 } from 'lucide-react'
 
 import {
@@ -300,6 +301,7 @@ const tabConfigMap: Partial<Record<TabKey, TabConfig>> = {
 // Memoized tab content component to prevent unnecessary re-renders
 const TabContent = memo(function TabContent({
   activeTab,
+  currentUrl,
   slug,
   isAssistantTabActive,
   assistantMode,
@@ -326,6 +328,7 @@ const TabContent = memo(function TabContent({
   router: routerProp,
 }: {
   activeTab: TabKey
+  currentUrl: string
   slug?: string[] | undefined
   isAssistantTabActive: boolean
   assistantMode: AssistantMode
@@ -336,7 +339,7 @@ const TabContent = memo(function TabContent({
   isProfileActive: boolean
   classroomTabs: Map<string, string>
   studentProfileTabs: Map<string, string>
-  handleNavigate: (tab: ClosableTabKey, replaceParent?: boolean) => void
+  handleNavigate: (tab: ClosableTabKey, navigateWithinTab?: boolean) => void
   handleOpenStudentProfile: (studentName: string) => void
   handleOpenClassroom: (classId: string, className?: string) => void
   handleOpenConversation: (conversationId: string) => void
@@ -351,7 +354,8 @@ const TabContent = memo(function TabContent({
   openTabsRef: React.MutableRefObject<ClosableTabKey[]>
   router: ReturnType<typeof useRouter>
 }) {
-  // Only render content for the active tab
+  // Use currentUrl for content rendering decisions
+  // Only render content for the current URL
   if (isAssistantTabActive) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
@@ -372,11 +376,11 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (activeTab === 'pulse') {
+  if (currentUrl === 'pulse') {
     return <PulseContent onPrepForMeeting={() => handleNavigate('classroom')} />
   }
 
-  if (isHomeActive) {
+  if (currentUrl === 'home') {
     return (
       <HomeContent
         onNavigateToClassroom={() => handleNavigate('classroom')}
@@ -388,19 +392,19 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (activeTab === 'explore') {
+  if (currentUrl === 'explore') {
     return <ExploreContent onAppClick={(appKey) => handleNavigate(appKey as ClosableTabKey)} />
   }
 
-  if (activeTab === 'classroom') {
+  if (currentUrl === 'classroom') {
     return <MyClasses onClassClick={handleOpenClassroom} />
   }
 
-  if (activeTab === 'records') {
+  if (currentUrl === 'records') {
     return <RecordsContent />
   }
 
-  if (activeTab === 'inbox') {
+  if (currentUrl === 'inbox' || currentUrl.startsWith('inbox/')) {
     const conversationId = slug && slug.length > 1 && slug[0] === 'inbox' ? slug[1] : undefined
     return (
       <InboxContent
@@ -410,15 +414,15 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (typeof activeTab === 'string' && activeTab.startsWith('classroom/') && activeTab.includes('/student/')) {
-    const classroomPath = classroomTabs.get(activeTab)
+  if (typeof currentUrl === 'string' && currentUrl.startsWith('classroom/') && currentUrl.includes('/student/')) {
+    const classroomPath = classroomTabs.get(currentUrl)
     const parts = classroomPath?.split('/') ?? []
     // Parse classId from encoded format "classId:className"
     const [classId] = parts[0]?.includes(':') ? parts[0].split(':', 2) : [parts[0]]
-    let studentName = studentProfileTabs.get(activeTab)
+    let studentName = studentProfileTabs.get(currentUrl)
 
-    if (!studentName && typeof activeTab === 'string') {
-      const segments = activeTab.split('/')
+    if (!studentName && typeof currentUrl === 'string') {
+      const segments = currentUrl.split('/')
       if (segments.length >= 4 && segments[2] === 'student') {
         const studentSlug = segments[3]
         studentName = studentSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -459,8 +463,8 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (typeof activeTab === 'string' && activeTab.startsWith('classroom/') && activeTab.includes('/students')) {
-    const classroomPath = classroomTabs.get(activeTab)
+  if (typeof currentUrl === 'string' && currentUrl.startsWith('classroom/') && currentUrl.includes('/students')) {
+    const classroomPath = classroomTabs.get(currentUrl)
     const parts = classroomPath?.split('/') ?? []
     // Parse classId from encoded format "classId:className"
     const [classId] = parts[0]?.includes(':') ? parts[0].split(':', 2) : [parts[0]]
@@ -496,8 +500,8 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (typeof activeTab === 'string' && activeTab.startsWith('classroom/') && activeTab.includes('/grades')) {
-    const classroomPath = classroomTabs.get(activeTab)
+  if (typeof currentUrl === 'string' && currentUrl.startsWith('classroom/') && currentUrl.includes('/grades')) {
+    const classroomPath = classroomTabs.get(currentUrl)
     const parts = classroomPath?.split('/') ?? []
     // Parse classId from encoded format "classId:className"
     const [classId] = parts[0]?.includes(':') ? parts[0].split(':', 2) : [parts[0]]
@@ -532,10 +536,10 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (typeof activeTab === 'string' && activeTab.startsWith('classroom/')) {
-    const classroomPath = classroomTabs.get(activeTab)
+  if (typeof currentUrl === 'string' && currentUrl.startsWith('classroom/')) {
+    const classroomPath = classroomTabs.get(currentUrl)
     // Parse classId from encoded format "classId:className"
-    const [classId] = classroomPath?.includes(':') ? classroomPath.split(':', 2) : [classroomPath ?? activeTab.replace('classroom/', '')]
+    const [classId] = classroomPath?.includes(':') ? classroomPath.split(':', 2) : [classroomPath ?? currentUrl.replace('classroom/', '')]
     return (
       <ClassOverview
         classId={classId}
@@ -561,10 +565,10 @@ const TabContent = memo(function TabContent({
     )
   }
 
-  if (typeof activeTab === 'string' && activeTab.startsWith('student-')) {
+  if (typeof currentUrl === 'string' && currentUrl.startsWith('student-')) {
     return (
       <StudentProfile
-        studentName={studentProfileTabs.get(activeTab) ?? 'Unknown Student'}
+        studentName={studentProfileTabs.get(currentUrl) ?? 'Unknown Student'}
         activeTab={activeTab}
         onNavigate={(path, replace) => handleNavigate(path as ClosableTabKey, replace)}
         classroomTabs={classroomTabs}
@@ -632,7 +636,22 @@ const TabContent = memo(function TabContent({
                 <Button size="sm" variant="ghost">
                   Share profile link
                 </Button>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      if (confirm('This will clear all tab data and reload the page. Continue?')) {
+                        sessionStorage.clear()
+                        window.location.reload()
+                      }
+                    }}
+                    aria-label="Clear cache and reload"
+                    className="gap-1.5"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span className="text-xs">Clear Cache</span>
+                  </Button>
                   <ThemeSwitcher />
                 </div>
               </div>
@@ -677,6 +696,9 @@ export default function Home() {
   // Initialize activeTab from URL params to prevent hydration mismatch
   const slug = params.slug as string[] | undefined
   const initialTab = !slug || slug.length === 0 ? 'home' : slug.join('/')
+
+  // Derive currentUrl from params - this is what we use for content rendering
+  const currentUrl = !slug || slug.length === 0 ? 'home' : slug.join('/')
 
   // ALWAYS start with empty state during SSR to prevent hydration mismatch
   // We'll restore from sessionStorage synchronously after mount using useLayoutEffect
@@ -727,6 +749,26 @@ export default function Home() {
       return null
     }
     return null
+  }
+
+  // Helper to check if any ancestor of tabKey exists in openTabs
+  const hasAnyParentInTabs = (tabKey: string, openTabs: ClosableTabKey[]): boolean => {
+    let currentKey = tabKey
+
+    // Traverse up the parent hierarchy
+    while (currentKey) {
+      const parent = getParentTab(currentKey)
+      if (!parent) break
+
+      // Check if this parent exists in openTabs
+      if (openTabs.includes(parent as ClosableTabKey)) {
+        return true
+      }
+
+      currentKey = parent
+    }
+
+    return false
   }
 
   // Debounced sessionStorage persistence - only run after mount
@@ -798,7 +840,7 @@ export default function Home() {
           .single()
 
         if (!error && data && 'name' in data) {
-          classroomNamesRef.current.set(classId, data.name)
+          classroomNamesRef.current.set(classId, (data as { name: string }).name)
           setClassroomNames(new Map(classroomNamesRef.current))
         }
       } catch (err) {
@@ -815,9 +857,37 @@ export default function Home() {
     const currentSlug = params.slug as string[] | undefined
     const tabFromUrl = !currentSlug || currentSlug.length === 0 ? 'home' : currentSlug.join('/')
 
-    // Only update activeTab if it changed
-    if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl as TabKey)
+    // Always check if this URL is a child page and should have its parent active
+    const currentTabsFromRef = openTabsRef.current
+    const parentInTabs = hasAnyParentInTabs(tabFromUrl, currentTabsFromRef)
+
+    if (parentInTabs) {
+      // This is a child page - keep the parent tab active
+      let parentKey = tabFromUrl
+      let foundParent: string | null = null
+
+      while (parentKey) {
+        const parent = getParentTab(parentKey)
+        if (!parent) break
+
+        // Found the parent that exists in openTabs
+        if (currentTabsFromRef.includes(parent as ClosableTabKey)) {
+          foundParent = parent
+          break
+        }
+
+        parentKey = parent
+      }
+
+      // Only update if we found a parent and it's different from current activeTab
+      if (foundParent && activeTab !== foundParent) {
+        setActiveTab(foundParent as TabKey)
+      }
+    } else {
+      // This is a top-level page - set activeTab to the URL
+      if (activeTab !== tabFromUrl) {
+        setActiveTab(tabFromUrl as TabKey)
+      }
     }
 
     // Don't add special tabs to openTabs
@@ -879,18 +949,23 @@ export default function Home() {
       }
     }
 
-    // Always add tab to openTabs if not present (handles all navigation - always opens new tabs)
-    // Use ref to get the most current tab list, avoiding stale closures in Strict Mode double-render
-    const currentTabsFromRef = openTabsRef.current
+    // Smart tab addition: Only add if not already present AND no parent exists in openTabs
     const tabExists = currentTabsFromRef.includes(tabFromUrl as ClosableTabKey)
 
     if (!tabExists) {
-      // Filter out the tab first to prevent any duplicates from race conditions
-      const filteredTabs = currentTabsFromRef.filter(t => t !== (tabFromUrl as ClosableTabKey))
-      const newTabs = [...filteredTabs, tabFromUrl as ClosableTabKey]
-      openTabsRef.current = newTabs // Update ref immediately
-      setOpenTabs(newTabs)
-      // Note: sessionStorage persistence happens in the debounced effect above
+      // Check if any ancestor of this URL exists in openTabs
+      const parentInTabsForAddition = hasAnyParentInTabs(tabFromUrl, currentTabsFromRef)
+
+      // Only add tab if no parent exists (this is a top-level navigation)
+      if (!parentInTabsForAddition) {
+        // Filter out the tab first to prevent any duplicates from race conditions
+        const filteredTabs = currentTabsFromRef.filter(t => t !== (tabFromUrl as ClosableTabKey))
+        const newTabs = [...filteredTabs, tabFromUrl as ClosableTabKey]
+        openTabsRef.current = newTabs // Update ref immediately
+        setOpenTabs(newTabs)
+        // Note: sessionStorage persistence happens in the debounced effect above
+      }
+      // If parent exists, don't add tab - we're navigating within an existing tab
     }
   }, [params, activeTab, isMounted, closingTabs])
 
@@ -906,7 +981,7 @@ export default function Home() {
 
   // Get breadcrumbs for current tab - declare after handlers are defined
   const { breadcrumbs: pageBreadcrumbs, isLoading: breadcrumbsLoading } = useBreadcrumbs({
-    activeTab: activeTab as string,
+    activeTab: currentUrl as string,
     classroomTabs,
     studentProfileTabs,
     classroomNames,
@@ -1084,75 +1159,20 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, classroomTabs])
 
-  const handleNavigate = (tabKey: ClosableTabKey, replaceParent: boolean = false) => {
-    // If replaceParent is true, handle parent-child tab replacement
-    if (replaceParent) {
-      const parentTabKey = getParentTab(tabKey)
+  const handleNavigate = (tabKey: ClosableTabKey, navigateWithinTab: boolean = false) => {
+    // Determine if this is a parent (top-level) page or a child page
+    const isParentPage = isTopLevelTab(tabKey)
+    const parentOfThisPage = getParentTab(tabKey)
 
-      if (parentTabKey) {
-        // We're navigating to a child - replace parent with child
-        setOpenTabs((tabs) => {
-          const parentIndex = tabs.indexOf(parentTabKey as ClosableTabKey)
-
-          // If parent exists, replace it with child
-          if (parentIndex !== -1) {
-            // Remove both parent AND any existing child tab to prevent duplicates
-            const filteredTabs = tabs.filter((key) => key !== parentTabKey && key !== tabKey)
-            // Insert the new tab at the parent's position
-            filteredTabs.splice(parentIndex, 0, tabKey)
-            openTabsRef.current = filteredTabs
-            // Note: sessionStorage persistence happens in the debounced effect
-            return filteredTabs
-          } else {
-            // Parent doesn't exist, just add the child tab if not already present
-            if (!tabs.includes(tabKey)) {
-              const newTabs = [...tabs, tabKey]
-              openTabsRef.current = newTabs
-              // Note: sessionStorage persistence happens in the debounced effect
-              return newTabs
-            }
-            return tabs
-          }
-        })
-
-        // Navigate after updating tabs
-        const newPath = tabKey === 'home' ? '/' : `/${tabKey}`
-        router.push(newPath, { scroll: false })
-        return
-      } else {
-        // We're navigating to a parent - check if we need to replace a child
-        setOpenTabs((tabs) => {
-          // Find any child tab that has tabKey as its parent
-          const childTab = tabs.find((tab) => getParentTab(tab) === tabKey)
-
-          if (childTab) {
-            // Replace child with parent
-            const childIndex = tabs.indexOf(childTab)
-            const filteredTabs = tabs.filter((key) => key !== childTab && key !== tabKey)
-            filteredTabs.splice(childIndex, 0, tabKey)
-            openTabsRef.current = filteredTabs
-            // Note: sessionStorage persistence happens in the debounced effect
-            return filteredTabs
-          } else {
-            // No child found, just add parent if not present
-            if (!tabs.includes(tabKey)) {
-              const newTabs = [...tabs, tabKey]
-              openTabsRef.current = newTabs
-              // Note: sessionStorage persistence happens in the debounced effect
-              return newTabs
-            }
-            return tabs
-          }
-        })
-
-        // Navigate after updating tabs
-        const newPath = tabKey === 'home' ? '/' : `/${tabKey}`
-        router.push(newPath, { scroll: false })
-        return
-      }
+    // If navigateWithinTab is true OR this is a child page, just navigate the URL without changing tabs
+    if (navigateWithinTab || (!isParentPage && parentOfThisPage)) {
+      // Just navigate the URL - keep the current tab structure
+      const newPath = tabKey === 'home' ? '/' : `/${tabKey}`
+      router.push(newPath, { scroll: false })
+      return
     }
 
-    // Simply navigate to the URL - the useEffect will handle adding the tab if not replaced
+    // For parent pages: Open/switch to the tab
     const newPath = tabKey === 'home' ? '/' : `/${tabKey}`
     router.push(newPath, { scroll: false })
   }
@@ -1166,7 +1186,7 @@ export default function Home() {
       return updated
     })
 
-    handleNavigate(tabKey, true) // Replace parent tab
+    handleNavigate(tabKey, true) // Navigate within tab
   }, [setClassroomTabs])
 
   const handleOpenStudentProfile = (studentName: string) => {
@@ -1194,7 +1214,7 @@ export default function Home() {
     classroomTabsRef.current = updatedClassroomTabs
     setClassroomTabs(updatedClassroomTabs)
 
-    handleNavigate(tabKey, true) // Replace parent tab
+    handleNavigate(tabKey, true) // Navigate within tab
   }
 
   const handleOpenStudentList = (classId: string) => {
@@ -1206,7 +1226,7 @@ export default function Home() {
       return updated
     })
 
-    handleNavigate(tabKey, true) // Replace parent tab
+    handleNavigate(tabKey, true) // Navigate within tab
   }
 
   const handleOpenStudentFromClass = (classId: string, studentName: string) => {
@@ -1224,7 +1244,7 @@ export default function Home() {
     studentProfileTabsRef.current = updatedStudentProfileTabs
     setStudentProfileTabs(updatedStudentProfileTabs)
 
-    handleNavigate(tabKey, true) // Replace parent tab
+    handleNavigate(tabKey, true) // Navigate within tab
   }
 
   const handleOpenConversation = (conversationId: string) => {
@@ -1254,7 +1274,13 @@ export default function Home() {
     // Update ref and state
     openTabsRef.current = filteredTabs
     setOpenTabs(filteredTabs)
-    // Note: sessionStorage persistence happens in the debounced effect
+
+    // IMMEDIATELY persist to sessionStorage (don't wait for debounced effect)
+    try {
+      sessionStorage.setItem('openTabs', JSON.stringify(filteredTabs))
+    } catch (error) {
+      console.error('Failed to persist tabs to sessionStorage:', error)
+    }
 
     // Only navigate if we're closing the currently active tab
     if (activeTab === pageKey) {
@@ -1356,37 +1382,40 @@ export default function Home() {
     const getVisibleTabCount = () => {
       if (containerWidth === 0) return openTabs.length // Show all by default until measured
 
-      // Constants for UI elements (measuring actual widths from DOM)
+      // Constants for UI elements
       const GAP = 8 // gap-2 (0.5rem = 8px)
       const NEW_TAB_BUTTON_WIDTH = isNewTabActive ? 100 : 36
-      const MORE_DROPDOWN_WIDTH = 36 // Only add when we know we'll have overflow
+      const MORE_DROPDOWN_WIDTH = 36
       const ASSISTANT_BUTTON_WIDTH = (!isAssistantTabActive && !isAssistantSidebarOpen) ? 120 : 0
+      const MIN_TAB_WIDTH = 120 // 7.5rem minimum width for each tab (reduced from 160px)
 
-      // Average tab width based on current calculation
-      const getTabWidth = (count: number) => {
-        if (count <= 2) return 192 // 12rem = 192px
-        if (count <= 4) return 144 // 9rem = 144px
-        if (count <= 6) return 120 // 7.5rem = 120px
-        return 104 // 6.5rem = 104px
+      // The containerWidth already includes everything (tabs + new tab button + assistant button)
+      // We need to calculate how much space is available for the actual tabs
+      // Layout: [tabs...] [gap] [more?] [gap] [new tab button] [gap] [assistant button]
+      const fixedElementsWidth = NEW_TAB_BUTTON_WIDTH + ASSISTANT_BUTTON_WIDTH
+      const fixedGapsWidth = ASSISTANT_BUTTON_WIDTH > 0 ? GAP * 2 : GAP // gaps around fixed elements
+
+      // Available space for tabs (including gaps between tabs)
+      let availableSpace = containerWidth - fixedElementsWidth - fixedGapsWidth
+
+      // Try to fit all tabs first (no more dropdown)
+      const allTabsSpace = openTabs.length * MIN_TAB_WIDTH + Math.max(0, openTabs.length - 1) * GAP
+
+      if (allTabsSpace <= availableSpace) {
+        // All tabs fit, show them all
+        return openTabs.length
       }
 
-      // Start with all tabs and work backwards
-      let testCount = openTabs.length
+      // Need more dropdown - account for its width and gap
+      availableSpace -= (MORE_DROPDOWN_WIDTH + GAP)
 
-      while (testCount > 0) {
-        const tabWidth = getTabWidth(testCount)
-        const tabsSpace = testCount * tabWidth + (testCount - 1) * GAP
-        const extraSpace = MORE_DROPDOWN_WIDTH + (testCount < openTabs.length ? 0 : -MORE_DROPDOWN_WIDTH)
-        const totalRequired = tabsSpace + NEW_TAB_BUTTON_WIDTH + ASSISTANT_BUTTON_WIDTH + extraSpace + (GAP * 3)
+      // Calculate how many tabs can fit
+      // Formula: (tabCount * MIN_TAB_WIDTH) + ((tabCount - 1) * GAP) <= availableSpace
+      // Solving: tabCount * (MIN_TAB_WIDTH + GAP) - GAP <= availableSpace
+      //         tabCount <= (availableSpace + GAP) / (MIN_TAB_WIDTH + GAP)
+      const maxTabs = Math.floor((availableSpace + GAP) / (MIN_TAB_WIDTH + GAP))
 
-        if (totalRequired <= containerWidth) {
-          return testCount
-        }
-
-        testCount--
-      }
-
-      return Math.max(1, openTabs.length) // Always show at least 1 tab
+      return Math.max(1, Math.min(maxTabs, openTabs.length))
     }
 
     const count = getVisibleTabCount()
@@ -1773,13 +1802,6 @@ export default function Home() {
                     const draggedIndex = draggedTab ? visibleTabs.indexOf(draggedTab) : -1
                     const showIndicatorLeft = isDragOver && draggedIndex > index
                     const showIndicatorRight = isDragOver && draggedIndex < index
-                    
-                    // Use stable tab width to avoid hydration mismatch
-                    // Default to 9rem during SSR/initial render
-                    const tabCount = visibleTabs.length
-                    const maxTabWidth = isMounted
-                      ? (tabCount <= 2 ? '12rem' : tabCount <= 4 ? '9rem' : tabCount <= 6 ? '7.5rem' : '6.5rem')
-                      : '9rem'
 
                     return (
                       <button
@@ -1798,9 +1820,8 @@ export default function Home() {
                           const newPath = tabKey === 'home' ? '/' : `/${tabKey}`
                           router.push(newPath, { scroll: false })
                         }}
-                        style={{ maxWidth: maxTabWidth }}
                         className={cn(
-                          'group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 min-w-[4rem]',
+                          'group relative flex items-center justify-start gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 min-w-[7.5rem] max-w-[20rem] flex-1',
                         isActive
                           ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -1814,7 +1835,7 @@ export default function Home() {
                           <div className="absolute -right-1 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
                         )}
                         <Icon className="size-4 shrink-0" />
-                        <span className="truncate flex-1 min-w-0">{label}</span>
+                        <span className="truncate text-left flex-1 min-w-0">{label}</span>
                         {/* Gradient overlay on hover - adapts to active/inactive state */}
                         <div
                           className={cn(
@@ -1949,13 +1970,13 @@ export default function Home() {
                         className={cn(
                           'group relative flex h-9 items-center rounded-md transition-colors',
                           isNewTabActive
-                            ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border min-w-[4rem]'
+                            ? 'gap-2 px-3 py-1.5 text-sm bg-background text-foreground shadow-sm ring-1 ring-border min-w-[4rem] justify-start'
                             : 'w-9 justify-center text-muted-foreground hover:bg-accent hover:text-foreground',
                         )}
                         aria-label="Open new tab"
                       >
                         <Plus className="size-4" />
-                        {isNewTabActive && <span className="truncate flex-1 min-w-0">{newTabConfig.label}</span>}
+                        {isNewTabActive && <span className="truncate text-left flex-1 min-w-0">{newTabConfig.label}</span>}
                         {isNewTabActive && (
                           <div
                             role="button"
@@ -2092,6 +2113,7 @@ export default function Home() {
               >
                 <TabContent
                   activeTab={activeTab}
+                  currentUrl={currentUrl}
                   slug={slug}
                   isAssistantTabActive={isAssistantTabActive}
                   assistantMode={assistantMode}
