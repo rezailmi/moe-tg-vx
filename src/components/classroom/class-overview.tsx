@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -126,9 +127,88 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
 
   if (loading) {
     return (
-      <PageLayout title="Loading...">
-        <div className="text-center py-12">
-          <p className="text-stone-600">Loading class data...</p>
+      <PageLayout
+        title=""
+        subtitle={
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-12 w-12 rounded-lg" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-40" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+          </div>
+        }
+        contentClassName="px-6 py-6"
+        headerClassName="border-b-0"
+      >
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+          {/* Quick Pulse Skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-32" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="border-stone-200">
+                  <CardContent className="p-4 flex flex-col justify-between min-h-[140px]">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-20" />
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Student List Skeleton */}
+          <Card className="border-stone-200">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-9 w-64" />
+                  <Skeleton className="h-9 w-20" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="w-32">Attendance</TableHead>
+                      <TableHead className="w-32">Average</TableHead>
+                      <TableHead className="w-32">Conduct</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...Array(6)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-6" /></TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-4 w-32" />
+                          </div>
+                        </TableCell>
+                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </PageLayout>
     )

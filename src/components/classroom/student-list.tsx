@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -130,9 +131,67 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
 
   if (loading) {
     return (
-      <PageLayout title="Loading...">
-        <div className="text-center py-12">
-          <p className="text-stone-600">Loading students...</p>
+      <PageLayout
+        title="Students"
+        subtitle={<Skeleton className="h-5 w-64" />}
+        contentClassName="px-6 py-6"
+      >
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <Card className="border-stone-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-9 w-64" />
+                  <Skeleton className="h-9 w-20" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-12">
+                      <Skeleton className="h-4 w-4" />
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500">Name</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500">Attendance</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500 text-center">English</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500 text-center">Math</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500 text-center">Science</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500">Conduct grade</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500">Remark</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(7)].map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton className="h-4 w-4" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <Skeleton className="h-4 w-32" />
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                      <TableCell>
+                        <Skeleton className="h-8 w-8" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       </PageLayout>
     )
