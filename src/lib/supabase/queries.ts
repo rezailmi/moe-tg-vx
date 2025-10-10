@@ -226,13 +226,16 @@ export async function createPrivateNote(
   note: string,
   teacherId: string
 ) {
+  const noteData: Database['public']['Tables']['student_private_notes']['Insert'] = {
+    student_id: studentId,
+    note,
+    created_by: teacherId,
+  }
+
   const { data, error } = await supabase
     .from('student_private_notes')
-    .insert({
-      student_id: studentId,
-      note,
-      created_by: teacherId,
-    })
+    // @ts-expect-error - Supabase type inference issue with insert
+    .insert(noteData)
     .select()
     .single()
 
@@ -296,6 +299,7 @@ export async function createCase(
 ) {
   const { data, error } = await supabase
     .from('cases')
+    // @ts-expect-error - Supabase type inference issue with insert
     .insert(caseData)
     .select()
     .single()
@@ -312,6 +316,7 @@ export async function createCaseIssue(
 ) {
   const { data, error } = await supabase
     .from('case_issues')
+    // @ts-expect-error - Supabase type inference issue with insert
     .insert(issueData)
     .select()
     .single()

@@ -1,13 +1,16 @@
 // Test API route to verify Supabase connection
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import type { Database } from '@/types/database'
+
+type TableName = keyof Database['public']['Tables']
 
 export async function GET() {
   try {
     const supabase = await createClient()
 
     // Test query - count tables
-    const tables = [
+    const tables: TableName[] = [
       'teachers',
       'classes',
       'students',
@@ -18,7 +21,7 @@ export async function GET() {
     const results = await Promise.all(
       tables.map(async (table) => {
         const { count, error } = await supabase
-          .from(table as any)
+          .from(table)
           .select('*', { count: 'exact', head: true })
 
         return {
@@ -42,12 +45,13 @@ export async function GET() {
       totalTables: 19,
       testedTables: tables.length,
     })
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
       {
         success: false,
         message: '❌ Database connection failed',
-        error: error.message,
+        error: errorMessage,
       },
       { status: 500 }
     )
