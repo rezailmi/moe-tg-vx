@@ -1,16 +1,15 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { MailIcon, PhoneIcon, MessageSquare } from 'lucide-react'
+import { MailIcon, PhoneIcon, MessageSquare, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseManagementTable } from '@/components/case-management-table'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
-import { StudentRecordsTimeline } from '@/components/records/student-records-timeline'
 import { ReportSlip } from '@/components/student/report-slip'
-import { getStudentByName } from '@/lib/mock-data/classroom-data'
+import { useStudentProfile } from '@/hooks/use-student-profile'
 
 interface StudentProfileProps {
   studentName: string
@@ -24,106 +23,52 @@ interface StudentProfileProps {
 
 export function StudentProfile({ studentName, classId, onBack, activeTab, onNavigate, classroomTabs, studentProfileTabs }: StudentProfileProps) {
   const router = useRouter()
+  const { student: studentData, loading, error } = useStudentProfile(studentName)
 
-  // Fetch real student data based on studentName
-  const studentData = getStudentByName(studentName)
+  if (loading) {
+    return (
+      <PageLayout title="Loading..." subtitle="">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-stone-400" />
+        </div>
+      </PageLayout>
+    )
+  }
 
-  // Map real student data to component format, or use fallback if not found
-  const student = studentData ? {
+  if (error || !studentData) {
+    return (
+      <PageLayout title="Error" subtitle="">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-stone-600">Student not found or error loading data.</p>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  // Calculate average grades from academic results
+  const getSubjectAverage = (subject: string) => {
+    const subjectResults = studentData.academic_results.filter(r =>
+      r.assessment_name.toLowerCase().includes(subject.toLowerCase())
+    )
+    if (subjectResults.length === 0) return 0
+    const avg = subjectResults.reduce((sum, r) => sum + (r.percentage || r.score || 0), 0) / subjectResults.length
+    return Math.round(avg)
+  }
+
+  // Map Supabase data to component format
+  const student = {
     name: studentData.name,
     id: studentData.student_id,
     class: studentData.class_name,
-    attendance: studentData.attendance_rate,
-    english: studentData.grades.english || 0,
-    math: studentData.grades.math || 0,
-    science: studentData.grades.science || 0,
-    conduct: studentData.conduct_grade,
-    status: studentData.status,
-    parentName: studentData.parent_name,
-    parentEmail: studentData.parent_email,
-    parentPhone: studentData.parent_phone,
-    background: {
-      healthDeclaration: studentData.health_declaration || 'No health declaration on file.',
-      friendsMapping: studentData.friends || [],
-      familyBackground: studentData.family_background || 'No family background information available.',
-      housingAndFinance: 'Information not available' // Not in current student data structure
-    },
-    attendanceDetails: {
-      daily: `${studentData.attendance_rate}% this term`,
-      temperature: 'Normal range',
-      cca: 'Information not available',
-      schoolEvents: 'Information not available',
-      earlyDismissal: 'None this term'
-    },
-    studentNeeds: {
-      counselling: studentData.needs_counselling || false,
-      disciplinary: studentData.has_disciplinary_issues || false,
-      sen: studentData.has_sen || false,
-      senDetails: studentData.has_sen
-        ? `Student is under ${studentData.status === 'SWAN' ? 'SWAN (Student With Additional Needs)' : 'SEN'} monitoring and receiving appropriate support.`
-        : null
-    },
-    recentActivities: studentData.name === 'Eric Lim' ? [
-      { date: '2025-01-20', activity: 'Term 1 Math Test', grade: 'C+' },
-      { date: '2025-01-15', activity: 'English Essay - "My Future Goals"', grade: 'B-' },
-      { date: '2025-01-10', activity: 'Science Practical Assessment', grade: 'C' },
-      { date: '2024-12-18', activity: 'End of Year Math Exam', grade: 'C+' },
-      { date: '2024-12-15', activity: 'Chinese Oral Examination', grade: 'C' },
-    ] : [] as Array<{ date: string; activity: string; grade: string }>,
-    strengths: studentData.name === 'Eric Lim' ? [
-      'Polite and respectful to teachers and peers',
-      'Consistently completes homework despite emotional challenges',
-      'Shows resilience in attending school regularly despite stress',
-      'Thoughtful and introspective in counseling sessions',
-      'Maintains average conduct grade despite personal difficulties'
-    ] : [] as string[],
-    areasForImprovement: studentData.name === 'Eric Lim' ? [
-      'Academic performance - grades declined from 78% to 64% average (-14 points)',
-      'Social engagement - very limited peer interactions outside of Daniel Koh',
-      'Emotional regulation - managing anxiety and stress in academic settings',
-      'Self-advocacy - building confidence to ask for help when needed',
-      'Work-life balance - reducing stress from excessive self-imposed pressure'
-    ] : [] as string[],
-    notes: studentData.needs_counselling
-      ? 'Student is currently receiving counselling support. Please check Records tab for detailed notes.'
-      : 'No special notes at this time.',
-  } : {
-    // Fallback data if student not found
-    name: studentName,
-    id: 'N/A',
-    class: 'Unknown',
-    attendance: 0,
-    english: 0,
-    math: 0,
-    science: 0,
-    conduct: 'N/A',
-    status: 'None',
-    parentName: 'N/A',
-    parentEmail: 'N/A',
-    parentPhone: 'N/A',
-    background: {
-      healthDeclaration: 'No data available',
-      friendsMapping: [],
-      familyBackground: 'No data available',
-      housingAndFinance: 'No data available'
-    },
-    attendanceDetails: {
-      daily: 'No data available',
-      temperature: 'No data available',
-      cca: 'No data available',
-      schoolEvents: 'No data available',
-      earlyDismissal: 'No data available'
-    },
-    studentNeeds: {
-      counselling: false,
-      disciplinary: false,
-      sen: false,
-      senDetails: null
-    },
-    recentActivities: [] as Array<{ date: string; activity: string; grade: string }>,
-    strengths: [] as string[],
-    areasForImprovement: [] as string[],
-    notes: 'Student data not found.',
+    attendance: studentData.attendance.attendance_rate,
+    english: getSubjectAverage('English'),
+    math: getSubjectAverage('Math'),
+    science: getSubjectAverage('Science'),
+    conduct: studentData.cce_results[0]?.overall_grade || 'N/A',
+    status: studentData.overview?.is_swan ? 'SWAN' : 'None',
+    parentName: studentData.guardian?.name || 'N/A',
+    parentEmail: studentData.guardian?.email || 'N/A',
+    parentPhone: studentData.guardian?.phone_number || 'N/A',
   }
 
   const getStatusColor = (status: string) => {
@@ -207,14 +152,13 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
 
       {/* Tabs Navigation */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="academic">Academic</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="wellness">Wellness</TabsTrigger>
-          <TabsTrigger value="records">Records</TabsTrigger>
-          <TabsTrigger value="report-slip">Report Slip</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="social-behaviour">Social & Behaviour</TabsTrigger>
           <TabsTrigger value="cases">Cases</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -262,218 +206,412 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
           {/* Background */}
           <Card className="border-stone-200">
             <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Background</CardTitle>
+              <CardTitle className="text-base font-medium text-stone-900">Student Background</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Health Declaration</h4>
-                <p className="text-sm text-stone-600">{student.background.healthDeclaration}</p>
+                <h4 className="text-sm font-medium text-stone-900 mb-1">Background</h4>
+                <p className="text-sm text-stone-600">{studentData.overview?.background || 'No background information available.'}</p>
               </div>
+              {studentData.overview?.medical_conditions && (
+                <div>
+                  <h4 className="text-sm font-medium text-stone-900 mb-1">Medical Conditions</h4>
+                  <p className="text-sm text-stone-600">{JSON.stringify(studentData.overview.medical_conditions)}</p>
+                </div>
+              )}
+              {studentData.overview?.mental_wellness && (
+                <div>
+                  <h4 className="text-sm font-medium text-stone-900 mb-1">Mental Wellness</h4>
+                  <p className="text-sm text-stone-600">
+                    Status: {studentData.overview.mental_wellness.status || 'N/A'} - {studentData.overview.mental_wellness.notes || 'No notes'}
+                  </p>
+                </div>
+              )}
+              {studentData.overview?.family && (
+                <div>
+                  <h4 className="text-sm font-medium text-stone-900 mb-1">Family Background</h4>
+                  <p className="text-sm text-stone-600">
+                    {studentData.overview.family.structure || 'N/A'} - {studentData.overview.family.notes || 'No additional notes'}
+                  </p>
+                </div>
+              )}
               <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Friends Mapping</h4>
+                <h4 className="text-sm font-medium text-stone-900 mb-1">Friends</h4>
                 <div className="flex flex-wrap gap-2">
-                  {student.background.friendsMapping.map((friend, index) => (
-                    <span key={index} className="inline-flex px-2 py-1 text-xs bg-stone-100 text-stone-700 rounded-md">
-                      {friend}
-                    </span>
-                  ))}
+                  {studentData.friend_relationships.length > 0 ? (
+                    studentData.friend_relationships.map((friend, index) => (
+                      <span key={index} className="inline-flex px-2 py-1 text-xs bg-stone-100 text-stone-700 rounded-md">
+                        {friend.friend_name} ({friend.closeness_level || 'acquaintance'})
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm text-stone-500">No friend relationships recorded</p>
+                  )}
                 </div>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Family Background</h4>
-                <p className="text-sm text-stone-600">{student.background.familyBackground}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-1">Housing and Finance</h4>
-                <p className="text-sm text-stone-600">{student.background.housingAndFinance}</p>
-              </div>
+              {studentData.overview?.is_swan && (
+                <div className="rounded-md bg-amber-50 p-3 border border-amber-200">
+                  <h4 className="text-sm font-medium text-amber-900 mb-1">SWAN Status</h4>
+                  <p className="text-sm text-amber-800">
+                    Student is under SWAN (Student With Additional Needs) monitoring and receiving appropriate support.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Academic Tab */}
-        <TabsContent value="academic" className="space-y-6">
-          {/* Academic Performance */}
+        {/* Performance Tab */}
+        <TabsContent value="performance" className="space-y-6">
+          {/* Academic Results */}
           <Card className="border-stone-200">
             <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Performance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-stone-600">English</span>
-                <span className="text-sm font-semibold text-stone-900">{student.english}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-stone-600">Math</span>
-                <span className="text-sm font-semibold text-stone-900">{student.math}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-stone-600">Science</span>
-                <span className="text-sm font-semibold text-stone-900">{student.science}</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-sm text-stone-600">Conduct Grade</span>
-                <span className={cn('text-sm font-semibold', getConductColor(student.conduct))}>
-                  {student.conduct}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activities */}
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Recent Activities</CardTitle>
+              <CardTitle className="text-base font-medium text-stone-900">Academic Results</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {student.recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-stone-900">{activity.activity}</p>
-                      <p className="text-xs text-stone-500">{new Date(activity.date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                {studentData.academic_results.length > 0 ? (
+                  studentData.academic_results.slice(0, 10).map((result, index) => (
+                    <div key={result.id} className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium text-stone-900">{result.assessment_name}</p>
+                        <p className="text-xs text-stone-500">
+                          {new Date(result.assessment_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          {result.term && ` • ${result.term}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-stone-600">{result.score}/{result.max_score}</span>
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-900">
+                          {result.grade}
+                        </span>
+                      </div>
                     </div>
-                    <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-900">
-                      {activity.grade}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No academic results recorded</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Strengths */}
+          {/* CCE Results */}
           <Card className="border-stone-200">
             <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Strengths</CardTitle>
+              <CardTitle className="text-base font-medium text-stone-900">Character & Citizenship Education (CCE)</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {student.strengths.map((strength, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm text-stone-900">
-                    <span className="text-green-600">✓</span>
-                    {strength}
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-4">
+                {studentData.cce_results.length > 0 ? (
+                  studentData.cce_results.map((cce, index) => (
+                    <div key={cce.id} className="border-b border-stone-100 pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="text-sm font-medium text-stone-900">{cce.term} {cce.academic_year}</p>
+                        <span className="text-sm font-semibold text-stone-900">{cce.overall_grade}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-stone-500">Character:</span>{' '}
+                          <span className="font-medium text-stone-900">{cce.character || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-stone-500">Citizenship:</span>{' '}
+                          <span className="font-medium text-stone-900">{cce.citizenship || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-stone-500">Education:</span>{' '}
+                          <span className="font-medium text-stone-900">{cce.education || 'N/A'}</span>
+                        </div>
+                      </div>
+                      {cce.comments && (
+                        <p className="text-sm text-stone-600 mt-2">{cce.comments}</p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No CCE results recorded</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Areas for Improvement */}
+          {/* Physical Fitness */}
           <Card className="border-stone-200">
             <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Areas for Improvement</CardTitle>
+              <CardTitle className="text-base font-medium text-stone-900">Physical Fitness</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {student.areasForImprovement.map((area, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm text-stone-900">
-                    <span className="text-amber-600">→</span>
-                    {area}
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-4">
+                {studentData.physical_fitness.length > 0 ? (
+                  studentData.physical_fitness.map((fitness, index) => (
+                    <div key={fitness.id} className="border-b border-stone-100 pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-stone-900">{fitness.assessment_type}</p>
+                          <p className="text-xs text-stone-500">
+                            {new Date(fitness.assessment_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <span className={cn(
+                          'px-2 py-1 text-xs font-medium rounded-full',
+                          fitness.pass_status ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                        )}>
+                          {fitness.overall_grade || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        {Object.entries(fitness.metrics).map(([key, value]) => (
+                          <div key={key}>
+                            <span className="text-stone-500 capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
+                            <span className="font-medium text-stone-900">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No fitness records available</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-6">
+          {/* Attendance Summary */}
           <Card className="border-stone-200">
             <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Attendance Details</CardTitle>
+              <CardTitle className="text-base font-medium text-stone-900">Attendance Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <h4 className="text-sm font-medium text-stone-900">Daily</h4>
-                <p className="text-sm text-stone-600">{student.attendanceDetails.daily}</p>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <h4 className="text-sm font-medium text-stone-900">Temperature</h4>
-                <p className="text-sm text-stone-600">{student.attendanceDetails.temperature}</p>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <h4 className="text-sm font-medium text-stone-900">CCA</h4>
-                <p className="text-sm text-stone-600">{student.attendanceDetails.cca}</p>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <h4 className="text-sm font-medium text-stone-900">School Events</h4>
-                <p className="text-sm text-stone-600">{student.attendanceDetails.schoolEvents}</p>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <h4 className="text-sm font-medium text-stone-900">Early Dismissal</h4>
-                <p className="text-sm text-stone-600">{student.attendanceDetails.earlyDismissal}</p>
+              <div className="grid grid-cols-5 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-green-600">{studentData.attendance.present}</p>
+                  <p className="text-xs text-stone-500">Present</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-red-600">{studentData.attendance.absent}</p>
+                  <p className="text-xs text-stone-500">Absent</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-amber-600">{studentData.attendance.late}</p>
+                  <p className="text-xs text-stone-500">Late</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-blue-600">{studentData.attendance.early_dismissal}</p>
+                  <p className="text-xs text-stone-500">Early Dismissal</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-stone-900">{studentData.attendance.attendance_rate}%</p>
+                  <p className="text-xs text-stone-500">Rate</p>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Behavioral & Wellness Tab */}
-        <TabsContent value="wellness" className="space-y-6">
+          {/* Recent Attendance Records */}
           <Card className="border-stone-200">
-            <CardContent className="pt-6">
-              <div className="grid gap-3 md:grid-cols-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded text-xs",
-                    student.studentNeeds.counselling ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                  )}>
-                    {student.studentNeeds.counselling ? '!' : '✓'}
-                  </span>
-                  <span className="text-sm text-stone-900">Counselling / Monitoring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded text-xs",
-                    student.studentNeeds.disciplinary ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                  )}>
-                    {student.studentNeeds.disciplinary ? '!' : '✓'}
-                  </span>
-                  <span className="text-sm text-stone-900">Disciplinary Offences</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded text-xs",
-                    student.studentNeeds.sen ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
-                  )}>
-                    {student.studentNeeds.sen ? '!' : '✓'}
-                  </span>
-                  <span className="text-sm text-stone-900">Socio-emotional Needs (SEN)</span>
-                </div>
-              </div>
-              {student.studentNeeds.senDetails && (
-                <div className="rounded-md bg-amber-50 p-3">
-                  <p className="text-sm text-amber-900">{student.studentNeeds.senDetails}</p>
-                </div>
-              )}
-              <div className="mt-4 pt-4 border-t">
-                <h4 className="text-sm font-medium text-stone-900 mb-2">Teacher Notes</h4>
-                <p className="text-sm text-stone-600">{student.notes}</p>
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Recent Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {studentData.attendance.recent_records.length > 0 ? (
+                  studentData.attendance.recent_records.map((record, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium text-stone-900">
+                          {new Date(record.date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                        {record.reason && (
+                          <p className="text-xs text-stone-500">{record.reason}</p>
+                        )}
+                      </div>
+                      <span className={cn(
+                        'px-2 py-1 text-xs font-medium rounded-full',
+                        record.status === 'present' && 'bg-green-100 text-green-800',
+                        record.status === 'absent' && 'bg-red-100 text-red-800',
+                        record.status === 'late' && 'bg-amber-100 text-amber-800',
+                        record.status === 'early_dismissal' && 'bg-blue-100 text-blue-800'
+                      )}>
+                        {record.status.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No attendance records</p>
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Records Tab */}
-        <TabsContent value="records" className="space-y-6">
-          <StudentRecordsTimeline
-            studentName={student.name}
-            studentId={student.id}
-          />
+        {/* Social & Behaviour Tab */}
+        <TabsContent value="social-behaviour" className="space-y-6">
+          {/* Behaviour Observations */}
+          <Card className="border-stone-200">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Behaviour Observations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {studentData.behaviour_observations.length > 0 ? (
+                  studentData.behaviour_observations.map((obs, index) => (
+                    <div key={obs.id} className="border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-stone-900">{obs.title}</p>
+                          <p className="text-xs text-stone-500">
+                            {new Date(obs.observation_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className={cn(
+                            'px-2 py-1 text-xs font-medium rounded-full',
+                            obs.category === 'positive' && 'bg-green-100 text-green-800',
+                            obs.category === 'concern' && 'bg-amber-100 text-amber-800',
+                            obs.category === 'neutral' && 'bg-stone-100 text-stone-800'
+                          )}>
+                            {obs.category}
+                          </span>
+                          {obs.severity && (
+                            <span className={cn(
+                              'px-2 py-1 text-xs font-medium rounded-full',
+                              obs.severity === 'low' && 'bg-blue-100 text-blue-800',
+                              obs.severity === 'medium' && 'bg-amber-100 text-amber-800',
+                              obs.severity === 'high' && 'bg-red-100 text-red-800'
+                            )}>
+                              {obs.severity}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-stone-600 mb-2">{obs.description}</p>
+                      {obs.action_taken && (
+                        <p className="text-xs text-stone-500">
+                          <span className="font-medium">Action taken:</span> {obs.action_taken}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No behaviour observations recorded</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Friend Relationships */}
+          <Card className="border-stone-200">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Friend Relationships</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {studentData.friend_relationships.length > 0 ? (
+                  studentData.friend_relationships.map((friend, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-stone-900">{friend.friend_name}</p>
+                        {friend.notes && (
+                          <p className="text-xs text-stone-500">{friend.notes}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {friend.closeness_level && (
+                          <span className={cn(
+                            'px-2 py-1 text-xs font-medium rounded-full',
+                            friend.closeness_level === 'very_close' && 'bg-purple-100 text-purple-800',
+                            friend.closeness_level === 'close' && 'bg-blue-100 text-blue-800',
+                            friend.closeness_level === 'acquaintance' && 'bg-stone-100 text-stone-800'
+                          )}>
+                            {friend.closeness_level.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No friend relationships recorded</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Report Slip Tab */}
-        <TabsContent value="report-slip" className="space-y-6">
+        {/* Cases Tab */}
+        <TabsContent value="cases" className="space-y-6">
+          <Card className="border-stone-200">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-stone-900">Student Cases</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {studentData.cases.length > 0 ? (
+                  studentData.cases.map((caseItem, index) => (
+                    <div key={caseItem.id} className="border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-stone-900">{caseItem.title}</p>
+                          <p className="text-xs text-stone-500">{caseItem.case_number}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className={cn(
+                            'px-2 py-1 text-xs font-medium rounded-full',
+                            caseItem.case_type === 'discipline' && 'bg-red-100 text-red-800',
+                            caseItem.case_type === 'counselling' && 'bg-blue-100 text-blue-800',
+                            caseItem.case_type === 'sen' && 'bg-purple-100 text-purple-800',
+                            caseItem.case_type === 'career_guidance' && 'bg-green-100 text-green-800'
+                          )}>
+                            {caseItem.case_type.replace('_', ' ')}
+                          </span>
+                          <span className={cn(
+                            'px-2 py-1 text-xs font-medium rounded-full',
+                            caseItem.status === 'open' && 'bg-amber-100 text-amber-800',
+                            caseItem.status === 'in_progress' && 'bg-blue-100 text-blue-800',
+                            caseItem.status === 'closed' && 'bg-green-100 text-green-800'
+                          )}>
+                            {caseItem.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                      {caseItem.description && (
+                        <p className="text-sm text-stone-600 mb-2">{caseItem.description}</p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-stone-500">
+                        <span>
+                          Opened: {new Date(caseItem.opened_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                        {caseItem.closed_date && (
+                          <span>
+                            Closed: {new Date(caseItem.closed_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                        {caseItem.severity && (
+                          <span className="capitalize">Severity: {caseItem.severity}</span>
+                        )}
+                        {caseItem.guardian_notified && (
+                          <span className="text-green-600">✓ Guardian Notified</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-stone-500">No cases recorded</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="space-y-6">
           <ReportSlip
             studentId={student.id}
             studentName={student.name}
             class={student.class}
           />
-        </TabsContent>
-
-        {/* Case Management Tab */}
-        <TabsContent value="cases" className="space-y-6">
-          <CaseManagementTable studentFilter={student.name} />
         </TabsContent>
       </Tabs>
       </div>
