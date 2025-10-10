@@ -3,6 +3,7 @@
 import { HomeIcon, UsersIcon, TrophyIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useUser } from '@/contexts/user-context'
 import { useClasses } from '@/hooks/use-classes'
 import { cn } from '@/lib/utils'
@@ -22,8 +23,48 @@ export function MyClasses({ onClassClick }: MyClassesProps) {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-5xl space-y-8">
-        <div className="text-center py-12">
-          <p className="text-stone-600">Loading classes...</p>
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-96 mt-2" />
+          </div>
+        </div>
+
+        {/* Form Class Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <ClassCardSkeleton isFormClass={true} />
+          </div>
+        </div>
+
+        {/* Subject Classes Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-6 w-48" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <ClassCardSkeleton />
+            <ClassCardSkeleton />
+            <ClassCardSkeleton />
+          </div>
+        </div>
+
+        {/* CCA Classes Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <CCACardSkeleton />
+            <CCACardSkeleton />
+          </div>
         </div>
       </div>
     )
@@ -204,6 +245,62 @@ function CCACard({ ccaData, onClassClick }: CCACardProps) {
           <div>
             <p className="text-xs text-stone-500 uppercase tracking-wide">Members</p>
             <p className="text-2xl font-bold text-stone-900">{ccaData.members.length}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Skeleton Components
+function ClassCardSkeleton({ isFormClass = false }: { isFormClass?: boolean }) {
+  return (
+    <Card className={cn(
+      "border-stone-200 h-full",
+      isFormClass && "ring-2 ring-blue-500/20 bg-blue-50/30"
+    )}>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <Skeleton className="h-8 w-16" />
+          {isFormClass && <Skeleton className="h-5 w-16" />}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {!isFormClass && (
+            <div>
+              <Skeleton className="h-3 w-12 mb-1" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          )}
+          <div>
+            <Skeleton className="h-3 w-16 mb-1" />
+            <Skeleton className="h-8 w-12" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CCACardSkeleton() {
+  return (
+    <Card className="border-stone-200 h-full bg-amber-50/30">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <Skeleton className="h-5 w-5" />
+          <Skeleton className="h-5 w-12" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div>
+            <Skeleton className="h-3 w-12 mb-1" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-16 mb-1" />
+            <Skeleton className="h-8 w-12" />
           </div>
         </div>
       </CardContent>
