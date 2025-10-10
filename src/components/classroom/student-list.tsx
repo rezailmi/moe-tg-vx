@@ -20,7 +20,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getClassById, getStudentsByClassId } from '@/lib/mock-data/classroom-data'
+import { useUser } from '@/contexts/user-context'
+import { useClasses } from '@/hooks/use-classes'
+import { useStudents } from '@/hooks/use-students'
 import { getInitials, getAvatarColor } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
 
@@ -36,8 +38,15 @@ type SortField = 'attendance_rate' | 'name' | 'english' | 'math' | 'science' | '
 type SortOrder = 'asc' | 'desc'
 
 export function StudentList({ classId, onBack, onStudentClick, onNavigate, classroomTabs }: StudentListProps) {
-  const classData = getClassById(classId)
-  const students = getStudentsByClassId(classId)
+  const { user } = useUser()
+  const { formClass, subjectClasses, ccaClasses, loading: classesLoading } = useClasses(user?.user_id || '')
+  const { students, loading: studentsLoading } = useStudents(classId)
+
+  // Find current class data
+  const allClasses = [formClass, ...subjectClasses, ...ccaClasses].filter(Boolean)
+  const classData = allClasses.find(c => c?.class_id === classId)
+
+  const loading = classesLoading || studentsLoading
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [sortField, setSortField] = useState<SortField>('name')
@@ -117,6 +126,26 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
       default:
         return ''
     }
+  }
+
+  if (loading) {
+    return (
+      <PageLayout title="Loading..." onBack={onBack}>
+        <div className="text-center py-12">
+          <p className="text-stone-600">Loading students...</p>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  if (!classData) {
+    return (
+      <PageLayout title="Class Not Found" onBack={onBack}>
+        <div className="text-center py-12">
+          <p className="text-red-600">Class not found</p>
+        </div>
+      </PageLayout>
+    )
   }
 
   const getConductColor = (conduct: string) => {

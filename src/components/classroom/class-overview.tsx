@@ -40,12 +40,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  getClassById,
-  getClassOverviewStats,
-  getStudentsByClassId,
-  currentUser,
-} from '@/lib/mock-data/classroom-data'
+import { useUser } from '@/contexts/user-context'
+import { useClasses } from '@/hooks/use-classes'
+import { useStudents } from '@/hooks/use-students'
+import { useClassStats } from '@/hooks/use-class-stats'
 import type { Student } from '@/types/classroom'
 import { cn, getInitials } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
@@ -60,9 +58,16 @@ interface ClassOverviewProps {
 }
 
 export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentClick, onNavigate, classroomTabs }: ClassOverviewProps) {
-  const classData = getClassById(classId)
-  const stats = getClassOverviewStats(classId)
-  const students = getStudentsByClassId(classId)
+  const { user } = useUser()
+  const { formClass, subjectClasses, ccaClasses, loading: classesLoading } = useClasses(user?.user_id || '')
+  const { students, loading: studentsLoading } = useStudents(classId)
+  const { stats, loading: statsLoading } = useClassStats(classId)
+
+  // Find current class data
+  const allClasses = [formClass, ...subjectClasses, ...ccaClasses].filter(Boolean)
+  const classData = allClasses.find(c => c?.class_id === classId)
+
+  const loading = classesLoading || studentsLoading || statsLoading
   const [searchQuery, setSearchQuery] = useState('')
   const [showDetails, setShowDetails] = useState(false)
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -119,11 +124,27 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
     }
   }
 
-  if (!classData) {
-    return <div>Class not found</div>
+  if (loading) {
+    return (
+      <PageLayout title="Loading..." onBack={onBack}>
+        <div className="text-center py-12">
+          <p className="text-stone-600">Loading class data...</p>
+        </div>
+      </PageLayout>
+    )
   }
 
-  const isFormClass = classData.is_form_class && classData.class_id === currentUser.form_class_id
+  if (!classData) {
+    return (
+      <PageLayout title="Class Not Found" onBack={onBack}>
+        <div className="text-center py-12">
+          <p className="text-red-600">Class not found</p>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  const isFormClass = classData.is_form_class && classData.class_id === user?.form_class_id
 
   // Title with badge and info button
   const titleElement = (
