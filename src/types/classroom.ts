@@ -54,6 +54,24 @@ export interface ClassSchedule {
   location: string
 }
 
+// AI Agent Notification
+// TODO: Integrate with AI Agent API for dynamic message generation
+export interface AINotification {
+  message: string
+  timestamp?: string
+  priority?: 'info' | 'warning' | 'urgent'
+  type?: 'event' | 'reminder' | 'insight'
+}
+
+// Overall Status (Form Class Summary)
+// TODO: Database schema update needed - add overall_status field
+export interface OverallStatus {
+  message: string
+  status: 'good' | 'warning' | 'attention'
+  illustration_url?: string
+  last_updated?: string
+}
+
 // Class
 export interface Class {
   class_id: string
@@ -67,6 +85,13 @@ export interface Class {
   academic_year: string
   is_form_class: boolean
   student_count: number
+  // TODO: Database schema updates needed for the following fields:
+  classroom_number?: string // e.g., "3-12", "5-01"
+  ai_notification?: AINotification // AI-generated contextual messages
+  awards?: string[] // e.g., ["Excellence award winner"]
+  sen_count?: number // Special Educational Needs student count
+  pa_count?: number // P&A (Performance & Achievement) student count
+  overall_status?: OverallStatus // Overall class health (form class only)
 }
 
 // CCA Class
@@ -77,6 +102,9 @@ export interface CCAClass {
   teacher_in_charge: string
   members: string[] // Student IDs
   schedule: ClassSchedule[]
+  // TODO: Database schema updates needed for the following fields:
+  location?: string // Physical location (e.g., "Tennis court", "Music room")
+  ai_notification?: AINotification // AI-generated contextual messages
 }
 
 // Student
