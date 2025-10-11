@@ -29,7 +29,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
   if (loading) {
     return (
       <PageLayout
-        title={<Skeleton className="h-8 w-48" />}
+        title="Loading..."
         subtitle={<Skeleton className="h-4 w-64 mt-1" />}
         titlePrefix={<Skeleton className="h-16 w-16 rounded-full" />}
         titleSuffix={<Skeleton className="h-6 w-16 rounded-full" />}
