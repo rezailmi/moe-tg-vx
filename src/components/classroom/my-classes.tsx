@@ -1,6 +1,6 @@
 'use client'
 
-import { HomeIcon, UsersIcon, TrophyIcon, Sparkles } from 'lucide-react'
+import { TrophyIcon, Sparkle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -27,36 +27,40 @@ export function MyClasses({ onClassClick }: MyClassesProps) {
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-96 mt-2" />
           </div>
         </div>
 
         {/* Form Class Skeleton */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5" />
-            <Skeleton className="h-6 w-32" />
-          </div>
+          <Skeleton className="h-6 w-32" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
               <ClassCardSkeleton isFormClass={true} />
             </div>
             <div className="lg:col-span-1">
-              <Skeleton className="h-[380px] w-full rounded-lg" />
+              <OverallCardSkeleton />
             </div>
           </div>
         </div>
 
         {/* Subject Classes Skeleton */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5" />
-            <Skeleton className="h-6 w-48" />
-          </div>
+          <Skeleton className="h-6 w-48" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ClassCardSkeleton />
             <ClassCardSkeleton />
             <ClassCardSkeleton />
+          </div>
+        </div>
+
+        {/* CCA Classes Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <div className="space-y-4">
+            <CCACardSkeleton />
           </div>
         </div>
       </div>
@@ -78,20 +82,14 @@ export function MyClasses({ onClassClick }: MyClassesProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-stone-900">My Classroom</h1>
-          <p className="text-sm text-stone-600 mt-1">
-            Manage your classes, students, and teaching activities
-          </p>
+          <h1 className="text-2xl font-semibold text-stone-900">Classroom</h1>
         </div>
       </div>
 
       {/* Form Class (if applicable) */}
       {hasFormClass && formClass && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <HomeIcon className="h-5 w-5 text-stone-700" />
-            <h2 className="text-lg font-semibold text-stone-900">Form class</h2>
-          </div>
+          <h2 className="text-lg font-medium text-stone-900">Form class</h2>
 
           {/* Two-column layout: Main card (left) + Overall card (right) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -112,12 +110,9 @@ export function MyClasses({ onClassClick }: MyClassesProps) {
       {/* Subject Classes */}
       {subjectClasses.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <UsersIcon className="h-5 w-5 text-stone-700" />
-            <h2 className="text-lg font-semibold text-stone-900">
-              Subject class {subjectClasses.length}
-            </h2>
-          </div>
+          <h2 className="text-lg font-medium text-stone-900">
+            Subject class {subjectClasses.length}
+          </h2>
 
           {/* Three-column grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -187,60 +182,53 @@ function ClassCard({ classData, isFormClass, onClassClick }: ClassCardProps) {
       )}
       onClick={() => onClassClick?.(classData.class_id, classData.class_name)}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-2xl font-semibold text-stone-900 mb-3">
-          Class {classData.class_name}
-        </CardTitle>
-        {/* Inline badges */}
-        <div className="flex flex-wrap gap-2">
-          {isFormClass && (
-            <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
-              Form class
-            </Badge>
-          )}
-          {!isFormClass && (
-            <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
-              {classData.subject}
-            </Badge>
-          )}
-          <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
-            Year {classData.year_level}
-          </Badge>
-          {classData.awards && classData.awards.length > 0 && (
-            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-              {classData.awards[0]}
-            </Badge>
-          )}
+      <CardHeader className="pb-6">
+        {/* Top row: Title and Stats aligned */}
+        <div className="flex items-start justify-between gap-8 mb-3">
+          <div className="flex flex-col gap-3 min-w-0">
+            <div className="flex flex-col">
+              <CardTitle className="text-2xl font-semibold text-stone-900">
+                Class {classData.class_name}
+              </CardTitle>
+              {!isFormClass && classData.subject && (
+                <div className="text-2xl font-semibold text-stone-900">
+                  {classData.subject}
+                </div>
+              )}
+            </div>
+            
+            {/* Badges row below title */}
+            <div className="flex flex-wrap gap-2">
+              {isFormClass && (
+                <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
+                  Form class
+                </Badge>
+              )}
+              <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
+                Year {classData.year_level}
+              </Badge>
+              {classData.awards && classData.awards.length > 0 && (
+                <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                  {classData.awards[0]}
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          {/* Stats on same row as title */}
+          <div className="flex items-stretch divide-x divide-stone-200 flex-shrink-0">
+            <StatItem label="Student" value={classData.student_count} />
+            <StatItem 
+              label="Classroom" 
+              value={classData.classroom_number || "5-12"} 
+            />
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col pt-4">
-        {/* Horizontal stats bar with dividers - no background */}
-        <div className="flex items-stretch divide-x divide-stone-200">
-          <StatItem label="Student" value={classData.student_count} />
-          <StatItem 
-            label="Classroom" 
-            value={classData.classroom_number || (
-              <span className="text-xs text-stone-400 italic">TODO: DB</span>
-            )} 
-          />
-          {isFormClass ? (
-            <>
-              <StatItem label="SEN" value={classData.sen_count || 0} />
-              <StatItem label="P&A" value={classData.pa_count || 0} />
-            </>
-          ) : (
-            <StatItem 
-              label="My classes" 
-              value={formatSchedule(classData.schedule)}
-            />
-          )}
-        </div>
-
+      <CardContent className="pt-0">
         {/* AI Agent notification box */}
-        <div className="mt-auto pt-6">
-          <AINotificationBox notification={classData.ai_notification} />
-        </div>
+        <AINotificationBox notification={classData.ai_notification} />
       </CardContent>
     </Card>
   )
@@ -269,11 +257,28 @@ function CCACard({ ccaData, onClassClick }: CCACardProps) {
       )}
       onClick={() => onClassClick?.(ccaData.cca_id, ccaData.name)}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-2xl font-semibold text-stone-900 mb-3">
-          Class {ccaData.name}
-        </CardTitle>
-        {/* Inline badges */}
+      <CardHeader className="pb-6">
+        {/* Top row: Title and Stats aligned */}
+        <div className="flex items-center justify-between gap-8 mb-2">
+          <CardTitle className="text-2xl font-semibold text-stone-900">
+            Class {ccaData.name}
+          </CardTitle>
+          
+          {/* Stats on same row as title */}
+          <div className="flex items-stretch divide-x divide-stone-200 flex-shrink-0">
+            <StatItem label="Student" value={ccaData.members.length} />
+            <StatItem 
+              label="Location" 
+              value={ccaData.location || "Tennis court"} 
+            />
+            <StatItem 
+              label="My classes" 
+              value={formatSchedule(ccaData.schedule) || "Tue, Thur"}
+            />
+          </div>
+        </div>
+        
+        {/* Badges row below */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
             {ccaData.type}
@@ -289,22 +294,7 @@ function CCACard({ ccaData, onClassClick }: CCACardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-4">
-        {/* Horizontal stats bar with dividers - no background */}
-        <div className="flex items-stretch divide-x divide-stone-200">
-          <StatItem label="Student" value={ccaData.members.length} />
-          <StatItem 
-            label="Location" 
-            value={ccaData.location || (
-              <span className="text-xs text-stone-400 italic">TODO: DB</span>
-            )} 
-          />
-          <StatItem 
-            label="My classes" 
-            value={formatSchedule(ccaData.schedule)}
-          />
-        </div>
-
+      <CardContent className="flex-1 flex flex-col pt-0">
         {/* AI Agent notification box */}
         <AINotificationBox notification={ccaData.ai_notification} />
       </CardContent>
@@ -323,25 +313,28 @@ function OverallCard({ status }: OverallCardProps) {
 
   return (
     <Card className="border-stone-200 h-full flex flex-col">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-6">
         <p className="text-xs font-medium text-stone-500 uppercase tracking-wide">Overall</p>
         <CardTitle className="text-lg font-semibold text-stone-900 mt-2">
           {statusMessage}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col justify-center">
+      <CardContent className="pt-0">
         {status?.illustration_url ? (
-          <div className="rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden h-48">
             <img 
               src={status.illustration_url} 
               alt="Overall status illustration" 
-              className="w-full h-auto"
+              className="w-full h-full object-cover"
             />
           </div>
         ) : (
           // Placeholder with gradient background (matching Figma design)
-          <div className="relative rounded-lg overflow-hidden h-48 bg-gradient-to-b from-blue-200 via-blue-100 to-pink-100">
+          <div 
+            className="relative rounded-lg overflow-hidden h-48 border border-stone-100"
+            style={{ background: 'linear-gradient(180deg, #B4ECFF 0%, #F5E3DF 100%)' }}
+          >
             {/* Cloud-like decorative element */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center p-4">
@@ -366,9 +359,9 @@ interface AINotificationBoxProps {
 function AINotificationBox({ notification }: AINotificationBoxProps) {
   if (!notification) {
     return (
-      <div className="p-4 bg-stone-50 rounded-lg">
-        <div className="flex items-start gap-2">
-          <Sparkles className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+      <div className="h-48 p-6 bg-stone-50 rounded-lg flex flex-col">
+        <div className="flex items-start gap-3">
+          <Sparkle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-stone-900">AI Agent</p>
             <p className="text-sm text-stone-600 mt-1">
@@ -383,13 +376,13 @@ function AINotificationBox({ notification }: AINotificationBoxProps) {
 
   return (
     <div className={cn(
-      "p-4 rounded-lg",
+      "h-48 p-6 rounded-lg flex flex-col",
       notification.priority === 'urgent' && "bg-red-50",
       notification.priority === 'warning' && "bg-amber-50",
       (!notification.priority || notification.priority === 'info') && "bg-stone-50"
     )}>
-      <div className="flex items-start gap-2">
-        <Sparkles className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+      <div className="flex items-start gap-3">
+        <Sparkle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-stone-900">AI Agent</p>
           <p className="text-sm text-stone-700 mt-1 leading-relaxed">
@@ -419,11 +412,11 @@ interface StatItemProps {
 
 function StatItem({ label, value }: StatItemProps) {
   return (
-    <div className="flex-1 px-5 py-6 min-w-0 first:pl-5 last:pr-5">
-      <p className="text-xs text-stone-500 mb-2">
+    <div className="px-4 py-2 min-w-0 first:pl-0 last:pr-0">
+      <p className="text-xs text-stone-500 mb-1 text-center whitespace-nowrap">
         {label}
       </p>
-      <p className="text-base font-medium text-stone-900 truncate">
+      <p className="text-base font-semibold text-stone-900 text-center whitespace-nowrap">
         {value}
       </p>
     </div>
@@ -436,36 +429,112 @@ function StatItem({ label, value }: StatItemProps) {
 
 function ClassCardSkeleton({ isFormClass = false }: { isFormClass?: boolean }) {
   return (
-    <Card className="border-stone-200 h-full">
-      <CardHeader className="pb-2">
-        <Skeleton className="h-8 w-24 mb-3" />
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-5 w-16" />
-          {isFormClass && <Skeleton className="h-5 w-32" />}
+    <Card className="border-stone-200 h-full flex flex-col">
+      <CardHeader className="pb-6">
+        {/* Top row: Title and Stats aligned */}
+        <div className="flex items-start justify-between gap-8 mb-3">
+          <div className="flex flex-col gap-3 min-w-0">
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-8 w-32" />
+              {!isFormClass && <Skeleton className="h-8 w-40" />}
+            </div>
+            
+            {/* Badges row */}
+            <div className="flex flex-wrap gap-2">
+              {isFormClass && <Skeleton className="h-5 w-20" />}
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+          </div>
+          
+          {/* Stats on same row as title */}
+          <div className="flex items-stretch divide-x divide-stone-200 flex-shrink-0">
+            <div className="px-4 py-2 first:pl-0">
+              <Skeleton className="h-3 w-12 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-8 mx-auto" />
+            </div>
+            <div className="px-4 py-2 last:pr-0">
+              <Skeleton className="h-3 w-16 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-10 mx-auto" />
+            </div>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pt-4">
-        <div className="flex items-stretch divide-x divide-stone-200">
-          <div className="flex-1 px-5 py-6">
-            <Skeleton className="h-3 w-12 mb-2" />
-            <Skeleton className="h-4 w-8" />
-          </div>
-          <div className="flex-1 px-5 py-6">
-            <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-4 w-12" />
-          </div>
-          <div className="flex-1 px-5 py-6">
-            <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-        </div>
-        <div className="p-4 bg-stone-50 rounded-lg">
-          <div className="flex items-start gap-2">
-            <Skeleton className="h-4 w-4" />
-            <div className="flex-1">
+
+      <CardContent className="pt-0">
+        {/* AI Agent notification box skeleton */}
+        <div className="h-48 p-6 bg-stone-50 rounded-lg flex flex-col">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-5 w-5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
               <Skeleton className="h-4 w-16 mb-2" />
               <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4 mt-2" />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function OverallCardSkeleton() {
+  return (
+    <Card className="border-stone-200 h-full flex flex-col">
+      <CardHeader className="pb-6">
+        <Skeleton className="h-3 w-16 mb-2" />
+        <Skeleton className="h-6 w-40" />
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <Skeleton className="rounded-lg h-48 w-full" />
+      </CardContent>
+    </Card>
+  )
+}
+
+function CCACardSkeleton() {
+  return (
+    <Card className="border-stone-200">
+      <CardHeader className="pb-6">
+        {/* Top row: Title and Stats aligned */}
+        <div className="flex items-center justify-between gap-8 mb-2">
+          <Skeleton className="h-8 w-40" />
+          
+          {/* Stats on same row as title - 3 stats for CCA */}
+          <div className="flex items-stretch divide-x divide-stone-200 flex-shrink-0">
+            <div className="px-4 py-2 first:pl-0">
+              <Skeleton className="h-3 w-12 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-8 mx-auto" />
+            </div>
+            <div className="px-4 py-2">
+              <Skeleton className="h-3 w-16 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-16 mx-auto" />
+            </div>
+            <div className="px-4 py-2 last:pr-0">
+              <Skeleton className="h-3 w-16 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-16 mx-auto" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Badges row */}
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-36" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        {/* AI Agent notification box skeleton */}
+        <div className="h-48 p-6 bg-stone-50 rounded-lg flex flex-col">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-5 w-5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <Skeleton className="h-4 w-16 mb-2" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4 mt-2" />
             </div>
           </div>
         </div>
