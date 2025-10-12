@@ -139,9 +139,14 @@ export function useStudentProfile(studentName: string) {
         setLoading(true)
         setError(null)
 
+        if (!studentName || studentName.trim() === '') {
+          throw new Error('Student name is required')
+        }
+
         const supabase = createClient()
 
         // 1. Get basic student info with guardian
+        // Use ilike for case-insensitive search since URL slugs may have different casing
         const { data: studentData, error: studentError } = await supabase
           .from('students')
           .select(`
@@ -156,12 +161,28 @@ export function useStudentProfile(studentName: string) {
               relationship
             )
           `)
-          .eq('name', studentName)
+          .ilike('name', studentName)
           .single()
 
-        if (studentError) throw studentError
+        if (studentError) {
+          console.error('Supabase error fetching student:', {
+            searchTerm: studentName,
+            error: studentError,
+            message: studentError.message,
+            code: studentError.code,
+            details: studentError.details,
+            hint: studentError.hint,
+          })
+          throw new Error(`Failed to fetch student data for "${studentName}": ${studentError.message || 'Unknown error'}`)
+        }
+        
         if (!studentData || typeof studentData !== 'object' || !('id' in studentData)) {
-          throw new Error('Student not found')
+          console.error('Student not found in database:', {
+            searchTerm: studentName,
+            searchLength: studentName.length,
+            charCodes: Array.from(studentName).map(c => `${c}(${c.charCodeAt(0)})`).join(' '),
+          })
+          throw new Error(`Student "${studentName}" not found in database`)
         }
 
         const typedStudentData = studentData as { id: string; name: string; student_id: string; year_level: string; parents_guardians?: { name: string; email: string; phone: string; relationship: string } | null }
@@ -304,15 +325,32 @@ export function useStudentProfile(studentName: string) {
 
         setStudent(profileData)
       } catch (err) {
-        console.error('Error fetching student profile:', err)
-        setError(err instanceof Error ? err : new Error('Failed to fetch student profile'))
+        console.error('Error fetching student profile:', {
+          error: err,
+          errorType: typeof err,
+          errorConstructor: err?.constructor?.name,
+          studentName,
+          stack: err instanceof Error ? err.stack : undefined,
+        })
+        
+        // Create a more informative error message
+        let errorMessage = 'Failed to fetch student profile'
+        if (err instanceof Error) {
+          errorMessage = err.message
+        } else if (typeof err === 'object' && err !== null) {
+          errorMessage = JSON.stringify(err)
+        }
+        
+        setError(new Error(errorMessage))
       } finally {
         setLoading(false)
       }
     }
 
-    if (studentName) {
+    if (studentName && studentName.trim() !== '') {
       fetchStudentProfile()
+    } else {
+      setLoading(false)
     }
   }, [studentName])
 

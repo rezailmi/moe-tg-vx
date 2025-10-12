@@ -497,3 +497,250 @@ export async function getStudentFriendships(
 
   return { data, error }
 }
+
+// =====================================================
+// DASHBOARD / ALERTS QUERIES
+// =====================================================
+
+export type StudentAlert = {
+  student_id: string
+  student_name: string
+  initials: string
+  message: string
+  priority: 'high' | 'medium' | 'info'
+  alert_type: 'attendance' | 'case' | 'behaviour' | 'performance'
+  class_id: string | null
+  class_name: string | null
+}
+
+/**
+ * Get students with alerts for teacher dashboard
+ * Checks for: attendance issues, open cases, recent behavior observations
+ */
+export async function getStudentAlerts(
+  supabase: Client,
+  teacherId: string,
+  limit = 3
+): Promise<{ data: StudentAlert[] | null; error: any }> {
+  try {
+    // Get current week's date range
+    const today = new Date()
+    const weekAgo = new Date(today)
+    weekAgo.setDate(today.getDate() - 7)
+    const todayStr = today.toISOString().split('T')[0]
+    const weekAgoStr = weekAgo.toISOString().split('T')[0]
+
+    // Get students taught by this teacher
+    const { data: teacherClasses } = await supabase
+      .from('teacher_classes')
+      .select('class_id')
+      .eq('teacher_id', teacherId)
+
+    if (!teacherClasses || teacherClasses.length === 0) {
+      return { data: [], error: null }
+    }
+
+    const classIds = teacherClasses.map((tc) => tc.class_id)
+
+    // Get students in these classes
+    const { data: studentClasses } = await supabase
+      .from('student_classes')
+      .select('student_id')
+      .in('class_id', classIds)
+      .eq('status', 'active')
+
+    if (!studentClasses || studentClasses.length === 0) {
+      return { data: [], error: null }
+    }
+
+    const studentIds = [...new Set(studentClasses.map((sc) => sc.student_id))]
+
+    // Get students with names and their primary class
+    const { data: students } = await supabase
+      .from('students')
+      .select(`
+        id, 
+        name, 
+        student_id,
+        student_classes!inner(
+          class:classes(
+            id,
+            name
+          )
+        )
+      `)
+      .in('id', studentIds)
+
+    if (!students) {
+      return { data: [], error: null }
+    }
+
+    // Transform to simpler structure with primary class
+    const studentsWithClasses = students.map((s: any) => {
+      // Get the first class (primary class)
+      const primaryClass = s.student_classes?.[0]?.class
+      return {
+        id: s.id,
+        name: s.name,
+        student_id: s.student_id,
+        class_id: primaryClass?.id || null,
+        class_name: primaryClass?.name || null,
+      }
+    })
+
+    const alerts: StudentAlert[] = []
+
+    // Check attendance issues (absences this week)
+    const { data: attendanceData } = await supabase
+      .from('attendance')
+      .select('student_id, status, date')
+      .in('student_id', studentIds)
+      .gte('date', weekAgoStr)
+      .lte('date', todayStr)
+      .in('status', ['absent', 'late'])
+      .order('date', { ascending: false })
+
+    // Count absences per student
+    const absenceCounts: Record<string, number> = {}
+    if (attendanceData) {
+      for (const record of attendanceData) {
+        if (record.status === 'absent') {
+          absenceCounts[record.student_id] =
+            (absenceCounts[record.student_id] || 0) + 1
+        }
+      }
+    }
+
+    // Add attendance alerts
+    for (const [studentId, count] of Object.entries(absenceCounts)) {
+      if (count >= 2) {
+        const student = studentsWithClasses.find((s) => s.id === studentId)
+        if (student) {
+          const nameParts = student.name.split(' ')
+          const initials =
+            nameParts.length >= 2
+              ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
+              : student.name.substring(0, 2).toUpperCase()
+
+          alerts.push({
+            student_id: student.id,
+            student_name: student.name,
+            initials: initials.toUpperCase(),
+            message: `${count} absence${count > 1 ? 's' : ''} this week`,
+            priority: count >= 3 ? 'high' : 'medium',
+            alert_type: 'attendance',
+            class_id: student.class_id,
+            class_name: student.class_name,
+          })
+        }
+      }
+    }
+
+    // Check for open cases
+    const { data: casesData } = await supabase
+      .from('cases')
+      .select('student_id, status, severity, case_type')
+      .in('student_id', studentIds)
+      .in('status', ['open', 'in_progress'])
+      .order('severity', { ascending: false })
+
+    if (casesData && casesData.length > 0) {
+      for (const caseRecord of casesData) {
+        // Skip if student already has an alert
+        if (alerts.some((a) => a.student_id === caseRecord.student_id)) {
+          continue
+        }
+
+        const student = studentsWithClasses.find((s) => s.id === caseRecord.student_id)
+        if (student) {
+          const nameParts = student.name.split(' ')
+          const initials =
+            nameParts.length >= 2
+              ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
+              : student.name.substring(0, 2).toUpperCase()
+
+          const priorityMap = {
+            high: 'high' as const,
+            medium: 'medium' as const,
+            low: 'info' as const,
+          }
+
+          alerts.push({
+            student_id: student.id,
+            student_name: student.name,
+            initials: initials.toUpperCase(),
+            message: `Open ${caseRecord.case_type} case`,
+            priority: priorityMap[caseRecord.severity || 'medium'],
+            alert_type: 'case',
+            class_id: student.class_id,
+            class_name: student.class_name,
+          })
+        }
+
+        if (alerts.length >= limit) break
+      }
+    }
+
+    // Check for recent positive behavior observations (if we haven't hit limit)
+    if (alerts.length < limit) {
+      const { data: behaviorData } = await supabase
+        .from('behaviour_observations')
+        .select('student_id, category, severity, observation_date')
+        .in('student_id', studentIds)
+        .gte('observation_date', weekAgoStr)
+        .order('observation_date', { ascending: false })
+        .limit(10)
+
+      if (behaviorData && behaviorData.length > 0) {
+        // Look for positive observations first
+        const positiveCategories = [
+          'excellence',
+          'achievement',
+          'improvement',
+          'positive',
+        ]
+
+        for (const obs of behaviorData) {
+          // Skip if student already has an alert
+          if (alerts.some((a) => a.student_id === obs.student_id)) {
+            continue
+          }
+
+          const isPositive = positiveCategories.some((cat) =>
+            obs.category.toLowerCase().includes(cat)
+          )
+
+          if (isPositive || obs.severity === 'low') {
+            const student = studentsWithClasses.find((s) => s.id === obs.student_id)
+            if (student) {
+              const nameParts = student.name.split(' ')
+              const initials =
+                nameParts.length >= 2
+                  ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
+                  : student.name.substring(0, 2).toUpperCase()
+
+              alerts.push({
+                student_id: student.id,
+                student_name: student.name,
+                initials: initials.toUpperCase(),
+                message: 'Excellent progress',
+                priority: 'info',
+                alert_type: 'behaviour',
+                class_id: student.class_id,
+                class_name: student.class_name,
+              })
+            }
+
+            if (alerts.length >= limit) break
+          }
+        }
+      }
+    }
+
+    // Return top alerts up to limit
+    return { data: alerts.slice(0, limit), error: null }
+  } catch (error) {
+    console.error('Error fetching student alerts:', error)
+    return { data: null, error }
+  }
+}

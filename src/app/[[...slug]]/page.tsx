@@ -389,6 +389,7 @@ const TabContent = memo(function TabContent({
         onNavigateToPulse={() => handleNavigate('pulse', true)}
         onAssistantMessage={handleAssistantMessage}
         onStudentClick={handleOpenStudentProfile}
+        onStudentClickWithClass={handleOpenStudentFromClass}
       />
     )
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Edit2,
   Sparkle,
@@ -24,6 +24,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { getStudentAlerts, type StudentAlert } from '@/lib/supabase/queries'
+import { useUser } from '@/contexts/user-context'
 
 const actionButtons = [
   { key: 'marking', label: 'Marking', icon: Edit2 },
@@ -53,24 +56,17 @@ const upcomingClassesData = [
   { time: '1:00 PM', subject: 'Math 9A', room: 'Room 201' },
 ]
 
-const studentAlertsData = [
+// Fallback data for when no alerts are found
+const fallbackStudentAlertsData = [
   {
-    student: 'Tan Wei Jie',
-    initials: 'TW',
-    message: '3 absences this week',
-    priority: 'high' as const,
-  },
-  {
-    student: 'Sarah Chen',
-    initials: 'SC',
-    message: 'Missing assignment',
-    priority: 'medium' as const,
-  },
-  {
-    student: 'Marcus Wong',
-    initials: 'MW',
-    message: 'Excellent progress',
+    student_id: '',
+    student_name: 'No alerts',
+    initials: 'NA',
+    message: 'All students doing well',
     priority: 'info' as const,
+    alert_type: 'performance' as const,
+    class_id: null,
+    class_name: null,
   },
 ]
 
@@ -79,16 +75,65 @@ interface HomeContentProps {
   onNavigateToExplore?: () => void
   onAssistantMessage?: (message: string) => void
   onStudentClick?: (studentName: string) => void
+  onStudentClickWithClass?: (classId: string, studentName: string) => void
   onNavigateToPulse?: () => void
   onEditWidgets?: () => void
   renderPageActions?: () => React.ReactNode
 }
 
-export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssistantMessage, onStudentClick, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
+export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssistantMessage, onStudentClick, onStudentClickWithClass, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
   const [assistantInput, setAssistantInput] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [gridRowHeight] = useState(156)
   const [widgetPadding] = useState(16)
+  const [studentAlerts, setStudentAlerts] = useState<StudentAlert[] | null>(null)
+  const { user, loading: userLoading } = useUser()
+
+  // Fetch student alerts on mount
+  useEffect(() => {
+    let isMounted = true
+
+    async function fetchStudentAlerts() {
+      // Wait for user context to finish loading before proceeding
+      if (userLoading) {
+        return
+      }
+
+      if (!user?.user_id) {
+        if (isMounted) {
+          setStudentAlerts(fallbackStudentAlertsData)
+        }
+        return
+      }
+
+      try {
+        const supabase = createClient()
+        const { data, error } = await getStudentAlerts(supabase, user.user_id, 3)
+
+        if (!isMounted) return
+
+        if (error) {
+          console.error('Error fetching student alerts:', error)
+          setStudentAlerts(fallbackStudentAlertsData)
+        } else if (data && data.length > 0) {
+          setStudentAlerts(data)
+        } else {
+          // No alerts found, use fallback
+          setStudentAlerts(fallbackStudentAlertsData)
+        }
+      } catch (error) {
+        if (!isMounted) return
+        console.error('Error fetching student alerts:', error)
+        setStudentAlerts(fallbackStudentAlertsData)
+      }
+    }
+
+    fetchStudentAlerts()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user?.user_id, userLoading])
 
   const handleAssistantSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -186,40 +231,77 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
 
                 {/* Horizontal Student List */}
                 <div className="flex items-start gap-3">
-                  {studentAlertsData.map((alert, index) => {
-                    const gradientColors = [
-                      'from-red-400 via-pink-500 to-orange-400',
-                      'from-purple-400 via-pink-500 to-red-400',
-                      'from-blue-400 via-cyan-500 to-teal-400',
-                    ]
-                    const bgColors = [
-                      'bg-red-100',
-                      'bg-purple-100',
-                      'bg-blue-100',
-                    ]
-                    const textColors = [
-                      'text-red-900',
-                      'text-purple-900',
-                      'text-blue-900',
-                    ]
-
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => onStudentClick?.(alert.student)}
-                        className="flex flex-col items-center gap-1 transition-transform hover:scale-105"
-                      >
-                        <div className={`rounded-full bg-gradient-to-br ${gradientColors[index]} p-0.5`}>
-                          <div className="rounded-full bg-white p-0.5">
-                            <div className={`flex size-12 items-center justify-center rounded-full ${bgColors[index]} text-xs font-semibold ${textColors[index]}`}>
-                              {alert.initials}
+                  {!studentAlerts ? (
+                    // Loading state - shimmer effect
+                    <>
+                      {[0, 1, 2].map((index) => (
+                        <div key={index} className="flex flex-col items-center gap-1.5">
+                          {/* Avatar skeleton with gradient ring */}
+                          <div className="relative">
+                            <div className="rounded-full bg-gradient-to-br from-stone-200 via-stone-300 to-stone-200 p-0.5 animate-pulse">
+                              <div className="rounded-full bg-white p-0.5">
+                                <div className="size-12 rounded-full bg-stone-200 animate-pulse" />
+                              </div>
                             </div>
                           </div>
+                          {/* Name skeleton */}
+                          <div className="h-2.5 w-12 animate-pulse rounded bg-stone-200" />
                         </div>
-                        <p className="max-w-[60px] truncate text-[10px] text-stone-600">{alert.student.split(' ')[0]}</p>
-                      </button>
-                    )
-                  })}
+                      ))}
+                    </>
+                  ) : (
+                    studentAlerts.map((alert, index) => {
+                      // Color scheme based on priority
+                      const colorSchemes = {
+                        high: {
+                          gradient: 'from-red-400 via-pink-500 to-orange-400',
+                          bg: 'bg-red-100',
+                          text: 'text-red-900',
+                        },
+                        medium: {
+                          gradient: 'from-purple-400 via-pink-500 to-red-400',
+                          bg: 'bg-purple-100',
+                          text: 'text-purple-900',
+                        },
+                        info: {
+                          gradient: 'from-blue-400 via-cyan-500 to-teal-400',
+                          bg: 'bg-blue-100',
+                          text: 'text-blue-900',
+                        },
+                      }
+
+                      const colors = colorSchemes[alert.priority]
+
+                      return (
+                        <button
+                          key={alert.student_id || index}
+                          onClick={() => {
+                            if (!alert.student_id) return
+                            // If we have a class context, use it
+                            if (alert.class_id && onStudentClickWithClass) {
+                              onStudentClickWithClass(alert.class_id, alert.student_name)
+                            } else {
+                              // Fall back to standalone student profile
+                              onStudentClick?.(alert.student_name)
+                            }
+                          }}
+                          className="flex flex-col items-center gap-1 transition-transform hover:scale-105"
+                          disabled={!alert.student_id}
+                        >
+                          <div className={`rounded-full bg-gradient-to-br ${colors.gradient} p-0.5`}>
+                            <div className="rounded-full bg-white p-0.5">
+                              <div className={`flex size-12 items-center justify-center rounded-full ${colors.bg} text-xs font-semibold ${colors.text}`}>
+                                {alert.initials}
+                              </div>
+                            </div>
+                          </div>
+                          <p className="max-w-[60px] truncate text-[10px] text-stone-600">
+                            {alert.student_name.split(' ')[0]}
+                          </p>
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -241,7 +323,7 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
                   <div className="relative">
                     {/* Outer expandable container - only visible when focused */}
                     {isInputFocused && (
-                      <div className="absolute -inset-x-4 -top-6 -bottom-3 rounded-2xl border border-stone-200/80 bg-white/95 shadow-lg backdrop-blur-sm transition-all" />
+                      <div className="absolute -inset-2 rounded-2xl border border-stone-200/80 bg-stone-100 shadow-lg backdrop-blur-sm transition-all" />
                     )}
 
                     {/* Content wrapper */}
@@ -278,20 +360,21 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
                         <div className="absolute left-5 top-1/2 z-10 -translate-y-1/2">
                           <Sparkle className="size-5 text-stone-600" />
                         </div>
-                        <Input
-                          type="text"
-                          value={assistantInput}
-                          onChange={(e) => setAssistantInput(e.target.value)}
-                          onFocus={() => setIsInputFocused(true)}
-                          onBlur={() => setIsInputFocused(false)}
-                          placeholder="Ask me about students, assignments, or lesson plans..."
-                          className={cn(
-                            'shimmer-input relative h-14 bg-white pl-14 pr-6 text-sm transition-all placeholder:text-stone-400 sm:h-16 sm:text-base',
-                            isInputFocused
-                              ? 'rounded-xl border-stone-200 hover:shadow-sm focus-visible:border-stone-300 focus-visible:shadow-sm'
-                              : 'rounded-2xl border-stone-200 hover:shadow-md focus-visible:border-stone-300 focus-visible:shadow-md'
-                          )}
-                        />
+                         <Input
+                           type="text"
+                           value={assistantInput}
+                           onChange={(e) => setAssistantInput(e.target.value)}
+                           onFocus={() => setIsInputFocused(true)}
+                           onBlur={() => setIsInputFocused(false)}
+                           placeholder="Ask me about students, assignments, or lesson plans..."
+                           className={cn(
+                             'shimmer-input relative h-14 bg-white pl-14 pr-6 text-sm transition-all placeholder:text-stone-400 sm:h-16 sm:text-base',
+                             'focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
+                             isInputFocused
+                               ? 'rounded-xl border-stone-300 focus-visible:border-stone-300'
+                               : 'rounded-2xl border-stone-200 focus-visible:border-stone-300'
+                           )}
+                         />
                       </div>
                     </div>
                   </div>
