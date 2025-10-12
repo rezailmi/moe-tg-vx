@@ -72,7 +72,7 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
   const [searchQuery, setSearchQuery] = useState('')
   const [showDetails, setShowDetails] = useState(false)
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [sortField, setSortField] = useState<'name' | 'attendance_rate' | 'average_grade' | 'conduct'>('name')
+  const [sortField, setSortField] = useState<'name' | 'attendance_rate' | 'english' | 'math' | 'science' | 'conduct'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // Filter and sort students - must be before early return
@@ -97,8 +97,10 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
         case 'attendance_rate':
           compareValue = a.attendance_rate - b.attendance_rate
           break
-        case 'average_grade':
-          compareValue = (a.average_grade || 0) - (b.average_grade || 0)
+        case 'english':
+        case 'math':
+        case 'science':
+          compareValue = (a.grades[sortField] || 0) - (b.grades[sortField] || 0)
           break
         case 'conduct':
           compareValue = a.conduct_grade.localeCompare(b.conduct_grade)
@@ -176,8 +178,10 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead className="w-32">Attendance</TableHead>
-                      <TableHead className="w-32">Average Grade</TableHead>
-                      <TableHead className="w-32">Conduct Grade</TableHead>
+                      <TableHead className="w-24 text-center">English</TableHead>
+                      <TableHead className="w-24 text-center">Math</TableHead>
+                      <TableHead className="w-24 text-center">Science</TableHead>
+                      <TableHead className="w-36">Conduct Grade</TableHead>
                       <TableHead className="w-24">Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -192,7 +196,9 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                           </div>
                         </TableCell>
                         <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-12" /></TableCell>
                       </TableRow>
@@ -480,7 +486,9 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => handleSort('name')}>Name</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleSort('attendance_rate')}>Attendance</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSort('average_grade')}>Average</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort('english')}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort('math')}>Math</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort('science')}>Science</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleSort('conduct')}>Conduct</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -495,8 +503,10 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="w-32">Attendance</TableHead>
-                  <TableHead className="w-32">Average Grade</TableHead>
-                  <TableHead className="w-32">Conduct Grade</TableHead>
+                  <TableHead className="w-24 text-center">English</TableHead>
+                  <TableHead className="w-24 text-center">Math</TableHead>
+                  <TableHead className="w-24 text-center">Science</TableHead>
+                  <TableHead className="w-36">Conduct Grade</TableHead>
                   <TableHead className="w-24">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -528,14 +538,28 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                           {student.attendance_rate}%
                         </span>
                       </TableCell>
-                      <TableCell>
-                        {student.average_grade !== undefined ? (
-                          <span className={cn(
-                            "font-medium",
-                            student.average_grade >= 75 ? "text-green-600" :
-                            student.average_grade >= 50 ? "text-amber-600" : "text-red-600"
-                          )}>
-                            {student.average_grade}%
+                      <TableCell className="text-center">
+                        {student.grades.english !== undefined ? (
+                          <span className="font-medium text-stone-900">
+                            {student.grades.english}
+                          </span>
+                        ) : (
+                          <span className="text-stone-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {student.grades.math !== undefined ? (
+                          <span className="font-medium text-stone-900">
+                            {student.grades.math}
+                          </span>
+                        ) : (
+                          <span className="text-stone-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {student.grades.science !== undefined ? (
+                          <span className="font-medium text-stone-900">
+                            {student.grades.science}
                           </span>
                         ) : (
                           <span className="text-stone-400">-</span>
@@ -595,7 +619,7 @@ export function ClassOverview({ classId, onBack, onNavigateToGrades, onStudentCl
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-stone-500 py-8">
+                    <TableCell colSpan={8} className="text-center text-stone-500 py-8">
                       No students found
                     </TableCell>
                   </TableRow>

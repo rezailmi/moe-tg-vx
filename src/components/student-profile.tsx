@@ -99,7 +99,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
     english: getSubjectAverage('English'),
     math: getSubjectAverage('Math'),
     science: getSubjectAverage('Science'),
-    conduct: studentData.overview?.conduct_grade || 'N/A',
+    conduct: (studentData.overview as { conduct_grade?: string })?.conduct_grade || 'N/A',
     status: studentData.overview?.is_swan ? 'SWAN' : 'None',
     parentName: studentData.guardian?.name || 'N/A',
     parentEmail: studentData.guardian?.email || 'N/A',

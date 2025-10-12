@@ -521,7 +521,7 @@ export async function getStudentAlerts(
   supabase: Client,
   teacherId: string,
   limit = 3
-): Promise<{ data: StudentAlert[] | null; error: any }> {
+): Promise<{ data: StudentAlert[] | null; error: unknown }> {
   try {
     // Get current week's date range
     const today = new Date()
@@ -540,7 +540,7 @@ export async function getStudentAlerts(
       return { data: [], error: null }
     }
 
-    const classIds = teacherClasses.map((tc) => tc.class_id)
+    const classIds = teacherClasses.map((tc: { class_id: string }) => tc.class_id)
 
     // Get students in these classes
     const { data: studentClasses } = await supabase
@@ -553,7 +553,7 @@ export async function getStudentAlerts(
       return { data: [], error: null }
     }
 
-    const studentIds = [...new Set(studentClasses.map((sc) => sc.student_id))]
+    const studentIds = [...new Set(studentClasses.map((sc: { student_id: string }) => sc.student_id))]
 
     // Get students with names and their primary class
     const { data: students } = await supabase
@@ -576,7 +576,7 @@ export async function getStudentAlerts(
     }
 
     // Transform to simpler structure with primary class
-    const studentsWithClasses = students.map((s: any) => {
+    const studentsWithClasses = students.map((s: { id: string; name: string; student_id: string; student_classes?: Array<{ class: { id: string; name: string } }> }) => {
       // Get the first class (primary class)
       const primaryClass = s.student_classes?.[0]?.class
       return {
@@ -603,7 +603,7 @@ export async function getStudentAlerts(
     // Count absences per student
     const absenceCounts: Record<string, number> = {}
     if (attendanceData) {
-      for (const record of attendanceData) {
+      for (const record of attendanceData as Array<{ student_id: string; status: string; date: string }>) {
         if (record.status === 'absent') {
           absenceCounts[record.student_id] =
             (absenceCounts[record.student_id] || 0) + 1
@@ -645,7 +645,7 @@ export async function getStudentAlerts(
       .order('severity', { ascending: false })
 
     if (casesData && casesData.length > 0) {
-      for (const caseRecord of casesData) {
+      for (const caseRecord of casesData as Array<{ student_id: string; status: string; severity: string; case_type: string }>) {
         // Skip if student already has an alert
         if (alerts.some((a) => a.student_id === caseRecord.student_id)) {
           continue
@@ -670,7 +670,7 @@ export async function getStudentAlerts(
             student_name: student.name,
             initials: initials.toUpperCase(),
             message: `Open ${caseRecord.case_type} case`,
-            priority: priorityMap[caseRecord.severity || 'medium'],
+            priority: priorityMap[(caseRecord.severity || 'medium') as 'high' | 'medium' | 'low'],
             alert_type: 'case',
             class_id: student.class_id,
             class_name: student.class_name,
@@ -700,7 +700,7 @@ export async function getStudentAlerts(
           'positive',
         ]
 
-        for (const obs of behaviorData) {
+        for (const obs of behaviorData as Array<{ student_id: string; category: string; severity: string; observation_date: string }>) {
           // Skip if student already has an alert
           if (alerts.some((a) => a.student_id === obs.student_id)) {
             continue

@@ -160,7 +160,7 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
                     <TableHead className="text-xs font-medium text-stone-500 text-center">English</TableHead>
                     <TableHead className="text-xs font-medium text-stone-500 text-center">Math</TableHead>
                     <TableHead className="text-xs font-medium text-stone-500 text-center">Science</TableHead>
-                    <TableHead className="text-xs font-medium text-stone-500">Conduct grade</TableHead>
+                    <TableHead className="text-xs font-medium text-stone-500 w-32">Conduct grade</TableHead>
                     <TableHead className="text-xs font-medium text-stone-500">Remark</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
@@ -211,12 +211,14 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
     switch (conduct) {
       case 'Excellent':
         return 'text-green-600'
-      case 'Above average':
+      case 'Very Good':
+        return 'text-blue-600'
+      case 'Good':
         return 'text-stone-900'
-      case 'Average':
-        return 'text-stone-600'
-      case 'Needs improvement':
+      case 'Fair':
         return 'text-amber-600'
+      case 'Poor':
+        return 'text-red-600'
       default:
         return 'text-stone-600'
     }
@@ -295,7 +297,7 @@ export function StudentList({ classId, onBack, onStudentClick, onNavigate, class
                 <TableHead className="text-xs font-medium text-stone-500 text-center">English</TableHead>
                 <TableHead className="text-xs font-medium text-stone-500 text-center">Math</TableHead>
                 <TableHead className="text-xs font-medium text-stone-500 text-center">Science</TableHead>
-                <TableHead className="text-xs font-medium text-stone-500">Conduct grade</TableHead>
+                <TableHead className="text-xs font-medium text-stone-500 w-32">Conduct grade</TableHead>
                 <TableHead className="text-xs font-medium text-stone-500">Remark</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
