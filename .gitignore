@@ -51,3 +51,6 @@ supabase/.temp/
 
 # scripts (development/testing only)
 /scripts/
+
+# claude code
+.claude/settings.json

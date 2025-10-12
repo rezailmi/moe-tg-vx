@@ -1556,7 +1556,7 @@ export default function Home() {
 
   return (
     <UserProvider>
-    <div className="flex min-h-svh w-full bg-stone-100 dark:bg-stone-800">
+    <div className="flex h-svh w-full bg-stone-100 dark:bg-stone-800">
       <Sidebar variant="inset" collapsible="icon">
         <SidebarContent className="gap-6">
           <SidebarGroup className="gap-3">
@@ -1735,7 +1735,7 @@ export default function Home() {
       </Sidebar>
 
       <SidebarInset>
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 min-h-0 flex-col">
           <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
             <div className="px-4">
               <div ref={tabContainerRef} className="flex items-center gap-2 py-2" suppressHydrationWarning>
@@ -2106,11 +2106,13 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="flex flex-1 overflow-hidden rounded-b-[15px]">
+          <div className="flex flex-1 min-h-0 overflow-hidden rounded-b-[15px]">
             <div
                 className={cn(
-                  'flex flex-1 flex-col overflow-y-auto',
-                  activeTab === 'pulse' || activeTab === 'home' ? '' : 'px-8 py-10',
+                  'flex flex-1 min-h-0 flex-col',
+                  // Remove overflow-y-auto for inbox to allow independent section scrolling
+                  activeTab !== 'inbox' && !(typeof activeTab === 'string' && activeTab.startsWith('inbox/')) && 'overflow-y-auto',
+                  activeTab === 'pulse' || activeTab === 'home' || activeTab === 'inbox' || (typeof activeTab === 'string' && activeTab.startsWith('inbox/')) ? '' : 'px-8 py-10',
                 )}
               >
                 <TabContent
