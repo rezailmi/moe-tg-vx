@@ -67,7 +67,7 @@ export function useStudents(classId: string) {
             .eq('student_id', studentId)
 
           if (attendanceData && attendanceData.length > 0) {
-            const present = attendanceData.filter(a => a.status === 'present').length
+            const present = attendanceData.filter((a: { status: string }) => a.status === 'present').length
             attendanceMap.set(studentId, {
               total: attendanceData.length,
               present
@@ -83,7 +83,7 @@ export function useStudents(classId: string) {
 
         // Group academic results by student
         const gradesMap = new Map<string, Array<{ subject: string; score: number }>>()
-        academicData?.forEach(result => {
+        academicData?.forEach((result: { student_id: string; subject: string; score: number }) => {
           const current = gradesMap.get(result.student_id) || []
           current.push({ subject: result.subject, score: result.score })
           gradesMap.set(result.student_id, current)
@@ -96,7 +96,7 @@ export function useStudents(classId: string) {
           .in('student_id', studentIds)
 
         const overviewMap = new Map<string, { is_swan: boolean; conduct_grade?: string }>()
-        overviewData?.forEach(overview => {
+        overviewData?.forEach((overview: { student_id: string; is_swan: boolean; conduct_grade?: string }) => {
           overviewMap.set(overview.student_id, {
             is_swan: overview.is_swan || false,
             conduct_grade: overview.conduct_grade || undefined
@@ -105,7 +105,7 @@ export function useStudents(classId: string) {
 
         // Enrich students with fetched data
         mappedStudents = mappedStudents.map(student => {
-          let enriched = { ...student }
+          const enriched = { ...student }
 
           // Add attendance - explicitly set rate even if no data
           const attendance = attendanceMap.get(student.student_id)
@@ -120,7 +120,11 @@ export function useStudents(classId: string) {
           if (grades && grades.length > 0) {
             const gradeObj: { [subject: string]: number } = {}
             grades.forEach(g => {
-              gradeObj[g.subject.toLowerCase()] = g.score
+              // Map database subject names to Student type property names
+              const subjectKey = g.subject.toLowerCase() === 'mathematics'
+                ? 'math'
+                : g.subject.toLowerCase()
+              gradeObj[subjectKey] = g.score
             })
             enriched.grades = gradeObj
 
