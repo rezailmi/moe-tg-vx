@@ -449,6 +449,30 @@ export async function getClassDetails(supabase: Client, classId: string) {
   return { data, error }
 }
 
+/**
+ * Get teacher's form class (where they are the form teacher)
+ */
+export async function getTeacherFormClass(supabase: Client, teacherId: string) {
+  const { data, error } = await supabase
+    .from('teacher_classes')
+    .select(
+      `
+      class_id,
+      class:classes(
+        id,
+        name,
+        type,
+        year_level
+      )
+    `
+    )
+    .eq('teacher_id', teacherId)
+    .eq('role', 'form_teacher')
+    .single()
+
+  return { data, error }
+}
+
 // =====================================================
 // BEHAVIOUR & SOCIAL QUERIES
 // =====================================================
