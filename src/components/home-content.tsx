@@ -32,7 +32,7 @@ const actionButtons = [
   },
   { 
     key: 'analyse', 
-    label: 'Analyse', 
+    label: 'Classroom', 
     icon: Sparkle,
     gradient: 'from-purple-400 to-purple-600',
     iconColor: 'text-white'
@@ -46,7 +46,7 @@ const actionButtons = [
   },
   { 
     key: 'communicate', 
-    label: 'Messages', 
+    label: 'Inbox', 
     icon: MessageSquare,
     gradient: 'from-green-400 to-green-600',
     iconColor: 'text-white'
@@ -97,6 +97,9 @@ const fallbackStudentAlertsData = [
 interface HomeContentProps {
   onNavigateToClassroom?: () => void
   onNavigateToExplore?: () => void
+  onNavigateToAttendance?: () => void
+  onNavigateToLearn?: () => void
+  onNavigateToInbox?: () => void
   onAssistantMessage?: (message: string) => void
   onStudentClick?: (studentName: string) => void
   onStudentClickWithClass?: (classId: string, studentName: string) => void
@@ -105,7 +108,7 @@ interface HomeContentProps {
   renderPageActions?: () => React.ReactNode
 }
 
-export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssistantMessage, onStudentClick, onStudentClickWithClass, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
+export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavigateToAttendance, onNavigateToLearn, onNavigateToInbox, onAssistantMessage, onStudentClick, onStudentClickWithClass, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
   const [assistantInput, setAssistantInput] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [gridRowHeight] = useState(156)
@@ -212,7 +215,7 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
                   <p className="text-xs text-stone-300">
                     {podcastData.date} • {podcastData.duration}
                   </p>
-                  <p className="text-xs text-stone-400 line-clamp-1">{podcastData.description}</p>
+                  <p className="text-sm text-stone-400 line-clamp-1">{podcastData.description}</p>
                 </div>
 
                 {/* Play Button - pushed to bottom */}
@@ -323,7 +326,7 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
                               </div>
                             </div>
                           </div>
-                          <p className="max-w-[60px] truncate text-[10px] text-stone-600">
+                          <p className="max-w-[60px] truncate text-xs text-stone-600">
                             {alert.student_name.split(' ')[0]}
                           </p>
                         </button>
@@ -416,7 +419,15 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onAssi
                       <button
                         key={action.key}
                         onClick={() => {
-                          if (action.key === 'explore') {
+                          if (action.key === 'marking') {
+                            onNavigateToAttendance?.()
+                          } else if (action.key === 'analyse') {
+                            onNavigateToClassroom?.()
+                          } else if (action.key === 'learn') {
+                            onNavigateToLearn?.()
+                          } else if (action.key === 'communicate') {
+                            onNavigateToInbox?.()
+                          } else if (action.key === 'explore') {
                             onNavigateToExplore?.()
                           }
                         }}

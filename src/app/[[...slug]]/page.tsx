@@ -89,6 +89,7 @@ import {
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { createClient } from '@/lib/supabase/client'
+import { getTeacherFormClass } from '@/lib/supabase/queries'
 
 const primaryPages = [
   { key: 'home', label: 'Home', icon: HomeIcon, tooltip: 'Home' },
@@ -343,6 +344,9 @@ const TabContent = memo(function TabContent({
   handleAssistantMessage,
   handleOpenStudentFromClass,
   handleOpenGrades,
+  handleNavigateToAttendance,
+  handleNavigateToLearn,
+  handleNavigateToInbox,
   setIsAssistantOpen,
   handleAssistantModeChange,
   setClassroomTabs,
@@ -371,6 +375,9 @@ const TabContent = memo(function TabContent({
   handleAssistantMessage: (message: string) => void
   handleOpenStudentFromClass: (classId: string, studentName: string) => void
   handleOpenGrades: (classId: string) => void
+  handleNavigateToAttendance: () => void
+  handleNavigateToLearn: () => void
+  handleNavigateToInbox: () => void
   setIsAssistantOpen: (open: boolean) => void
   handleAssistantModeChange: (mode: AssistantMode | 'full') => void
   setClassroomTabs: React.Dispatch<React.SetStateAction<Map<string, string>>>
@@ -410,6 +417,9 @@ const TabContent = memo(function TabContent({
       <HomeContent
         onNavigateToClassroom={() => handleNavigate('classroom')}
         onNavigateToExplore={() => handleNavigate('explore')}
+        onNavigateToAttendance={handleNavigateToAttendance}
+        onNavigateToLearn={handleNavigateToLearn}
+        onNavigateToInbox={handleNavigateToInbox}
         onNavigateToPulse={() => handleNavigate('pulse', true)}
         onAssistantMessage={handleAssistantMessage}
         onStudentClick={handleOpenStudentProfile}
@@ -752,6 +762,7 @@ export default function Home() {
   const classroomNamesRef = useRef<Map<string, string>>(new Map()) // Ref for immediate access to class names
   const [pendingAssistantMessage, setPendingAssistantMessage] = useState<string | null>(null)
   const tabContainerRef = useRef<HTMLDivElement>(null)
+  const [formClassId, setFormClassId] = useState<string | null>(null)
 
   // Helper to determine if a tab is a top-level page
   const isTopLevelTab = (tabKey: string): boolean => {
@@ -1287,6 +1298,24 @@ export default function Home() {
     router.push(`/inbox/${conversationId}`)
   }
 
+  const handleNavigateToAttendance = () => {
+    // Navigate to form class if available
+    if (formClassId) {
+      handleOpenClassroom(formClassId)
+    } else {
+      // Fallback to classroom list if no form class
+      handleNavigate('classroom')
+    }
+  }
+
+  const handleNavigateToLearn = () => {
+    handleNavigate('learning')
+  }
+
+  const handleNavigateToInbox = () => {
+    handleNavigate('inbox')
+  }
+
   const handleAssistantMessage = (message: string) => {
     setPendingAssistantMessage(message)
     setIsAssistantOpen(true)
@@ -1396,6 +1425,31 @@ export default function Home() {
       setIsMounted(true)
     }
   }, [])
+
+  // Fetch teacher's form class
+  useEffect(() => {
+    if (!isMounted) return
+
+    async function fetchFormClass() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user?.id) return
+        
+        const result = await getTeacherFormClass(supabase, user.id)
+        
+        if (!result.error && result.data) {
+          const classId = (result.data as { class_id: string }).class_id
+          setFormClassId(classId)
+        }
+      } catch (error) {
+        console.error('Error fetching form class:', error)
+      }
+    }
+
+    fetchFormClass()
+  }, [isMounted])
 
   // Measure tab container width
   useLayoutEffect(() => {
@@ -2197,6 +2251,9 @@ export default function Home() {
                   handleAssistantMessage={handleAssistantMessage}
                   handleOpenStudentFromClass={handleOpenStudentFromClass}
                   handleOpenGrades={handleOpenGrades}
+                  handleNavigateToAttendance={handleNavigateToAttendance}
+                  handleNavigateToLearn={handleNavigateToLearn}
+                  handleNavigateToInbox={handleNavigateToInbox}
                   setIsAssistantOpen={setIsAssistantOpen}
                   handleAssistantModeChange={handleAssistantModeChange}
                   setClassroomTabs={setClassroomTabs}
