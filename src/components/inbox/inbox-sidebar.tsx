@@ -26,7 +26,8 @@ export function InboxSidebar({ activeView, onViewChange }: InboxSidebarProps) {
       </div>
 
       {/* Views List */}
-      <ScrollArea className="flex-1 px-2 py-2">
+      <ScrollArea className="flex-1">
+        <div className="px-2 py-2">
         {/* Main views */}
         <div className="space-y-0.5">
           {inboxViews.map((view) => (
@@ -186,6 +187,7 @@ export function InboxSidebar({ activeView, onViewChange }: InboxSidebarProps) {
               ))}
             </div>
           )}
+        </div>
         </div>
       </ScrollArea>
     </div>
