@@ -177,8 +177,8 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 min-h-0 bg-stone-50 px-6 py-4">
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="space-y-6 bg-stone-50 px-6 py-4">
           {messageGroups.map((group, groupIndex) => (
             <div key={groupIndex} className="space-y-4">
               {/* Date separator */}

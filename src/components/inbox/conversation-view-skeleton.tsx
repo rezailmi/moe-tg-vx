@@ -26,8 +26,8 @@ export function ConversationViewSkeleton() {
       </div>
 
       {/* Messages Area Skeleton */}
-      <ScrollArea className="flex-1 min-h-0 bg-stone-50 px-6 py-4">
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="space-y-6 bg-stone-50 px-6 py-4">
           {/* Date separator skeleton */}
           <div className="flex items-center justify-center">
             <Skeleton className="h-6 w-32 rounded-full" />

@@ -72,8 +72,10 @@ export function PageLayout({
       )}
 
       {/* Page Content */}
-      <ScrollArea className={cn('flex-1', contentClassName)}>
-        {children}
+      <ScrollArea className="flex-1 min-h-0">
+        <div className={contentClassName}>
+          {children}
+        </div>
       </ScrollArea>
     </div>
   )

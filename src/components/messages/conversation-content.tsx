@@ -128,7 +128,8 @@ export function ConversationContent({ conversationId }: ConversationContentProps
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 bg-stone-50 px-6 py-4">
+      <ScrollArea className="flex-1">
+        <div className="bg-stone-50 px-6 py-4">
         {messageGroups.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center">
             <p className="text-stone-500">No messages yet. Start the conversation!</p>
@@ -237,6 +238,7 @@ export function ConversationContent({ conversationId }: ConversationContentProps
             <div ref={scrollRef} />
           </div>
         )}
+        </div>
       </ScrollArea>
 
       {/* Input Area */}
