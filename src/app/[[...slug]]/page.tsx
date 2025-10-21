@@ -1858,8 +1858,8 @@ export default function Home() {
         <div className="flex flex-1 min-h-0 flex-col">
           <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
             <div className="px-4">
-              <div ref={tabContainerRef} className="flex items-center gap-2 py-2" suppressHydrationWarning>
-                <div className="flex items-center gap-2" suppressHydrationWarning>
+              <div ref={tabContainerRef} className="flex items-center gap-2 py-2 overflow-hidden" suppressHydrationWarning>
+                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden tab-scrollbar-hidden flex-1 min-w-0" suppressHydrationWarning>
                 <TooltipProvider delayDuration={150}>
                       {visibleTabs.map((tabKey, index) => {
                     const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
@@ -2230,9 +2230,9 @@ export default function Home() {
             <div
                 className={cn(
                   'flex flex-1 min-h-0 flex-col',
-                  // Remove overflow-y-auto for inbox to allow independent section scrolling
-                  activeTab !== 'inbox' && !(typeof activeTab === 'string' && activeTab.startsWith('inbox/')) && 'overflow-y-auto',
-                  activeTab === 'pulse' || activeTab === 'home' || activeTab === 'inbox' || (typeof activeTab === 'string' && activeTab.startsWith('inbox/')) ? '' : 'px-8 py-10',
+                  // Remove overflow-y-auto for pages that handle their own scrolling (inbox, home, pulse, myschool)
+                  activeTab !== 'inbox' && activeTab !== 'myschool' && !(typeof activeTab === 'string' && activeTab.startsWith('inbox/')) && 'overflow-y-auto',
+                  activeTab === 'pulse' || activeTab === 'home' || activeTab === 'inbox' || activeTab === 'myschool' || (typeof activeTab === 'string' && activeTab.startsWith('inbox/')) ? '' : 'px-8 py-10',
                 )}
               >
                 <TabContent
