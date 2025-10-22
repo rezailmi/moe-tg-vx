@@ -1854,12 +1854,12 @@ export default function Home() {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="overflow-x-clip">
         <div className="flex flex-1 min-h-0 flex-col">
-          <div className="sticky top-0 z-20 overflow-hidden rounded-t-2xl bg-background">
-            <div className="px-4">
-              <div ref={tabContainerRef} className="flex items-center gap-2 py-2 overflow-hidden" suppressHydrationWarning>
-                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden tab-scrollbar-hidden flex-1 min-w-0" suppressHydrationWarning>
+          <div className="sticky top-0 z-20 w-full max-w-full overflow-hidden rounded-t-2xl bg-background">
+            <div className="w-full max-w-full">
+              <div ref={tabContainerRef} className="grid grid-cols-[minmax(0,1fr)_auto] w-full max-w-full items-center gap-2" suppressHydrationWarning>
+                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden tab-scrollbar-hidden min-w-0 px-4 py-2" suppressHydrationWarning>
                 <TooltipProvider delayDuration={150}>
                       {visibleTabs.map((tabKey, index) => {
                     const tab = tabConfigMap[tabKey as keyof typeof tabConfigMap]
@@ -1943,7 +1943,7 @@ export default function Home() {
                           router.push(newPath, { scroll: false })
                         }}
                         className={cn(
-                          'group relative flex items-center justify-start gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 min-w-[7.5rem] max-w-[20rem] flex-1',
+                          'group relative flex shrink-0 items-center justify-start gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 min-w-[7.5rem] max-w-[20rem]',
                         isActive
                           ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -1993,7 +1993,11 @@ export default function Home() {
                       </button>
                     )
                   })}
+                </TooltipProvider>
+                </div>
 
+                <div className="flex items-center gap-2 pr-4 py-2">
+                  <TooltipProvider delayDuration={150}>
                   {/* More dropdown for hidden tabs */}
                   {hiddenTabs.length > 0 && (
                     <Tooltip>
@@ -2127,11 +2131,8 @@ export default function Home() {
                     </TooltipTrigger>
                     <TooltipContent side="bottom">New Tab</TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
-                </div>
 
-                {!isAssistantTabActive && !isAssistantSidebarOpen && (
-                  <div className="ml-auto">
+                  {!isAssistantTabActive && !isAssistantSidebarOpen && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -2143,8 +2144,9 @@ export default function Home() {
                       <Sparkle className="size-4" />
                       Assistant
                     </Button>
-                  </div>
-                )}
+                  )}
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
             <div className="flex flex-col bg-background">
