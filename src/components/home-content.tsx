@@ -188,18 +188,18 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
             }}
           >
             {/* Podcast Widget - Large, spans 1 column on larger screens */}
-            <Card className="rounded-2xl border-none bg-gradient-to-br from-stone-900 to-stone-800 shadow-md md:row-span-2 py-0">
+            <Card className="flex h-full flex-col rounded-2xl border-stone-200 bg-white shadow-sm md:row-span-2 py-0">
               <CardContent className="flex h-full flex-col p-0" style={{ padding: `${widgetPadding}px` }}>
                 {/* Podcast Image with Waveform Overlay */}
-                <div className="relative h-32 overflow-hidden rounded-xl bg-stone-700">
+                <div className="relative h-32 overflow-hidden rounded-xl bg-stone-100">
                   {/* Placeholder for podcast image */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-600 to-stone-700">
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200">
                     <div className="flex items-center gap-0.5">
                       {/* Audio waveform visual */}
                       {[19.6, 26.0, 20.8, 33.5, 29.1, 29.3, 30.7, 19.3, 19.2, 34.2, 26.4, 30.1, 25.6, 13.9, 33.3].map((height, i) => (
                         <div
                           key={i}
-                          className="w-0.5 rounded-full bg-white/60"
+                          className="w-0.5 rounded-full bg-stone-600/70"
                           style={{
                             height: `${height}px`,
                             animation: `pulse ${[2.8, 1.2, 2.7, 2.4, 1.1, 1.4, 2.4, 2.3, 2.8, 1.8, 1.6, 2.5, 2.8, 2.7, 2.2][i]}s ease-in-out infinite`,
@@ -212,15 +212,15 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
 
                 {/* Podcast Info */}
                 <div className="mt-3 space-y-1">
-                  <h3 className="text-base font-semibold text-white sm:text-lg">{podcastData.title}</h3>
-                  <p className="text-xs text-stone-300">
+                  <h3 className="text-base font-semibold text-stone-900 sm:text-lg">{podcastData.title}</h3>
+                  <p className="text-xs text-stone-500">
                     {podcastData.date} • {podcastData.duration}
                   </p>
-                  <p className="text-sm text-stone-400 line-clamp-1">{podcastData.description}</p>
+                  <p className="text-sm text-stone-600 line-clamp-1">{podcastData.description}</p>
                 </div>
 
                 {/* Play Button - pushed to bottom */}
-                <Button className="mt-auto h-9 w-full rounded-lg bg-white text-sm text-stone-900 hover:bg-stone-100">
+                <Button className="mt-auto h-9 w-full rounded-lg bg-stone-900 text-sm text-white hover:bg-stone-800">
                   <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
                   Play now
                 </Button>
@@ -228,7 +228,7 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
             </Card>
 
             {/* Calendar & Upcoming Classes Widget */}
-            <Card className="rounded-2xl border-stone-200 bg-white shadow-sm py-0">
+            <Card className="flex h-full flex-col rounded-2xl border-stone-200 bg-white shadow-sm py-0">
               <CardContent className="flex gap-4 items-start p-0" style={{ padding: `${widgetPadding}px` }}>
                 {/* Left: Day Display */}
                 <div className="flex flex-col">
@@ -255,84 +255,50 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
             </Card>
 
             {/* Student Alert Widget */}
-            <Card className="rounded-2xl border-stone-200 bg-white shadow-sm py-0">
+            <Card className="flex h-full flex-col rounded-2xl border-stone-200 bg-white shadow-sm py-0">
               <CardContent className="flex flex-col gap-3 items-start p-0" style={{ padding: `${widgetPadding}px` }}>
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wide text-stone-500">STUDENT ALERTS</p>
                 </div>
 
-                {/* Horizontal Student List */}
-                <div className="flex items-start gap-3">
+                {/* AI Summary */}
+                <div className="flex w-full flex-col gap-3">
                   {!studentAlerts ? (
                     // Loading state - shimmer effect
-                    <>
-                      {[0, 1, 2].map((index) => (
-                        <div key={index} className="flex flex-col items-center gap-1.5">
-                          {/* Avatar skeleton with gradient ring */}
-                          <div className="relative">
-                            <div className="rounded-full bg-gradient-to-br from-stone-200 via-stone-300 to-stone-200 p-0.5 animate-pulse">
-                              <div className="rounded-full bg-white p-0.5">
-                                <div className="size-12 rounded-full bg-stone-200 animate-pulse" />
-                              </div>
-                            </div>
-                          </div>
-                          {/* Name skeleton */}
-                          <div className="h-2.5 w-12 animate-pulse rounded bg-stone-200" />
-                        </div>
-                      ))}
-                    </>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full animate-pulse rounded bg-stone-200" />
+                      <div className="h-3 w-5/6 animate-pulse rounded bg-stone-200" />
+                      <div className="h-3 w-4/6 animate-pulse rounded bg-stone-200" />
+                    </div>
                   ) : (
-                    studentAlerts.map((alert, index) => {
-                      // Color scheme based on priority
-                      const colorSchemes = {
-                        high: {
-                          gradient: 'from-red-400 via-pink-500 to-orange-400',
-                          bg: 'bg-red-100',
-                          text: 'text-red-900',
-                        },
-                        medium: {
-                          gradient: 'from-purple-400 via-pink-500 to-red-400',
-                          bg: 'bg-purple-100',
-                          text: 'text-purple-900',
-                        },
-                        info: {
-                          gradient: 'from-blue-400 via-cyan-500 to-teal-400',
-                          bg: 'bg-blue-100',
-                          text: 'text-blue-900',
-                        },
-                      }
+                    <>
+                      {/* AI Summary Text */}
+                      <div className="space-y-2">
+                        <p className="text-sm leading-relaxed text-stone-700">
+                          {studentAlerts.length > 0 ? (
+                            <>
+                              <span className="font-semibold text-stone-900">{studentAlerts.length} students</span> require immediate attention today. Priority cases include {studentAlerts.filter(a => a.priority === 'high').length > 0 && <span className="font-medium text-red-700">{studentAlerts.filter(a => a.priority === 'high').length} urgent</span>}{studentAlerts.filter(a => a.priority === 'high').length > 0 && studentAlerts.filter(a => a.priority === 'medium').length > 0 && ', '}{studentAlerts.filter(a => a.priority === 'medium').length > 0 && <span className="font-medium text-amber-700">{studentAlerts.filter(a => a.priority === 'medium').length} moderate</span>} interventions needed.
+                            </>
+                          ) : (
+                            'No student alerts at this time. All cases are up to date.'
+                          )}
+                        </p>
+                      </div>
 
-                      const colors = colorSchemes[alert.priority]
-
-                      return (
+                      {/* View Details Link */}
+                      {studentAlerts.length > 0 && (
                         <button
-                          key={alert.student_id || index}
                           onClick={() => {
-                            if (!alert.student_id) return
-                            // If we have a class context, use it
-                            if (alert.class_id && onStudentClickWithClass) {
-                              onStudentClickWithClass(alert.class_id, alert.student_name)
-                            } else {
-                              // Fall back to standalone student profile
-                              onStudentClick?.(alert.student_name)
-                            }
+                            // Navigate to classroom or cases view
+                            window.location.href = '/classroom'
                           }}
-                          className="flex flex-col items-center gap-1 transition-transform hover:scale-105"
-                          disabled={!alert.student_id}
+                          className="flex items-center gap-1 text-xs font-medium text-stone-600 transition-colors hover:text-stone-900"
                         >
-                          <div className={`rounded-full bg-gradient-to-br ${colors.gradient} p-0.5`}>
-                            <div className="rounded-full bg-white p-0.5">
-                              <div className={`flex size-12 items-center justify-center rounded-full ${colors.bg} text-xs font-semibold ${colors.text}`}>
-                                {alert.initials}
-                              </div>
-                            </div>
-                          </div>
-                          <p className="max-w-[60px] truncate text-xs text-stone-600">
-                            {alert.student_name.split(' ')[0]}
-                          </p>
+                          View all cases
+                          <ArrowRight className="h-3 w-3" />
                         </button>
-                      )
-                    })
+                      )}
+                    </>
                   )}
                 </div>
               </CardContent>
