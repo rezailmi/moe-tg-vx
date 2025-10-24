@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, MonitorIcon, PanelRightIcon, SendIcon, SquareIcon, XIcon } from 'lucide-react'
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, Loader2Icon, MonitorIcon, PanelRightIcon, SendIcon, SquareIcon, XIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -16,6 +16,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Textarea } from '@/components/ui/textarea'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom'
+import { usePTMStudents } from '@/hooks/use-ptm-students'
+import { formatAttendanceRate } from '@/lib/utils/ptm-utils'
 
 type AssistantMode = 'floating' | 'sidebar'
 
@@ -28,6 +30,7 @@ type AssistantPanelProps = {
   showBodyHeading?: boolean
   showHeaderControls?: boolean
   onStudentClick?: (studentName: string) => void
+  onStudentClickWithClass?: (classId: string, studentName: string) => void
   incomingMessage?: string | null
   onMessageProcessed?: () => void
 }
@@ -35,6 +38,7 @@ type AssistantPanelProps = {
 type AssistantBodyProps = {
   showHeading?: boolean
   onStudentClick?: (studentName: string) => void
+  onStudentClickWithClass?: (classId: string, studentName: string) => void
   incomingMessage?: string | null
   onMessageProcessed?: () => void
 }
@@ -108,194 +112,248 @@ const getBadgeColor = (badge: string) => {
   return 'bg-muted text-muted-foreground'
 }
 
-function PTMResponseContent({ onStudentClick }: { onStudentClick?: (studentName: string) => void }) {
+function PTMResponseContent({
+  onStudentClick,
+  onStudentClickWithClass
+}: {
+  onStudentClick?: (studentName: string) => void
+  onStudentClickWithClass?: (classId: string, studentName: string) => void
+}) {
   const [currentPage, setCurrentPage] = useState(0)
 
-  const topStudents = [
-    {
-      name: 'Sarah Johnson',
-      grade: 'Excellent',
-      tags: ['Top performer'],
-      description: 'Consistently achieves high grades across all subjects. Shows strong leadership skills and actively participates in class discussions.'
-    },
-    {
-      name: 'Marcus Lee',
-      grade: 'Above average',
-      tags: ['Improved'],
-      description: 'Has shown significant improvement this semester. Particularly strong in mathematics and science subjects.'
-    },
-    {
-      name: 'Emily Wong',
-      grade: 'Excellent',
-      tags: ['Top performer'],
-      description: 'Excels in creative subjects and demonstrates exceptional critical thinking abilities. Active in extracurricular activities.'
-    },
-    {
-      name: 'Daniel Rodriguez',
-      grade: 'Above average',
-      tags: ['Consistent'],
-      description: 'Maintains steady performance across all subjects. Shows good time management and organizational skills.'
-    },
-    {
-      name: 'Aisha Patel',
-      grade: 'Above average',
-      tags: ['Creative'],
-      description: 'Demonstrates strong creative abilities and innovative problem-solving approaches. Excellent collaboration skills.'
-    }
-  ]
+  // Fetch real PTM student data
+  const { students, loading, error, isEmpty, highPriorityCount, mediumPriorityCount, totalCount, formClassId } = usePTMStudents()
 
-  const otherStudents = [
-    {
-      name: 'James Wilson',
-      grade: 'Average',
-      tags: ['Steady'],
-      description: 'Maintains consistent performance. Would benefit from additional support in reading comprehension.'
-    },
-    {
-      name: 'Olivia Martinez',
-      grade: 'Above average',
-      tags: ['Engaged'],
-      description: 'Shows enthusiasm in class and actively seeks help when needed. Strong in group work.'
-    },
-    {
-      name: 'Ryan Kim',
-      grade: 'Average',
-      tags: ['Improving'],
-      description: 'Recent improvement noted. Responds well to one-on-one attention and feedback.'
-    },
-    {
-      name: 'Sophie Taylor',
-      grade: 'Below average',
-      tags: ['Needs support'],
-      description: 'Struggling with core concepts. Would benefit from additional tutoring and parental involvement.'
-    },
-    {
-      name: 'Michael Brown',
-      grade: 'Average',
-      tags: ['Potential'],
-      description: 'Shows potential but lacks focus. Encouragement and structured study time recommended.'
+  // Handler for student clicks
+  const handleStudentClick = (studentName: string) => {
+    if (onStudentClickWithClass && formClassId) {
+      // Use class-aware routing if available
+      onStudentClickWithClass(formClassId, studentName)
+    } else if (onStudentClick) {
+      // Fall back to simple student click
+      onStudentClick(studentName)
     }
-  ]
+  }
 
-  const studentsToShow = currentPage === 0 ? [] : currentPage === 1 ? topStudents : otherStudents
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-8">
+        <Loader2Icon className="h-6 w-6 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Loading student data...</p>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+        <p className="text-sm font-medium text-red-900">Failed to load student data</p>
+        <p className="text-sm text-red-700">{error.message}</p>
+        <p className="text-xs text-red-600">Please check that you have students in your form class and try again.</p>
+      </div>
+    )
+  }
+
+  // Empty state
+  if (isEmpty) {
+    return (
+      <div className="flex flex-col gap-3 rounded-lg border bg-muted/50 p-6 text-center">
+        <p className="text-sm font-medium">No students found</p>
+        <p className="text-sm text-muted-foreground">
+          You don&apos;t have any students in your form class yet.
+        </p>
+      </div>
+    )
+  }
+
+  // Split students into priority groups for pagination
+  const highPriorityStudents = students.filter(s => s.priorityLevel === 'high')
+  const mediumLowStudents = students.filter(s => s.priorityLevel !== 'high')
+
+  // Determine which students to show based on current page
+  const studentsToShow = currentPage === 0
+    ? []
+    : currentPage === 1
+      ? students.slice(0, Math.min(8, students.length))
+      : students.slice(8, students.length)
+
+  // Calculate total pages based on student count
+  const hasMoreStudents = students.length > 8
+  const maxPages = hasMoreStudents ? 2 : 1
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Introduction */}
       <p className="text-sm">
-        On October 14, 2025, you&apos;ll be meeting with six parents, and there are two important pieces of information regarding two students that you should keep in mind.
+        I&apos;ve analyzed your form class of <span className="font-medium">{totalCount} students</span> to help you prepare for parent-teacher meetings.
+        {highPriorityCount > 0 && (
+          <> There {highPriorityCount === 1 ? 'is' : 'are'} <span className="font-medium text-red-600">{highPriorityCount} student{highPriorityCount > 1 ? 's' : ''}</span> requiring priority attention.</>
+        )}
       </p>
-      <p className="text-sm font-medium">Here are the two students you might want to focus on.</p>
 
-      {/* Student 1 - Alice Wong */}
-      <div
-        className={cn(
-          "flex flex-col gap-3 rounded-lg border bg-background p-4",
-          onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
-        )}
-        onClick={() => onStudentClick?.('Alice Wong')}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Alice Wong')}`}>
-            {getInitials('Alice Wong')}
-          </div>
-          <div className="flex flex-1 flex-col gap-1.5">
-            <span className="font-semibold">Alice Wong</span>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-            Excellent
-          </span>
-          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-            Hardworking
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Alice recently scored an A in her latest assessment, a significant improvement from her consistent B grades. This positive trend demonstrates her dedication and hard work, making it a meaningful achievement to celebrate with her parents.
-        </p>
-      </div>
-
-      {/* Student 2 - Reza Halim */}
-      <div
-        className={cn(
-          "flex flex-col gap-3 rounded-lg border bg-background p-4",
-          onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
-        )}
-        onClick={() => onStudentClick?.('Reza Halim')}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor('Reza Halim')}`}>
-            {getInitials('Reza Halim')}
-          </div>
-          <div className="flex flex-1 flex-col gap-1.5">
-            <span className="font-semibold">Reza Halim</span>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-            Above average
-          </span>
-          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-            Improved behavior
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Reza has shown remarkable growth and improvement since his last discipline case. The Case Management team&apos;s observations reveal a clear positive trajectory in both his behavior and academic engagement, a story worth celebrating with his parents.
-        </p>
-      </div>
-
-      {currentPage > 0 && (
+      {/* Show top priority students on page 0 */}
+      {currentPage === 0 && highPriorityStudents.length > 0 && (
         <>
-          <p className="text-sm font-medium">{currentPage === 1 ? 'Top 5 students in priority' : 'Other 5 students'}</p>
-          {studentsToShow.map((student) => (
+          <p className="text-sm font-medium">
+            {highPriorityStudents.length === 1
+              ? 'Here is the student you should focus on:'
+              : `Here are ${Math.min(highPriorityStudents.length, 2)} students you should focus on:`}
+          </p>
+
+          {highPriorityStudents.slice(0, 2).map((student) => (
             <div
-              key={student.name}
+              key={student.student_id}
               className={cn(
                 "flex flex-col gap-3 rounded-lg border bg-background p-4",
-                onStudentClick && "cursor-pointer hover:bg-accent transition-colors"
+                (onStudentClick || onStudentClickWithClass) && "cursor-pointer hover:bg-accent transition-colors"
               )}
-              onClick={() => onStudentClick?.(student.name)}
+              onClick={() => handleStudentClick(student.name)}
             >
+              {/* Student header */}
               <div className="flex items-center gap-3">
                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor(student.name)}`}>
                   {getInitials(student.name)}
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5">
                   <span className="font-semibold">{student.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    Attendance: {formatAttendanceRate(student.attendanceRate)}
+                  </span>
                 </div>
               </div>
+
+              {/* Tags/Badges */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                  {student.grade}
+                {/* Priority badge */}
+                <span className={cn(
+                  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
+                  student.badgeColor
+                )}>
+                  {student.priorityLevel === 'high' ? 'High Priority' : 'Medium Priority'}
                 </span>
+
+                {/* Conduct grade badge */}
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                  {student.conductGrade}
+                </span>
+
+                {/* Additional tags */}
+                {student.tags.slice(0, 2).map((tag) => (
+                  <span key={tag} className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Concern areas */}
+              {student.concernAreas.length > 0 && (
+                <div className="text-sm">
+                  <span className="font-medium">Concerns: </span>
+                  <span className="text-muted-foreground">{student.concernAreas.join(', ')}</span>
+                </div>
+              )}
+
+              {/* Strengths */}
+              {student.strengths.length > 0 && (
+                <div className="text-sm">
+                  <span className="font-medium">Strengths: </span>
+                  <span className="text-muted-foreground">{student.strengths.join(', ')}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Show paginated student list on pages 1 and 2 */}
+      {currentPage > 0 && studentsToShow.length > 0 && (
+        <>
+          <p className="text-sm font-medium">
+            {currentPage === 1
+              ? `Students 1-${Math.min(8, students.length)} (sorted by priority)`
+              : `Students 9-${students.length}`}
+          </p>
+
+          {studentsToShow.map((student) => (
+            <div
+              key={student.student_id}
+              className={cn(
+                "flex flex-col gap-3 rounded-lg border bg-background p-4",
+                (onStudentClick || onStudentClickWithClass) && "cursor-pointer hover:bg-accent transition-colors"
+              )}
+              onClick={() => handleStudentClick(student.name)}
+            >
+              {/* Student header */}
+              <div className="flex items-center gap-3">
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-medium ${getAvatarColor(student.name)}`}>
+                  {getInitials(student.name)}
+                </div>
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <span className="font-semibold">{student.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    Attendance: {formatAttendanceRate(student.attendanceRate)}
+                    {student.average_grade && ` • Avg: ${student.average_grade}%`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {/* Priority badge for high priority students */}
+                {student.priorityLevel === 'high' && (
+                  <span className={cn(
+                    "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
+                    student.badgeColor
+                  )}>
+                    High Priority
+                  </span>
+                )}
+
+                {/* Conduct grade */}
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                  {student.conductGrade}
+                </span>
+
+                {/* Student tags */}
                 {student.tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
                     {tag}
                   </span>
                 ))}
               </div>
+
+              {/* Summary */}
               <p className="text-sm text-muted-foreground">
-                {student.description}
+                {student.concernAreas.length > 0
+                  ? student.concernAreas.join('; ')
+                  : student.strengths.join('; ')}
               </p>
             </div>
           ))}
         </>
       )}
 
-      {currentPage < 2 && (
+      {/* Pagination button */}
+      {currentPage < maxPages && (
         <Button
           variant="outline"
           className="w-full"
           onClick={() => setCurrentPage(currentPage + 1)}
         >
-          {currentPage === 0 ? 'Show all summaries' : 'Show other 5'}
+          {currentPage === 0
+            ? 'Show all students'
+            : hasMoreStudents && currentPage === 1
+              ? `Show remaining ${students.length - 8} students`
+              : 'Show more'}
         </Button>
       )}
     </div>
   )
 }
 
-function AssistantBody({ onStudentClick, incomingMessage, onMessageProcessed }: AssistantBodyProps) {
+function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessage, onMessageProcessed }: AssistantBodyProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const { scrollRef } = useScrollToBottom({ dependencies: [messages] })
   const [input, setInput] = useState('')
@@ -413,7 +471,7 @@ function AssistantBody({ onStudentClick, incomingMessage, onMessageProcessed }: 
       const assistantMessage: Message = {
         id: generateMessageId(),
         role: 'assistant',
-        content: shortcut.command === '/ptm' ? <PTMResponseContent onStudentClick={onStudentClick} /> : 'This is a simulated response. In a real implementation, this would connect to an AI service.',
+        content: shortcut.command === '/ptm' ? <PTMResponseContent onStudentClick={onStudentClick} onStudentClickWithClass={onStudentClickWithClass} /> : 'This is a simulated response. In a real implementation, this would connect to an AI service.',
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, assistantMessage])
@@ -644,6 +702,7 @@ export function AssistantPanel({
   showBodyHeading = true,
   showHeaderControls = true,
   onStudentClick,
+  onStudentClickWithClass,
   incomingMessage,
   onMessageProcessed,
 }: AssistantPanelProps) {
@@ -671,6 +730,7 @@ export function AssistantPanel({
       <AssistantBody
         showHeading={showBodyHeading}
         onStudentClick={onStudentClick}
+        onStudentClickWithClass={onStudentClickWithClass}
         incomingMessage={incomingMessage}
         onMessageProcessed={onMessageProcessed}
       />
@@ -716,6 +776,8 @@ export function AssistantPanel({
         <div className="flex max-h-[calc(100vh-10rem)] min-h-[24rem] flex-col overflow-hidden p-5">
           <AssistantBody
             showHeading={showBodyHeading}
+            onStudentClick={onStudentClick}
+            onStudentClickWithClass={onStudentClickWithClass}
             incomingMessage={incomingMessage}
             onMessageProcessed={onMessageProcessed}
           />

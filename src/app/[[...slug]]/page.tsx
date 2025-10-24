@@ -404,9 +404,10 @@ const TabContent = memo(function TabContent({
             showBodyHeading={false}
             showHeaderControls={false}
             onStudentClick={handleOpenStudentProfile}
+            onStudentClickWithClass={handleOpenStudentFromClass}
           />
         ) : (
-          <AssistantBody showHeading={false} onStudentClick={handleOpenStudentProfile} />
+          <AssistantBody showHeading={false} onStudentClick={handleOpenStudentProfile} onStudentClickWithClass={handleOpenStudentFromClass} />
         )}
       </div>
     )
@@ -2315,6 +2316,7 @@ export default function Home() {
                   onModeChange={handleAssistantModeChange}
                   className="flex h-full w-full flex-col"
                   onStudentClick={handleOpenStudentProfile}
+                  onStudentClickWithClass={handleOpenStudentFromClass}
                   incomingMessage={pendingAssistantMessage}
                   onMessageProcessed={handleMessageProcessed}
                 />
@@ -2331,6 +2333,7 @@ export default function Home() {
             onOpenChange={setIsAssistantOpen}
             onModeChange={handleAssistantModeChange}
             onStudentClick={handleOpenStudentProfile}
+            onStudentClickWithClass={handleOpenStudentFromClass}
             incomingMessage={pendingAssistantMessage}
             onMessageProcessed={handleMessageProcessed}
           />
