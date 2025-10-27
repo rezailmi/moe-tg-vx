@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Send, Paperclip, MoreVertical, MessageSquare, Star } from 'lucide-react'
+import { Send, Paperclip, MoreVertical, MessageSquare, Star, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getInitials, getAvatarColor } from '@/lib/chat/utils'
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom'
-import { ConversationViewSkeleton } from './conversation-view-skeleton'
+import { useConversation } from '@/hooks/use-conversation-lookup'
+import { useSendMessageMutation } from '@/hooks/mutations/use-send-message-mutation'
+import { useUser } from '@/contexts/user-context'
 import type { ConversationGroup, ConversationThread } from '@/types/inbox'
-import type { Message, Attachment } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 interface ConversationViewProps {
   conversationId?: string
@@ -20,78 +22,46 @@ interface ConversationViewProps {
 
 export function ConversationView({ conversationId, conversationGroups }: ConversationViewProps) {
   const [newMessage, setNewMessage] = useState('')
-  const [conversation, setConversation] = useState<ConversationThread | undefined>()
-  const [messages, setMessages] = useState<Message[]>([])
+  const { user } = useUser()
+
+  // Instant O(1) lookup - no delay, no linear search
+  const conversation = useConversation(conversationGroups, conversationId)
+
+  // Track the displayed conversation to prevent flicker during transitions
+  const [displayedConversation, setDisplayedConversation] = useState<ConversationThread | undefined>()
+
+  // Only update displayed conversation when we have a valid one
+  // This prevents flicker when switching - keeps previous conversation visible during transition
+  useEffect(() => {
+    if (conversation) {
+      setDisplayedConversation(conversation)
+    }
+  }, [conversation])
+
+  // Get messages from displayed conversation (not the transitioning one)
+  const messages = displayedConversation?.messages || []
+
+  // Auto-scroll to bottom when messages change
   const { scrollRef } = useScrollToBottom({ dependencies: [messages] })
 
-  // Cache for loaded conversations - persists across renders
-  const conversationCacheRef = useRef<Map<string, { conversation: ConversationThread; messages: Message[] }>>(new Map())
+  // Mutation hook for sending messages with optimistic updates
+  const sendMessageMutation = useSendMessageMutation(user?.user_id)
 
-  useEffect(() => {
-    if (!conversationId) {
-      setConversation(undefined)
-      setMessages([])
-      return
-    }
+  const handleSendMessage = async () => {
+    if (!displayedConversation || !newMessage.trim() || sendMessageMutation.isPending) return
 
-    // Check if conversation is in cache
-    const cached = conversationCacheRef.current.get(conversationId)
-    if (cached) {
-      // Use cached data immediately (no skeleton, no delay)
-      setConversation(cached.conversation)
-      setMessages(cached.messages)
-      return
-    }
+    const messageContent = newMessage.trim()
 
-    // Not in cache - simulate async loading with setTimeout (in real app, this would be an API call)
-    const timeoutId = setTimeout(() => {
-      // Find the conversation
-      for (const group of conversationGroups) {
-        const thread = group.threads.find((t) => t.id === conversationId)
-        if (thread) {
-          const loadedData = {
-            conversation: thread,
-            messages: thread.messages,
-          }
-          // Store in cache for future use
-          conversationCacheRef.current.set(conversationId, loadedData)
-          // Update state
-          setConversation(thread)
-          setMessages(thread.messages)
-          break
-        }
-      }
-    }, 400) // 400ms delay to show skeleton
-
-    return () => clearTimeout(timeoutId)
-  }, [conversationId, conversationGroups])
-
-  // Derive loading state synchronously - only show skeleton if:
-  // 1. We have a conversationId to load AND
-  // 2. The conversation is NOT in cache AND
-  // 3. Either we have no conversation loaded OR the loaded conversation doesn't match
-  const isInCache = conversationId ? conversationCacheRef.current.has(conversationId) : false
-  const shouldShowSkeleton = conversationId && !isInCache && (!conversation || conversation.id !== conversationId)
-
-  const handleSendMessage = () => {
-    if (!conversation || !newMessage.trim()) return
-
-    const message: Message = {
-      id: `msg-${Date.now()}`,
-      conversationId: conversation.id,
-      senderId: 'teacher-1',
-      senderName: 'You',
-      senderRole: 'teacher',
-      type: 'text',
-      content: newMessage.trim(),
-      attachments: [],
-      sentAt: new Date(),
-      status: 'sent',
-      readBy: [],
-    }
-
-    setMessages([...messages, message])
+    // Clear input immediately for better UX
     setNewMessage('')
+
+    // Send message with optimistic update (mutation hook handles the optimistic UI)
+    sendMessageMutation.mutate({
+      conversationId: displayedConversation.id,
+      content: messageContent,
+      senderType: 'teacher',
+      senderName: user?.name || 'Teacher', // Use actual user name
+    })
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,15 +71,11 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
     }
   }
 
-  // Show loading skeleton when switching conversations
-  if (shouldShowSkeleton) {
-    return <ConversationViewSkeleton />
-  }
-
-  // Show empty state when no conversation is selected
-  if (!conversationId || !conversation) {
+  // Show empty state ONLY when no conversation is selected in URL
+  // Never show it when conversationId exists (even during loading/transition)
+  if (!conversationId) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center px-4">
+      <div className="flex h-full flex-col items-center justify-center text-center px-4 bg-stone-50">
         <div className="rounded-full bg-stone-200 p-6 mb-4">
           <MessageSquare className="size-12 text-stone-500" />
         </div>
@@ -123,9 +89,15 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
     )
   }
 
-  const parentParticipant = conversation.participants.find((p) => p.role === 'parent')
-  const displayName = conversation.type === 'group'
-    ? conversation.groupName || 'Group Chat'
+  // If we don't have a conversation to display yet, return null (blank screen)
+  // This prevents the flicker - better to show nothing briefly than wrong content
+  if (!displayedConversation) {
+    return null
+  }
+
+  const parentParticipant = displayedConversation.participants.find((p) => p.role === 'parent')
+  const displayName = displayedConversation.type === 'group'
+    ? displayedConversation.groupName || 'Group Chat'
     : parentParticipant?.name || 'Unknown'
 
   const groupMessagesByDate = (msgs: Message[]) => {
@@ -161,7 +133,7 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
             <div>
               <h2 className="text-sm font-semibold text-stone-900">{displayName}</h2>
               <p className="text-xs text-stone-600">
-                Parent of {conversation.studentContext.studentName}
+                Parent of {displayedConversation.studentContext.studentName}
               </p>
             </div>
           </div>
@@ -177,8 +149,8 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="space-y-6 bg-stone-50 px-6 py-4">
+      <ScrollArea className="flex-1 min-h-0 bg-stone-50">
+        <div className="space-y-6 px-6 py-4 min-h-full">
           {messageGroups.map((group, groupIndex) => (
             <div key={groupIndex} className="space-y-4">
               {/* Date separator */}
@@ -253,10 +225,14 @@ export function ConversationView({ conversationId, conversationGroups }: Convers
             type="button"
             size="icon"
             onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || sendMessageMutation.isPending}
             className="h-10 w-10 flex-shrink-0 bg-stone-900 hover:bg-stone-800"
           >
-            <Send className="w-5 h-5" />
+            {sendMessageMutation.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
           </Button>
         </div>
 

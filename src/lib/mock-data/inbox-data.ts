@@ -490,7 +490,24 @@ const conversation5: ConversationThread = {
   ),
 }
 
-// Conversation Groups
+// =============================================================================
+// DEPRECATED: Conversation Groups (Mock Data)
+// =============================================================================
+// ⚠️ DEPRECATED: This mock conversation data is NO LONGER USED by the inbox.
+//
+// The inbox now uses real database data from the `conversations` and
+// `conversation_messages` tables. See:
+// - Migration: supabase/migrations/20251027112648_create_conversations_tables.sql
+// - Hook: src/hooks/use-inbox-conversations.ts
+// - API: src/app/api/conversations/route.ts
+//
+// This data is kept for reference only and may be removed in the future.
+// Last used: October 27, 2025 (before database migration)
+// =============================================================================
+
+/**
+ * @deprecated Use `useInboxConversations()` hook to fetch real conversations from database
+ */
 export const conversationGroups: ConversationGroup[] = [
   {
     student: students['student-1'],
@@ -534,11 +551,20 @@ export const conversationGroups: ConversationGroup[] = [
   },
 ]
 
-// Helper functions
+// =============================================================================
+// DEPRECATED: Helper Functions
+// =============================================================================
+
+/**
+ * @deprecated Use `useInboxConversations()` hook and filter the results instead
+ */
 export function getConversationGroup(conversationId: string): ConversationGroup | undefined {
   return conversationGroups.find((group) => group.threads.some((t) => t.id === conversationId))
 }
 
+/**
+ * @deprecated Use `useConversationMessages(conversationId)` hook to fetch real messages
+ */
 export function getConversationThread(conversationId: string): ConversationThread | undefined {
   for (const group of conversationGroups) {
     const thread = group.threads.find((t) => t.id === conversationId)
@@ -547,10 +573,16 @@ export function getConversationThread(conversationId: string): ConversationThrea
   return undefined
 }
 
+/**
+ * @deprecated Use `useInboxConversations()` and filter by priority in your component
+ */
 export function filterConversationsByPriority(priority: string): ConversationGroup[] {
   return conversationGroups.filter((group) => group.priority === priority)
 }
 
+/**
+ * @deprecated Use `useInboxConversations()` and implement view filtering in your component
+ */
 export function getConversationsByView(viewType: string): ConversationGroup[] {
   switch (viewType) {
     case 'inbox':
