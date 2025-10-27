@@ -727,6 +727,7 @@ We keep all important docs in `.agent` folder and keep updating them, structure 
 **Important Rules:**
 - Always update `.agent` docs after we implement certain feature, to make sure it fully reflects the up to date information
 - Before you plan any implementation, always read the `.agent/README` first to get context
+- When in plan mode, always store the created plan in `.agent/Tasks/[feature-name].md` BEFORE implementing, only after user accepts the plan
 
 ## Development Commands
 

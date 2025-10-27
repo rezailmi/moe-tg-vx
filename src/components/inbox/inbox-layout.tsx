@@ -1,14 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { ConversationList } from './conversation-list'
 import { ConversationView } from './conversation-view'
 import { MetadataSidebar } from './metadata-sidebar'
-import { conversationGroups as mockConversationGroups } from '@/lib/mock-data/inbox-data'
-import { useInboxStudents } from '@/hooks/use-inbox-students'
-import { useUser } from '@/contexts/user-context'
-import { useClasses } from '@/hooks/use-classes'
-import type { Priority, ConversationGroup } from '@/types/inbox'
+import { useInbox } from '@/contexts/inbox-context'
+import type { Priority } from '@/types/inbox'
 
 interface InboxLayoutProps {
   conversationId?: string
@@ -18,73 +15,14 @@ interface InboxLayoutProps {
 export function InboxLayout({ conversationId, onConversationClick }: InboxLayoutProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all')
-  const { user } = useUser()
-  const { formClass } = useClasses(user?.user_id || '')
-  const { students, loading, error } = useInboxStudents()
 
-  // Merge real student data with mock conversations
-  const conversationGroups = useMemo<ConversationGroup[]>(() => {
-    // Convert students map to array
-    const studentArray = Array.from(students.values())
-
-    // Use form class name if available, otherwise fall back to "5A"
-    const displayClassName = formClass?.class_name || '5A'
-    const displayClassId = formClass?.class_id || ''
-
-    // If we have real students, update the first few mock conversations with real data
-    if (studentArray.length > 0) {
-      return mockConversationGroups.map((group, index) => {
-        const realStudent = studentArray[index]
-        if (realStudent) {
-          // Update student info - use form class name instead of student's individual class
-          const updatedStudent = {
-            ...group.student,
-            id: realStudent.student_id,
-            name: realStudent.name,
-            class: displayClassName,
-            class_id: displayClassId,
-            class_name: displayClassName,
-          }
-
-          // Update parent participant name to match student
-          const updatedThreads = group.threads.map(thread => {
-            const parentParticipant = thread.participants.find(p => p.role === 'parent')
-            if (parentParticipant) {
-              // Generate parent name from student name (e.g., "Tan Wei Jie" -> "Mrs. Tan" or "Mr. Tan")
-              const lastName = realStudent.name.split(' ')[0]
-              const updatedParentName = `Mrs. ${lastName}`
-
-              return {
-                ...thread,
-                participants: thread.participants.map(p =>
-                  p.role === 'parent'
-                    ? { ...p, name: updatedParentName }
-                    : p
-                ),
-                studentContext: {
-                  ...thread.studentContext,
-                  studentId: realStudent.student_id,
-                  studentName: realStudent.name,
-                  className: displayClassName,
-                }
-              }
-            }
-            return thread
-          })
-
-          return {
-            ...group,
-            student: updatedStudent,
-            threads: updatedThreads,
-          }
-        }
-        return group
-      })
-    }
-
-    // Fall back to mock data if no real students yet
-    return mockConversationGroups
-  }, [students, formClass])
+  // Get stable conversation data from context
+  // This data persists across navigation, preventing flicker
+  const {
+    conversationGroups,
+    isLoading: loading,
+    error
+  } = useInbox()
 
   // Filter by priority
   let filteredGroups = conversationGroups
@@ -115,7 +53,7 @@ export function InboxLayout({ conversationId, onConversationClick }: InboxLayout
           onSearchChange={setSearchQuery}
           priorityFilter={priorityFilter}
           onPriorityFilterChange={setPriorityFilter}
-          isLoading={loading && students.size === 0}
+          isLoading={loading}
         />
       </div>
 
@@ -135,7 +73,7 @@ export function InboxLayout({ conversationId, onConversationClick }: InboxLayout
             <MetadataSidebar
               conversationId={conversationId}
               conversationGroups={conversationGroups}
-              isLoading={loading && students.size === 0}
+              isLoading={loading}
             />
           </div>
         )}

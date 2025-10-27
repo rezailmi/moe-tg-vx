@@ -2,8 +2,9 @@
 
 import type { Conversation, Message, Participant } from './chat'
 
+// Database-aligned types
+export type ConversationStatus = 'active' | 'archived' | 'resolved'
 export type Priority = 'urgent' | 'follow-up' | 'active' | 'resolved'
-export type ConversationStatus = 'open' | 'snoozed' | 'closed'
 export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertType = 'academic' | 'behavioral' | 'attendance' | 'health'
 export type ViewType =
@@ -86,4 +87,77 @@ export interface ConversationFilter {
   priority?: Priority
   status?: ConversationStatus
   searchQuery?: string
+}
+
+// =====================================================
+// Database-Aligned Types (from new schema)
+// =====================================================
+
+// Database conversation record (matches conversations table)
+export interface DbConversation {
+  id: string
+  student_id: string
+  class_id: string
+  teacher_id: string
+  status: ConversationStatus
+  subject?: string | null
+  last_message_at: string
+  created_at: string
+  updated_at: string
+}
+
+// Database message record (matches conversation_messages table)
+export interface DbMessage {
+  id: string
+  conversation_id: string
+  sender_type: 'teacher' | 'parent'
+  sender_name: string
+  content: string
+  read: boolean
+  created_at: string
+}
+
+// Database participant record (matches conversation_participants table)
+export interface DbParticipant {
+  id: string
+  conversation_id: string
+  participant_type: 'teacher' | 'parent'
+  participant_name: string
+  last_read_at?: string | null
+  created_at: string
+}
+
+// Enriched conversation with joined data (from API)
+export interface EnrichedConversation extends DbConversation {
+  student?: {
+    id: string
+    name: string
+    class_id: string
+    class_name: string
+  }
+  messages?: DbMessage[]
+  participants?: DbParticipant[]
+  unread_count?: number
+}
+
+// API response types
+export interface ConversationsListResponse {
+  conversations: EnrichedConversation[]
+}
+
+export interface MessagesListResponse {
+  messages: DbMessage[]
+}
+
+export interface CreateConversationRequest {
+  student_id: string
+  class_id: string
+  teacher_id: string
+  subject?: string
+}
+
+export interface SendMessageRequest {
+  sender_type: 'teacher' | 'parent'
+  sender_name: string
+  content: string
 }

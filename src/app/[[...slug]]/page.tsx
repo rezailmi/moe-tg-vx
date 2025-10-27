@@ -56,10 +56,12 @@ import { StudentProfile } from '@/components/student-profile'
 import { RecordsContent } from '@/components/records-content'
 import { ExploreContent } from '@/components/explore-content'
 import { InboxContent } from '@/components/messages/inbox-content'
+import { InboxProvider } from '@/contexts/inbox-context'
 import { SettingsContent } from '@/components/settings-content'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-import { UserProvider } from '@/contexts/user-context'
+import { UserProvider, useUser } from '@/contexts/user-context'
 import { useAssistant } from '@/contexts/assistant-context'
+import { useConversationsRawQuery } from '@/hooks/queries/use-conversations-query'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -738,6 +740,22 @@ const TabContent = memo(function TabContent({
     </div>
   )
 })
+
+// Component to get unread conversation count - must be inside UserProvider
+function UnreadCountBadge() {
+  const { user } = useUser()
+  const { data: inboxConversations = [] } = useConversationsRawQuery({
+    teacherId: user?.user_id,
+  })
+
+  const unreadCount = useMemo(() => {
+    return inboxConversations.filter((conv) => (conv.unread_count || 0) > 0).length
+  }, [inboxConversations])
+
+  if (unreadCount === 0) return null
+
+  return <SidebarMenuBadge>{unreadCount}</SidebarMenuBadge>
+}
 
 export default function Home() {
   const router = useRouter()
@@ -1680,7 +1698,6 @@ export default function Home() {
   }, [isAssistantTabActive, handleAssistantButtonClick, handleCloseTab])
 
   return (
-    <UserProvider>
     <div className="flex h-svh w-full">
       <Sidebar variant="inset" collapsible="icon">
         <SidebarContent className="gap-6">
@@ -1713,7 +1730,6 @@ export default function Home() {
                 {primaryPages.slice(0, 4).map((page) => {
                   const Icon = page.icon
                   const isInbox = page.key === 'inbox'
-                  const urgentMessageCount = isInbox ? 2 : 0 // TODO: Replace with actual urgent conversation count
 
                   return (
                     <SidebarMenuItem key={page.key}>
@@ -1731,9 +1747,7 @@ export default function Home() {
                         <Icon className="size-4" />
                         <span>{page.label}</span>
                       </SidebarMenuButton>
-                      {isInbox && urgentMessageCount > 0 && (
-                        <SidebarMenuBadge>{urgentMessageCount}</SidebarMenuBadge>
-                      )}
+                      {isInbox && <UnreadCountBadge />}
                     </SidebarMenuItem>
                   )
                 })}
@@ -2341,6 +2355,5 @@ export default function Home() {
           />
         )}
       </div>
-    </UserProvider>
     )
   }

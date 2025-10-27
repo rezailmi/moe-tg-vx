@@ -4,9 +4,12 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { SWRProvider } from '@/components/providers/swr-provider'
+import { QueryProvider } from '@/providers/query-provider'
 import { FontSizeProvider } from '@/contexts/font-size-context'
 import { AccessibilityProvider } from '@/contexts/accessibility-context'
 import { AssistantProvider } from '@/contexts/assistant-context'
+import { UserProvider } from '@/contexts/user-context'
+import { InboxProvider } from '@/contexts/inbox-context'
 import './globals.css'
 
 const geistSans = Geist({
@@ -61,11 +64,17 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <SWRProvider>
-                <AssistantProvider>
-                  <SidebarProvider>{children}</SidebarProvider>
-                </AssistantProvider>
-              </SWRProvider>
+              <QueryProvider>
+                <UserProvider>
+                  <InboxProvider>
+                    <SWRProvider>
+                      <AssistantProvider>
+                        <SidebarProvider>{children}</SidebarProvider>
+                      </AssistantProvider>
+                    </SWRProvider>
+                  </InboxProvider>
+                </UserProvider>
+              </QueryProvider>
             </ThemeProvider>
           </AccessibilityProvider>
         </FontSizeProvider>
