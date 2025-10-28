@@ -8,6 +8,7 @@ import { FontSizeProvider } from '@/contexts/font-size-context'
 import { AccessibilityProvider } from '@/contexts/accessibility-context'
 import { AssistantProvider } from '@/contexts/assistant-context'
 import { UserProvider } from '@/contexts/user-context'
+import { UserRoleProvider } from '@/contexts/user-role-context'
 import { InboxProvider } from '@/contexts/inbox-context'
 import './globals.css'
 
@@ -65,11 +66,13 @@ export default function RootLayout({
             >
               <QueryProvider>
                 <UserProvider>
-                  <InboxProvider>
-                    <AssistantProvider>
-                      <SidebarProvider>{children}</SidebarProvider>
-                    </AssistantProvider>
-                  </InboxProvider>
+                  <UserRoleProvider>
+                    <InboxProvider>
+                      <AssistantProvider>
+                        <SidebarProvider>{children}</SidebarProvider>
+                      </AssistantProvider>
+                    </InboxProvider>
+                  </UserRoleProvider>
                 </UserProvider>
               </QueryProvider>
             </ThemeProvider>

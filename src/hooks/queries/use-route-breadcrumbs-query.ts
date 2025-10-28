@@ -245,7 +245,7 @@ function generateBreadcrumbs(
 
       case 'explore':
         breadcrumbs.push({
-          label: 'All apps',
+          label: 'All Apps',
           path: 'explore',
           isActive: isLast,
           onClick: onNavigate && !isLast ? () => onNavigate('explore') : undefined,

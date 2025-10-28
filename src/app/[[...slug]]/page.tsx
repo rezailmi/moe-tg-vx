@@ -38,6 +38,7 @@ import {
   Sparkle,
   Bell,
   Presentation,
+  Shield,
 } from 'lucide-react'
 
 import {
@@ -47,6 +48,8 @@ import {
   type AssistantMode,
 } from '@/components/assistant-panel'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { HomeContent } from '@/components/home-content'
 import { PulseContent } from '@/components/pulse-content'
 import { SchoolDashboard } from '@/components/school-dashboard'
@@ -66,6 +69,7 @@ import { InboxProvider } from '@/contexts/inbox-context'
 import { SettingsContent } from '@/components/settings-content'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { UserProvider, useUser } from '@/contexts/user-context'
+import { UserRoleProvider, useUserRole } from '@/contexts/user-role-context'
 import { useAssistant } from '@/contexts/assistant-context'
 import { useConversationsRawQuery } from '@/hooks/queries/use-conversations-query'
 import { createClient } from '@/lib/supabase/client'
@@ -91,6 +95,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -114,7 +119,7 @@ const primaryPages = [
   { key: 'calendar', label: 'Timetable', icon: CalendarDays, tooltip: 'Timetable' },
   { key: 'forms', label: 'Forms', icon: FileText, tooltip: 'Forms' },
   { key: 'notifications', label: 'Notifications', icon: Bell, tooltip: 'Notifications' },
-  { key: 'explore', label: 'All apps', icon: Compass, tooltip: 'All apps' },
+  { key: 'explore', label: 'All Apps', icon: Compass, tooltip: 'All Apps' },
 ] as const
 
 const newTabConfig = {
@@ -211,7 +216,7 @@ const emptyStates: Record<TabKey, EmptyState> = {
     secondaryAction: 'Invite a teammate',
   },
   explore: {
-    heading: 'All apps',
+    heading: 'All Apps',
     title: 'Discover all available apps',
     description:
       'Browse through all apps and find the tools you need to enhance your workflow.',
@@ -426,6 +431,9 @@ const TabContent = memo(function TabContent({
   classroomNamesRef: React.MutableRefObject<Map<string, string>>
   router: ReturnType<typeof useRouter>
 }) {
+  // Account role management
+  const { role, setRole } = useUserRole()
+
   // Use currentUrl for content rendering decisions
   // Only render content for the current URL
   if (isAssistantTabActive) {
@@ -692,33 +700,12 @@ const TabContent = memo(function TabContent({
 
   if (currentState) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-          {ActiveIcon ? <ActiveIcon className="size-7" /> : <Plus className="size-7" />}
-        </div>
-        <div className="mt-6 space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {currentState.title}
-          </h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {currentState.description}
-          </p>
-        </div>
-        {(currentState.primaryAction || currentState.secondaryAction) && (
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {currentState.primaryAction && (
-              <Button size="sm">{currentState.primaryAction}</Button>
-            )}
-            {currentState.secondaryAction && (
-              <Button size="sm" variant="outline">
-                {currentState.secondaryAction}
-              </Button>
-            )}
-          </div>
-        )}
-        {isProfileActive && (
-          <div className="mt-10 w-full max-w-md text-left">
-            <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
+      <ScrollArea className="h-full w-full">
+        <div className="mx-auto w-full max-w-3xl space-y-8 px-8 py-10">
+          {/* Profile Content */}
+          {isProfileActive && (
+            <>
+              <div className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-accent hover:shadow-lg">
               <div className="flex items-center gap-4">
                 <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary transition-colors group-hover:bg-primary/20">
                   DT
@@ -765,9 +752,122 @@ const TabContent = memo(function TabContent({
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+
+            {/* Account Switcher Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="size-5" />
+                  Account Role
+                </CardTitle>
+                <CardDescription>
+                  Switch between Form Teacher and Year Head roles to access different features
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Current Role</Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          "w-full rounded-lg border bg-background px-4 py-3 text-left transition-all hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          role === 'form-teacher' ? "border-blue-200" : "border-purple-200"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "flex size-10 items-center justify-center rounded-full transition-colors",
+                            role === 'form-teacher'
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-purple-100 text-purple-700"
+                          )}>
+                            {role === 'form-teacher' ? <User className="size-5" /> : <Shield className="size-5" />}
+                          </div>
+                          <div className="flex flex-1 flex-col items-start">
+                            <span className="font-semibold text-sm">
+                              {role === 'form-teacher' ? 'Form Teacher' : 'Year Head'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {role === 'form-teacher'
+                                ? 'Manage your classes and students'
+                                : 'School management and oversight'}
+                            </span>
+                          </div>
+                          <ChevronDown className="size-4 text-muted-foreground" />
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                      <DropdownMenuItem
+                        className="px-3 py-4 cursor-pointer"
+                        onClick={() => setRole('form-teacher')}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                            <User className="size-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm">Form Teacher</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">Manage your classes and students</div>
+                          </div>
+                          {role === 'form-teacher' && (
+                            <div className="size-2 rounded-full bg-blue-600" />
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="px-3 py-4 cursor-pointer"
+                        onClick={() => setRole('year-head')}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="flex size-10 items-center justify-center rounded-full bg-purple-100 text-purple-700">
+                            <Shield className="size-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm">Year Head</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">School management and oversight</div>
+                          </div>
+                          {role === 'year-head' && (
+                            <div className="size-2 rounded-full bg-purple-600" />
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className={cn(
+                  "rounded-lg border p-4 text-sm transition-colors",
+                  role === 'form-teacher'
+                    ? "bg-blue-50/50 border-blue-200"
+                    : "bg-purple-50/50 border-purple-200"
+                )}>
+                  <p className="font-semibold flex items-center gap-2">
+                    {role === 'form-teacher' ? (
+                      <>
+                        <User className="size-4" />
+                        Form Teacher Access
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="size-4" />
+                        Year Head Access
+                      </>
+                    )}
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1.5 leading-relaxed">
+                    {role === 'form-teacher'
+                      ? 'You have access to your classes, students, and teaching tools. School Management features are hidden.'
+                      : 'You have full access including School Management features and oversight tools for year-wide administration.'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            </>
+          )}
+        </div>
+      </ScrollArea>
     )
   }
 
@@ -818,6 +918,7 @@ export default function Home() {
   const params = useParams()
   const { state: sidebarState, toggleSidebar } = useSidebar()
   const { user } = useUser()
+  const { role } = useUserRole()
 
   // Use assistant context for persistent state
   const { isOpen: isAssistantOpen, setIsOpen: setIsAssistantOpen, mode: assistantMode, setMode: setAssistantMode } = useAssistant()
@@ -1802,31 +1903,35 @@ export default function Home() {
 
               <SidebarSeparator className="mx-0 my-2 w-full" />
 
-              {/* School management section */}
-              <div className="space-y-1">
-                <SidebarGroupLabel className="text-xs">School Management</SidebarGroupLabel>
-                <SidebarMenu>
-                  {[primaryPages[2]].map((page) => {
-                    const Icon = page.icon
+              {/* School management section - Only visible for Year Heads */}
+              {role === 'year-head' && (
+                <>
+                  <div className="space-y-1">
+                    <SidebarGroupLabel className="text-xs">School Management</SidebarGroupLabel>
+                    <SidebarMenu>
+                      {[primaryPages[2]].map((page) => {
+                        const Icon = page.icon
 
-                    return (
-                      <SidebarMenuItem key={page.key}>
-                        <SidebarMenuButton
-                          tooltip={page.tooltip}
-                          isActive={activeTab === page.key}
-                          onClick={() => handleNavigate(page.key)}
-                          type="button"
-                        >
-                          <Icon className="size-4" />
-                          <span>{page.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </div>
+                        return (
+                          <SidebarMenuItem key={page.key}>
+                            <SidebarMenuButton
+                              tooltip={page.tooltip}
+                              isActive={activeTab === page.key}
+                              onClick={() => handleNavigate(page.key)}
+                              type="button"
+                            >
+                              <Icon className="size-4" />
+                              <span>{page.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        )
+                      })}
+                    </SidebarMenu>
+                  </div>
 
-              <SidebarSeparator className="mx-0 my-2 w-full" />
+                  <SidebarSeparator className="mx-0 my-2 w-full" />
+                </>
+              )}
 
               {/* School life section */}
               <div className="space-y-1">
