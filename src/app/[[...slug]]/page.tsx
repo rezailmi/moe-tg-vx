@@ -36,6 +36,8 @@ import {
   ChevronDown,
   RotateCcw,
   Sparkle,
+  Bell,
+  Presentation,
 } from 'lucide-react'
 
 import {
@@ -56,6 +58,8 @@ import { StudentProfile } from '@/components/student-profile'
 import { RecordsContent } from '@/components/records-content'
 import { ExploreContent } from '@/components/explore-content'
 import { MessagesPageContent } from '@/components/messages/messages-page-content'
+import { NotificationsContent } from '@/components/messages/notifications-content'
+import { AnnouncementsContent } from '@/components/messages/announcements-content'
 import { FormsContent } from '@/components/forms-content'
 import { TeachingContent } from '@/components/teaching-content'
 import { InboxProvider } from '@/contexts/inbox-context'
@@ -64,6 +68,7 @@ import { ThemeSwitcher } from '@/components/theme-switcher'
 import { UserProvider, useUser } from '@/contexts/user-context'
 import { useAssistant } from '@/contexts/assistant-context'
 import { useConversationsRawQuery } from '@/hooks/queries/use-conversations-query'
+import { createClient } from '@/lib/supabase/client'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,8 +100,6 @@ import {
 } from '@/components/ui/tooltip'
 import { useRouteBreadcrumbs } from '@/hooks/queries/use-route-breadcrumbs-query'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
-import { createClient } from '@/lib/supabase/client'
-import { getTeacherFormClass } from '@/lib/supabase/queries'
 
 const primaryPages = [
   { key: 'home', label: 'Home', icon: HomeIcon, tooltip: 'Home' },
@@ -105,9 +108,12 @@ const primaryPages = [
   { key: 'teaching', label: 'Teaching', icon: GraduationCap, tooltip: 'Teaching' },
   { key: 'learning', label: 'Learning', icon: BookOpen, tooltip: 'Learning' },
   { key: 'community', label: 'Community', icon: Users2, tooltip: 'Community' },
-  { key: 'inbox', label: 'Messages', icon: Inbox, tooltip: 'Messages' },
+  { key: 'inbox', label: 'Communications', icon: Inbox, tooltip: 'Communications' },
+  { key: 'announcements', label: 'Announcements', icon: MessageSquare, tooltip: 'Announcements' },
+  { key: 'inbox', label: 'Parent & communication', icon: Presentation, tooltip: 'Parent & communication' },
   { key: 'calendar', label: 'Timetable', icon: CalendarDays, tooltip: 'Timetable' },
   { key: 'forms', label: 'Forms', icon: FileText, tooltip: 'Forms' },
+  { key: 'notifications', label: 'Notifications', icon: Bell, tooltip: 'Notifications' },
   { key: 'explore', label: 'All apps', icon: Compass, tooltip: 'All apps' },
 ] as const
 
@@ -238,12 +244,26 @@ const emptyStates: Record<TabKey, EmptyState> = {
     primaryAction: 'Connect calendar',
   },
   inbox: {
-    heading: 'Messages',
+    heading: 'Communications',
     title: 'No updates right now',
     description:
       "When teammates mention you or share docs, they'll show up here for quick triage.",
     icon: Inbox,
     primaryAction: 'Compose a note',
+  },
+  announcements: {
+    heading: 'Announcements',
+    title: 'No announcements yet',
+    description:
+      'Important updates and alerts will appear here when they are available.',
+    icon: MessageSquare,
+  },
+  notifications: {
+    heading: 'Notifications',
+    title: 'No notifications yet',
+    description:
+      'You&apos;ll see notifications here when there are important updates, alerts, or messages that require your attention.',
+    icon: Bell,
   },
   recents: {
     heading: 'Recents',
@@ -361,6 +381,7 @@ const TabContent = memo(function TabContent({
   handleOpenStudentFromClass,
   handleOpenGrades,
   handleNavigateToAttendance,
+  handleNavigateToRecordResults,
   handleNavigateToLearn,
   handleNavigateToInbox,
   handlePulseDismiss,
@@ -393,6 +414,7 @@ const TabContent = memo(function TabContent({
   handleOpenStudentFromClass: (classId: string, studentName: string) => void
   handleOpenGrades: (classId: string) => void
   handleNavigateToAttendance: () => void
+  handleNavigateToRecordResults: () => void
   handleNavigateToLearn: () => void
   handleNavigateToInbox: () => void
   handlePulseDismiss: () => void
@@ -437,8 +459,11 @@ const TabContent = memo(function TabContent({
         onNavigateToClassroom={() => handleNavigate('classroom')}
         onNavigateToExplore={() => handleNavigate('explore')}
         onNavigateToAttendance={handleNavigateToAttendance}
+        onNavigateToRecordResults={handleNavigateToRecordResults}
         onNavigateToLearn={handleNavigateToLearn}
         onNavigateToInbox={handleNavigateToInbox}
+        onNavigateToTeachingMarking={() => handleNavigate('teaching/marking' as ClosableTabKey)}
+        onNavigateToTeachingLessonPlanning={() => handleNavigate('teaching/lesson-planning' as ClosableTabKey)}
         onNavigateToPulse={() => handleNavigate('pulse', true)}
         onAssistantMessage={handleAssistantMessage}
         onStudentClick={handleOpenStudentProfile}
@@ -471,8 +496,12 @@ const TabContent = memo(function TabContent({
     return <FormsContent />
   }
 
-  if (currentUrl === 'teaching') {
-    return <TeachingContent />
+  if (currentUrl === 'teaching' || currentUrl.startsWith('teaching/')) {
+    // Extract tab from URL (e.g., 'teaching/marking' -> 'marking')
+    const tabFromUrl = currentUrl.startsWith('teaching/')
+      ? currentUrl.split('/')[1] as 'marking' | 'lesson-planning' | 'homework'
+      : undefined
+    return <TeachingContent defaultTab={tabFromUrl} />
   }
 
   if (currentUrl === 'inbox' || currentUrl.startsWith('inbox/')) {
@@ -483,6 +512,14 @@ const TabContent = memo(function TabContent({
         onConversationClick={handleOpenConversation}
       />
     )
+  }
+
+  if (currentUrl === 'announcements') {
+    return <AnnouncementsContent />
+  }
+
+  if (currentUrl === 'notifications') {
+    return <NotificationsContent />
   }
 
   if (typeof currentUrl === 'string' && currentUrl.startsWith('classroom/') && currentUrl.includes('/student/')) {
@@ -780,6 +817,7 @@ export default function Home() {
   const router = useRouter()
   const params = useParams()
   const { state: sidebarState, toggleSidebar } = useSidebar()
+  const { user } = useUser()
 
   // Use assistant context for persistent state
   const { isOpen: isAssistantOpen, setIsOpen: setIsAssistantOpen, mode: assistantMode, setMode: setAssistantMode } = useAssistant()
@@ -810,7 +848,6 @@ export default function Home() {
   const classroomNamesRef = useRef<Map<string, string>>(new Map()) // Ref for immediate access to class names
   const [pendingAssistantMessage, setPendingAssistantMessage] = useState<string | null>(null)
   const tabContainerRef = useRef<HTMLDivElement>(null)
-  const [formClassId, setFormClassId] = useState<string | null>(null)
 
   // Helper to determine if a tab is a top-level page
   const isTopLevelTab = (tabKey: string): boolean => {
@@ -1352,8 +1389,18 @@ export default function Home() {
 
   const handleNavigateToAttendance = () => {
     // Navigate to form class if available
-    if (formClassId) {
-      handleOpenClassroom(formClassId)
+    if (user?.form_class_id) {
+      handleOpenClassroom(user.form_class_id)
+    } else {
+      // Fallback to classroom list if no form class
+      handleNavigate('classroom')
+    }
+  }
+
+  const handleNavigateToRecordResults = () => {
+    // Navigate to form class grades page if available
+    if (user?.form_class_id) {
+      handleOpenGrades(user.form_class_id)
     } else {
       // Fallback to classroom list if no form class
       handleNavigate('classroom')
@@ -1495,31 +1542,6 @@ export default function Home() {
       setIsMounted(true)
     }
   }, [])
-
-  // Fetch teacher's form class
-  useEffect(() => {
-    if (!isMounted) return
-
-    async function fetchFormClass() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (!user?.id) return
-        
-        const result = await getTeacherFormClass(supabase, user.id)
-        
-        if (!result.error && result.data) {
-          const classId = (result.data as { class_id: string }).class_id
-          setFormClassId(classId)
-        }
-      } catch (error) {
-        console.error('Error fetching form class:', error)
-      }
-    }
-
-    fetchFormClass()
-  }, [isMounted])
 
   // Measure tab container width
   useLayoutEffect(() => {
@@ -1753,7 +1775,7 @@ export default function Home() {
 
               {/* Classroom management section */}
               <div className="space-y-1">
-                <SidebarGroupLabel className="text-xs">Classroom management</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-xs">Classroom Management</SidebarGroupLabel>
                 <SidebarMenu>
                   {[primaryPages[1], primaryPages[3]].map((page) => {
                     const Icon = page.icon
@@ -1782,7 +1804,7 @@ export default function Home() {
 
               {/* School management section */}
               <div className="space-y-1">
-                <SidebarGroupLabel className="text-xs">School management</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-xs">School Management</SidebarGroupLabel>
                 <SidebarMenu>
                   {[primaryPages[2]].map((page) => {
                     const Icon = page.icon
@@ -1808,9 +1830,9 @@ export default function Home() {
 
               {/* School life section */}
               <div className="space-y-1">
-                <SidebarGroupLabel className="text-xs">School life</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-xs">School Life</SidebarGroupLabel>
                 <SidebarMenu>
-                  {[primaryPages[7], primaryPages[6], primaryPages[8]].map((page) => {
+                  {[primaryPages[8], primaryPages[9], primaryPages[10], primaryPages[11]].map((page) => {
                     const Icon = page.icon
                     const isInbox = page.key === 'inbox'
 
@@ -1839,7 +1861,7 @@ export default function Home() {
 
               {/* Professional development section */}
               <div className="space-y-1">
-                <SidebarGroupLabel className="text-xs">Professional development</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-xs">Professional Development</SidebarGroupLabel>
                 <SidebarMenu>
                   {[primaryPages[4], primaryPages[5]].map((page) => {
                     const Icon = page.icon
@@ -1865,7 +1887,7 @@ export default function Home() {
 
               {/* All apps - standalone */}
               <SidebarMenu>
-                {[primaryPages[9]].map((page) => {
+                {[primaryPages[12]].map((page) => {
                   const Icon = page.icon
 
                   return (
@@ -2325,6 +2347,7 @@ export default function Home() {
                   handleOpenStudentFromClass={handleOpenStudentFromClass}
                   handleOpenGrades={handleOpenGrades}
                   handleNavigateToAttendance={handleNavigateToAttendance}
+                  handleNavigateToRecordResults={handleNavigateToRecordResults}
                   handleNavigateToLearn={handleNavigateToLearn}
                   handleNavigateToInbox={handleNavigateToInbox}
                   handlePulseDismiss={handlePulseDismiss}

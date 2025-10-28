@@ -70,8 +70,6 @@ export function ConversationList({
     <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-stone-200 p-4">
-        <h2 className="mb-3 text-lg font-semibold text-stone-900">Conversations</h2>
-
         {/* Search and Filter */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">

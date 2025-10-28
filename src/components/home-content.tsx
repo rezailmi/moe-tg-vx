@@ -102,8 +102,11 @@ interface HomeContentProps {
   onNavigateToClassroom?: () => void
   onNavigateToExplore?: () => void
   onNavigateToAttendance?: () => void
+  onNavigateToRecordResults?: () => void
   onNavigateToLearn?: () => void
   onNavigateToInbox?: () => void
+  onNavigateToTeachingMarking?: () => void
+  onNavigateToTeachingLessonPlanning?: () => void
   onAssistantMessage?: (message: string) => void
   onStudentClick?: (studentName: string) => void
   onStudentClickWithClass?: (classId: string, studentName: string) => void
@@ -112,7 +115,7 @@ interface HomeContentProps {
   renderPageActions?: () => React.ReactNode
 }
 
-export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavigateToAttendance, onNavigateToLearn, onNavigateToInbox, onAssistantMessage, onStudentClick, onStudentClickWithClass, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
+export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavigateToAttendance, onNavigateToRecordResults, onNavigateToLearn, onNavigateToInbox, onNavigateToTeachingMarking, onNavigateToTeachingLessonPlanning, onAssistantMessage, onStudentClick, onStudentClickWithClass, onNavigateToPulse, onEditWidgets, renderPageActions }: HomeContentProps = {}) {
   const [assistantInput, setAssistantInput] = useState('')
   const [gridRowHeight] = useState(156)
   const [widgetPadding] = useState(16)
@@ -180,92 +183,6 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
   return (
     <ScrollArea className="h-full w-full bg-gradient-to-b from-white to-[#F5E3DF]">
       <div className="mx-auto w-full max-w-5xl px-6 py-6 space-y-6">
-          {/* Assistant and Action Buttons Section */}
-          <div className="flex flex-col gap-4">
-            {/* Assistant Input */}
-            <form onSubmit={handleAssistantSubmit} className="flex flex-col gap-2">
-              <div className="relative">
-                <div className="absolute left-5 top-1/2 z-10 -translate-y-1/2">
-                  <Sparkle className="size-5 text-stone-600" />
-                </div>
-                <Input
-                  type="text"
-                  value={assistantInput}
-                  onChange={(e) => setAssistantInput(e.target.value)}
-                  placeholder="Ask me about students, assignments, or lesson plans..."
-                  className="shimmer-input h-14 bg-white pl-14 pr-6 text-sm placeholder:text-stone-400 sm:h-16 sm:text-base rounded-2xl"
-                />
-              </div>
-
-              {/* Quick action suggestions - normal flow */}
-              <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600 px-2">
-                <span className="hidden sm:inline">Try asking:</span>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    onAssistantMessage?.('Find student with needs')
-                  }}
-                  className="rounded-md border border-stone-200 bg-white px-2.5 py-1.5 font-medium text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
-                >
-                  &quot;Find student with needs&quot;
-                </button>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    onAssistantMessage?.('Draft a parent email')
-                  }}
-                  className="rounded-md border border-stone-200 bg-white px-2.5 py-1.5 font-medium text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
-                >
-                  &quot;Draft a parent email&quot;
-                </button>
-              </div>
-            </form>
-
-            {/* Action Buttons */}
-            <div className="flex w-full items-stretch justify-center gap-3">
-              {actionButtons.map((action) => {
-                const Icon = action.icon
-                return (
-                  <button
-                    key={action.key}
-                    onClick={() => {
-                      if (action.key === 'attendance') {
-                        onNavigateToAttendance?.()
-                      } else if (action.key === 'marking') {
-                        onNavigateToClassroom?.()
-                      } else if (action.key === 'lesson-planning') {
-                        onNavigateToInbox?.()
-                      } else if (action.key === 'record-results') {
-                        onNavigateToClassroom?.()
-                      } else if (action.key === 'explore') {
-                        onNavigateToExplore?.()
-                      }
-                    }}
-                    className="group relative flex flex-1 flex-col items-center rounded-2xl border border-stone-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-                  >
-                    {/* Icon Circle */}
-                    <div className={cn(
-                      "relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full shadow-sm transition-all group-hover:shadow-md",
-                      action.bgColor
-                    )}>
-                      <Icon className={cn(
-                        "size-6 transition-transform group-hover:scale-110",
-                        action.iconColor
-                      )} />
-                    </div>
-
-                    {/* Label - min height to accommodate 2 lines */}
-                    <span className="mt-3 text-center text-sm font-medium leading-[1.3] text-stone-900 transition-colors min-h-[2.5rem] flex items-center justify-center">
-                      {action.label}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
           {/* Teacher Widgets Section */}
           <div
             className="grid grid-cols-1 gap-3 sm:gap-3 md:grid-cols-2"
@@ -429,6 +346,92 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Assistant and Action Buttons Section */}
+          <div className="flex flex-col gap-4">
+            {/* Assistant Input */}
+            <form onSubmit={handleAssistantSubmit} className="flex flex-col gap-2">
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 z-10 -translate-y-1/2">
+                  <Sparkle className="size-5 text-stone-600" />
+                </div>
+                <Input
+                  type="text"
+                  value={assistantInput}
+                  onChange={(e) => setAssistantInput(e.target.value)}
+                  placeholder="Ask me about students, assignments, or lesson plans..."
+                  className="shimmer-input h-14 bg-white pl-14 pr-6 text-sm placeholder:text-stone-400 sm:h-16 sm:text-base rounded-2xl"
+                />
+              </div>
+
+              {/* Quick action suggestions - normal flow */}
+              <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600 px-2">
+                <span className="hidden sm:inline">Try asking:</span>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    onAssistantMessage?.('Find student with needs')
+                  }}
+                  className="rounded-md border border-stone-200 bg-white px-2.5 py-1.5 font-medium text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
+                >
+                  &quot;Find student with needs&quot;
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    onAssistantMessage?.('Draft a parent email')
+                  }}
+                  className="rounded-md border border-stone-200 bg-white px-2.5 py-1.5 font-medium text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
+                >
+                  &quot;Draft a parent email&quot;
+                </button>
+              </div>
+            </form>
+
+            {/* Action Buttons */}
+            <div className="flex w-full items-stretch justify-center gap-3">
+              {actionButtons.map((action) => {
+                const Icon = action.icon
+                return (
+                  <button
+                    key={action.key}
+                    onClick={() => {
+                      if (action.key === 'attendance') {
+                        onNavigateToAttendance?.()
+                      } else if (action.key === 'marking') {
+                        onNavigateToTeachingMarking?.()
+                      } else if (action.key === 'lesson-planning') {
+                        onNavigateToTeachingLessonPlanning?.()
+                      } else if (action.key === 'record-results') {
+                        onNavigateToRecordResults?.()
+                      } else if (action.key === 'explore') {
+                        onNavigateToExplore?.()
+                      }
+                    }}
+                    className="group relative flex flex-1 flex-col items-center rounded-2xl border border-stone-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                  >
+                    {/* Icon Circle */}
+                    <div className={cn(
+                      "relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full shadow-sm transition-all group-hover:shadow-md",
+                      action.bgColor
+                    )}>
+                      <Icon className={cn(
+                        "size-6 transition-transform group-hover:scale-110",
+                        action.iconColor
+                      )} />
+                    </div>
+
+                    {/* Label - min height to accommodate 2 lines */}
+                    <span className="mt-3 text-center text-sm font-medium leading-[1.3] text-stone-900 transition-colors min-h-[2.5rem] flex items-center justify-center">
+                      {action.label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
       </div>
     </ScrollArea>
