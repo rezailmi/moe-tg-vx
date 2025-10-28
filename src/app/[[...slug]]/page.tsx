@@ -56,6 +56,8 @@ import { StudentProfile } from '@/components/student-profile'
 import { RecordsContent } from '@/components/records-content'
 import { ExploreContent } from '@/components/explore-content'
 import { MessagesPageContent } from '@/components/messages/messages-page-content'
+import { FormsContent } from '@/components/forms-content'
+import { TeachingContent } from '@/components/teaching-content'
 import { InboxProvider } from '@/contexts/inbox-context'
 import { SettingsContent } from '@/components/settings-content'
 import { ThemeSwitcher } from '@/components/theme-switcher'
@@ -74,6 +76,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarInset,
   SidebarMenu,
   SidebarMenuBadge,
@@ -104,6 +107,7 @@ const primaryPages = [
   { key: 'community', label: 'Community', icon: Users2, tooltip: 'Community' },
   { key: 'inbox', label: 'Messages', icon: Inbox, tooltip: 'Messages' },
   { key: 'calendar', label: 'Timetable', icon: CalendarDays, tooltip: 'Timetable' },
+  { key: 'forms', label: 'Forms', icon: FileText, tooltip: 'Forms' },
   { key: 'explore', label: 'All apps', icon: Compass, tooltip: 'All apps' },
 ] as const
 
@@ -281,6 +285,14 @@ const emptyStates: Record<TabKey, EmptyState> = {
     icon: Users2,
     primaryAction: 'Join discussion',
   },
+  forms: {
+    heading: 'Forms',
+    title: 'No forms available',
+    description:
+      'Access and submit various school forms including leave applications, permission slips, and more.',
+    icon: FileText,
+    primaryAction: 'Browse forms',
+  },
   profile: {
     heading: 'Profile',
     title: 'Complete your profile details',
@@ -453,6 +465,14 @@ const TabContent = memo(function TabContent({
 
   if (currentUrl === 'settings') {
     return <SettingsContent />
+  }
+
+  if (currentUrl === 'forms') {
+    return <FormsContent />
+  }
+
+  if (currentUrl === 'teaching') {
+    return <TeachingContent />
   }
 
   if (currentUrl === 'inbox' || currentUrl.startsWith('inbox/')) {
@@ -1705,6 +1725,7 @@ export default function Home() {
               </SidebarMenuItem>
             </SidebarMenu>
             <SidebarGroupContent className="mt-2">
+              {/* Home - No section title */}
               <SidebarMenu>
                 {primaryPages.slice(0, 1).map((page) => {
                   const Icon = page.icon
@@ -1730,33 +1751,121 @@ export default function Home() {
 
               <SidebarSeparator className="mx-0 my-2 w-full" />
 
-              <SidebarMenu>
-                {primaryPages.slice(1, 4).map((page) => {
-                  const Icon = page.icon
+              {/* Classroom management section */}
+              <div className="space-y-1">
+                <SidebarGroupLabel className="text-xs">Classroom management</SidebarGroupLabel>
+                <SidebarMenu>
+                  {[primaryPages[1], primaryPages[3]].map((page) => {
+                    const Icon = page.icon
 
-                  return (
-                    <SidebarMenuItem key={page.key}>
-                      <SidebarMenuButton
-                        tooltip={page.tooltip}
-                        isActive={
-                          activeTab === page.key ||
-                          (page.key === 'classroom' && typeof activeTab === 'string' && activeTab.startsWith('classroom/'))
-                        }
-                        onClick={() => handleNavigate(page.key)}
-                        type="button"
-                      >
-                        <Icon className="size-4" />
-                        <span>{page.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
+                    return (
+                      <SidebarMenuItem key={page.key}>
+                        <SidebarMenuButton
+                          tooltip={page.tooltip}
+                          isActive={
+                            activeTab === page.key ||
+                            (page.key === 'classroom' && typeof activeTab === 'string' && activeTab.startsWith('classroom/'))
+                          }
+                          onClick={() => handleNavigate(page.key)}
+                          type="button"
+                        >
+                          <Icon className="size-4" />
+                          <span>{page.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </div>
 
               <SidebarSeparator className="mx-0 my-2 w-full" />
 
+              {/* School management section */}
+              <div className="space-y-1">
+                <SidebarGroupLabel className="text-xs">School management</SidebarGroupLabel>
+                <SidebarMenu>
+                  {[primaryPages[2]].map((page) => {
+                    const Icon = page.icon
+
+                    return (
+                      <SidebarMenuItem key={page.key}>
+                        <SidebarMenuButton
+                          tooltip={page.tooltip}
+                          isActive={activeTab === page.key}
+                          onClick={() => handleNavigate(page.key)}
+                          type="button"
+                        >
+                          <Icon className="size-4" />
+                          <span>{page.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </div>
+
+              <SidebarSeparator className="mx-0 my-2 w-full" />
+
+              {/* School life section */}
+              <div className="space-y-1">
+                <SidebarGroupLabel className="text-xs">School life</SidebarGroupLabel>
+                <SidebarMenu>
+                  {[primaryPages[7], primaryPages[6], primaryPages[8]].map((page) => {
+                    const Icon = page.icon
+                    const isInbox = page.key === 'inbox'
+
+                    return (
+                      <SidebarMenuItem key={page.key}>
+                        <SidebarMenuButton
+                          tooltip={page.tooltip}
+                          isActive={
+                            activeTab === page.key ||
+                            (page.key === 'inbox' && typeof activeTab === 'string' && activeTab.startsWith('inbox/'))
+                          }
+                          onClick={() => handleNavigate(page.key)}
+                          type="button"
+                        >
+                          <Icon className="size-4" />
+                          <span>{page.label}</span>
+                        </SidebarMenuButton>
+                        {isInbox && <UnreadCountBadge />}
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </div>
+
+              <SidebarSeparator className="mx-0 my-2 w-full" />
+
+              {/* Professional development section */}
+              <div className="space-y-1">
+                <SidebarGroupLabel className="text-xs">Professional development</SidebarGroupLabel>
+                <SidebarMenu>
+                  {[primaryPages[4], primaryPages[5]].map((page) => {
+                    const Icon = page.icon
+
+                    return (
+                      <SidebarMenuItem key={page.key}>
+                        <SidebarMenuButton
+                          tooltip={page.tooltip}
+                          isActive={activeTab === page.key}
+                          onClick={() => handleNavigate(page.key)}
+                          type="button"
+                        >
+                          <Icon className="size-4" />
+                          <span>{page.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </div>
+
+              <SidebarSeparator className="mx-0 my-2 w-full" />
+
+              {/* All apps - standalone */}
               <SidebarMenu>
-                {primaryPages.slice(4, 6).map((page) => {
+                {[primaryPages[9]].map((page) => {
                   const Icon = page.icon
 
                   return (
@@ -1770,33 +1879,6 @@ export default function Home() {
                         <Icon className="size-4" />
                         <span>{page.label}</span>
                       </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-
-              <SidebarSeparator className="mx-0 my-2 w-full" />
-
-              <SidebarMenu>
-                {primaryPages.slice(6).map((page) => {
-                  const Icon = page.icon
-                  const isInbox = page.key === 'inbox'
-
-                  return (
-                    <SidebarMenuItem key={page.key}>
-                      <SidebarMenuButton
-                        tooltip={page.tooltip}
-                        isActive={
-                          activeTab === page.key ||
-                          (page.key === 'inbox' && typeof activeTab === 'string' && activeTab.startsWith('inbox/'))
-                        }
-                        onClick={() => handleNavigate(page.key)}
-                        type="button"
-                      >
-                        <Icon className="size-4" />
-                        <span>{page.label}</span>
-                      </SidebarMenuButton>
-                      {isInbox && <UnreadCountBadge />}
                     </SidebarMenuItem>
                   )
                 })}
