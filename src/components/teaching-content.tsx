@@ -7,8 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export function TeachingContent() {
-  const [activeTab, setActiveTab] = useState('marking')
+interface TeachingContentProps {
+  defaultTab?: 'marking' | 'lesson-planning' | 'homework'
+}
+
+export function TeachingContent({ defaultTab = 'marking' }: TeachingContentProps = {}) {
+  const [activeTab, setActiveTab] = useState<'marking' | 'lesson-planning' | 'homework'>(defaultTab)
+
+  const handleTabChange = (value: string) => {
+    if (value === 'marking' || value === 'lesson-planning' || value === 'homework') {
+      setActiveTab(value)
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -33,7 +43,7 @@ export function TeachingContent() {
       {/* Tabs Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl px-6 py-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="marking">
                 <CheckSquare className="mr-2 size-4" />
