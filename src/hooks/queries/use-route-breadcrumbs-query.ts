@@ -198,6 +198,60 @@ function generateBreadcrumbs(
         })
         break
 
+      case 'teaching':
+        breadcrumbs.push({
+          label: 'Teaching',
+          path: 'teaching',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('teaching') : undefined,
+        })
+        break
+
+      case 'forms':
+        breadcrumbs.push({
+          label: 'Forms',
+          path: 'forms',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('forms') : undefined,
+        })
+        break
+
+      case 'myschool':
+        breadcrumbs.push({
+          label: 'My School',
+          path: 'myschool',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('myschool') : undefined,
+        })
+        break
+
+      case 'learning':
+        breadcrumbs.push({
+          label: 'Learning',
+          path: 'learning',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('learning') : undefined,
+        })
+        break
+
+      case 'community':
+        breadcrumbs.push({
+          label: 'Community',
+          path: 'community',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('community') : undefined,
+        })
+        break
+
+      case 'explore':
+        breadcrumbs.push({
+          label: 'All apps',
+          path: 'explore',
+          isActive: isLast,
+          onClick: onNavigate && !isLast ? () => onNavigate('explore') : undefined,
+        })
+        break
+
       default:
         // Unknown segment - skip
         break
