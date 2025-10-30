@@ -257,7 +257,7 @@ function generateBreadcrumbs(
         if (config.selectedExploreApp) {
           breadcrumbs.push({
             label: config.selectedExploreApp,
-            path: 'explore',
+            path: 'explore/app',
             isActive: true,
             onClick: undefined, // Can't navigate directly to app detail
           })
