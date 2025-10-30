@@ -3,7 +3,6 @@ import { AppInfoSection } from './app-info-section'
 import { AppMetadataBar } from './app-metadata-bar'
 import { AppDescription } from './app-description'
 import { AppDeveloperInfo } from './app-developer-info'
-import { AppReviews } from './app-reviews'
 import type { App } from '@/types/explore'
 
 interface AppDetailProps {
@@ -42,9 +41,6 @@ export function AppDetail({ app }: AppDetailProps) {
 
           {/* Developer Info */}
           <AppDeveloperInfo developer={app.developer} />
-
-          {/* Ratings & Reviews */}
-          <AppReviews metadata={app.metadata} />
           </div>
         </div>
       </ScrollArea>

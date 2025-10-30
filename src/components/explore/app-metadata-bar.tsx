@@ -1,5 +1,4 @@
-import { Star, User } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
+import { User } from 'lucide-react'
 
 interface AppMetadata {
   rating?: number
@@ -26,33 +25,7 @@ export function AppMetadataBar({ metadata, developerName }: AppMetadataBarProps)
 
   return (
     <div className="border-b border-stone-200 bg-stone-50 px-6 py-6">
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
-        {/* Ratings */}
-        {metadata.rating && (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-stone-500">
-              {metadata.ratingCount?.toLocaleString()} RATINGS
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-semibold text-stone-900">
-                {metadata.rating.toFixed(1)}
-              </span>
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`size-3 ${
-                      i < Math.floor(metadata.rating!)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-stone-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
         {/* Age */}
         <div className="space-y-1">
           <div className="text-xs font-medium uppercase tracking-wide text-stone-500">
