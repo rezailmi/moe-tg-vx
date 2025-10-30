@@ -58,7 +58,7 @@ const actionButtons = [
   },
   {
     key: 'explore',
-    label: 'All Apps',
+    label: 'Discover',
     icon: Compass,
     bgColor: 'bg-cyan-500',
     iconColor: 'text-white'

@@ -22,7 +22,7 @@ export interface App {
   description: string
   tagline: string
   fullDescription: string
-  icon: LucideIcon
+  icon: LucideIcon | string
   category: string
   gradient?: string
   thirdParty?: boolean
