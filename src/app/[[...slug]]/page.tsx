@@ -520,11 +520,31 @@ const TabContent = memo(function TabContent({
   }
 
   if (currentUrl === 'inbox' || currentUrl.startsWith('inbox/')) {
-    const conversationId = slug && slug.length > 1 && slug[0] === 'inbox' ? slug[1] : undefined
+    const parts = slug || []
+    let tabName: 'chat' | 'announcements' | 'meetings' = 'chat'
+    let conversationId: string | undefined
+
+    if (parts.length >= 2) {
+      const secondPart = parts[1]
+      if (secondPart === 'announcements' || secondPart === 'meetings') {
+        // /inbox/announcements or /inbox/meetings
+        tabName = secondPart
+      } else if (secondPart === 'chat') {
+        // /inbox/chat or /inbox/chat/{conversationId}
+        tabName = 'chat'
+        conversationId = parts[2] // third segment is conversationId
+      } else {
+        // /inbox/{conversationId} - assume it's a conversation ID for chat tab
+        tabName = 'chat'
+        conversationId = secondPart
+      }
+    }
+
     return (
       <MessagesPageContent
         conversationId={conversationId}
         onConversationClick={handleOpenConversation}
+        defaultTab={tabName}
       />
     )
   }
