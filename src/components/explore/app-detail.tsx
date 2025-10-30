@@ -14,7 +14,7 @@ export function AppDetail({ app }: AppDetailProps) {
       {/* Scrollable content */}
       <ScrollArea className="flex-1 min-h-0">
         <div className="bg-gradient-to-b from-white to-[#F5E3DF] pb-8">
-          <div className="flex flex-col">
+          <div className="mx-auto w-full max-w-5xl flex flex-col">
           {/* App Info Section */}
           <AppInfoSection
             name={app.name}
