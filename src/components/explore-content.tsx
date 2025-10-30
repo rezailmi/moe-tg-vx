@@ -593,117 +593,119 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
   }, [filteredApps])
 
   return (
-    <ScrollArea className="h-full w-full">
-      <div className="mx-auto w-full max-w-5xl space-y-8 px-8 py-10">
-        {/* Page Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-stone-900">Discover</h1>
-          <p className="text-base text-stone-600">
-            Find all MOE digital solutions for educator related jobs
-          </p>
-        </div>
-
-        {/* Search Bar */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
-            <Input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search apps by name or description..."
-              className="h-12 rounded-xl border-stone-200 bg-white pl-12 pr-6 text-sm shadow-sm transition-shadow placeholder:text-stone-400 focus-visible:shadow-md"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-stone-500">
-              {filteredApps.length === allApps.length
-                ? `${allApps.length} apps available`
-                : `${filteredApps.length} of ${allApps.length} apps`}
+    <>
+      <ScrollArea className="h-full w-full">
+        <div className="mx-auto w-full max-w-5xl space-y-8 px-8 py-10">
+          {/* Page Header */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-stone-900">Discover</h1>
+            <p className="text-base text-stone-600">
+              Find all MOE digital solutions for educator related jobs
             </p>
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                Clear search
-              </button>
-            )}
           </div>
-        </div>
 
-      {/* Apps Grid by Category */}
-      {filteredApps.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Search className="size-12 text-stone-300" />
-          <h3 className="mt-4 text-base font-semibold text-stone-900">No apps found</h3>
-          <p className="mt-2 text-sm text-stone-500">
-            Try adjusting your search to find what you&apos;re looking for
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {appsByCategory.map(([category, apps]) => (
-            <div key={category} className="space-y-4">
-              <div className="space-y-1.5">
-                <h2 className="text-base font-semibold text-stone-900">
-                  {category}
-                </h2>
-                {categoryDescriptions[category] && (
-                  <p className="text-sm text-stone-600">
-                    {categoryDescriptions[category]}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {apps.map((app) => {
-                  const Icon = app.icon
-                  return (
-                    <Card
-                      key={app.key}
-                      className="group cursor-pointer overflow-hidden rounded-2xl border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                      onClick={() => {
-                        setSelectedApp(app)
-                        onAppClick?.(app.key)
-                      }}
-                    >
-                      <CardHeader className="p-5">
-                        <div className="flex items-start gap-4">
-                          {/* Logo Area */}
-                          <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md`}>
-                            <Icon className="size-8 text-white" />
-                          </div>
-
-                          {/* App Info */}
-                          <div className="flex-1 space-y-1.5 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <CardTitle className="text-base font-semibold text-stone-900 leading-tight">
-                                {app.name}
-                              </CardTitle>
-                              {app.thirdParty && (
-                                <Badge variant="secondary" className="text-[10px] font-medium shrink-0">
-                                  3rd party
-                                </Badge>
-                              )}
-                            </div>
-                            <CardDescription className="text-sm text-stone-600 leading-snug line-clamp-2">
-                              {app.tagline}
-                            </CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  )
-                })}
-              </div>
+          {/* Search Bar */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search apps by name or description..."
+                className="h-12 rounded-xl border-stone-200 bg-white pl-12 pr-6 text-sm shadow-sm transition-shadow placeholder:text-stone-400 focus-visible:shadow-md"
+              />
             </div>
-          ))}
-        </div>
-      )}
-      </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-stone-500">
+                {filteredApps.length === allApps.length
+                  ? `${allApps.length} apps available`
+                  : `${filteredApps.length} of ${allApps.length} apps`}
+              </p>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  Clear search
+                </button>
+              )}
+            </div>
+          </div>
 
-      {/* App Detail Dialog */}
+          {/* Apps Grid by Category */}
+          {filteredApps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Search className="size-12 text-stone-300" />
+              <h3 className="mt-4 text-base font-semibold text-stone-900">No apps found</h3>
+              <p className="mt-2 text-sm text-stone-500">
+                Try adjusting your search to find what you&apos;re looking for
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {appsByCategory.map(([category, apps]) => (
+                <div key={category} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <h2 className="text-base font-semibold text-stone-900">
+                      {category}
+                    </h2>
+                    {categoryDescriptions[category] && (
+                      <p className="text-sm text-stone-600">
+                        {categoryDescriptions[category]}
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {apps.map((app) => {
+                      const Icon = app.icon
+                      return (
+                        <Card
+                          key={app.key}
+                          className="group cursor-pointer overflow-hidden rounded-2xl border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                          onClick={() => {
+                            setSelectedApp(app)
+                            onAppClick?.(app.key)
+                          }}
+                        >
+                          <CardHeader className="p-5">
+                            <div className="flex items-start gap-4">
+                              {/* Logo Area */}
+                              <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md`}>
+                                <Icon className="size-8 text-white" />
+                              </div>
+
+                              {/* App Info */}
+                              <div className="flex-1 space-y-1.5 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <CardTitle className="text-base font-semibold text-stone-900 leading-tight">
+                                    {app.name}
+                                  </CardTitle>
+                                  {app.thirdParty && (
+                                    <Badge variant="secondary" className="text-[10px] font-medium shrink-0">
+                                      3rd party
+                                    </Badge>
+                                  )}
+                                </div>
+                                <CardDescription className="text-sm text-stone-600 leading-snug line-clamp-2">
+                                  {app.tagline}
+                                </CardDescription>
+                              </div>
+                            </div>
+                          </CardHeader>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* App Detail Dialog - Outside ScrollArea for proper portal behavior */}
       <Dialog open={selectedApp !== null} onOpenChange={(open) => !open && setSelectedApp(null)}>
         <DialogContent className="h-[90vh] max-w-4xl p-0">
           {selectedApp && (
@@ -714,6 +716,6 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
           )}
         </DialogContent>
       </Dialog>
-    </ScrollArea>
+    </>
   )
 }
