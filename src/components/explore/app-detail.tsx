@@ -17,11 +17,13 @@ export function AppDetail({ app, onClose }: AppDetailProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header with navigation */}
-      <AppDetailHeader onBack={onClose} />
+      <div className="flex-shrink-0">
+        <AppDetailHeader onBack={onClose} />
+      </div>
 
       {/* Scrollable content */}
-      <ScrollArea className="flex-1">
-        <div className="min-h-full bg-gradient-to-b from-white to-[#F5E3DF]">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="bg-gradient-to-b from-white to-[#F5E3DF] pb-8">
           <div className="flex flex-col">
           {/* App Info Section */}
           <AppInfoSection
