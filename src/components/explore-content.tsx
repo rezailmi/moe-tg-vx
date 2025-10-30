@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Search,
   CalendarDays,
@@ -1264,9 +1264,28 @@ In the coming months, educators will be able to assign Gems (custom AI assistant
   },
 ]
 
-export function ExploreContent() {
+interface ExploreContentProps {
+  onAppSelected?: (appName: string | null) => void
+  clearSelection?: boolean
+}
+
+export function ExploreContent({ onAppSelected, clearSelection }: ExploreContentProps = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedApp, setSelectedApp] = useState<App | null>(null)
+
+  // Clear selection when parent requests it
+  useEffect(() => {
+    if (clearSelection && selectedApp !== null) {
+      setSelectedApp(null)
+    }
+  }, [clearSelection])
+
+  // Notify parent when app selection changes
+  useEffect(() => {
+    if (onAppSelected) {
+      onAppSelected(selectedApp?.name || null)
+    }
+  }, [selectedApp, onAppSelected])
 
   const filteredApps = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
@@ -1310,12 +1329,7 @@ export function ExploreContent() {
   if (selectedApp) {
     return (
       <div className="h-full w-full">
-        <AppDetail
-          app={selectedApp}
-          onClose={() => {
-            setSelectedApp(null)
-          }}
-        />
+        <AppDetail app={selectedApp} />
       </div>
     )
   }
