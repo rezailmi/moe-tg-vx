@@ -686,7 +686,10 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
                         <Card
                           key={app.key}
                           className="group cursor-pointer overflow-hidden rounded-2xl border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            console.log('Card clicked:', app.name)
                             setSelectedApp(app)
                             onAppClick?.(app.key)
                           }}
@@ -728,13 +731,24 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
       </ScrollArea>
 
       {/* App Detail Dialog - Outside ScrollArea for proper portal behavior */}
-      <Dialog open={selectedApp !== null} onOpenChange={(open) => !open && setSelectedApp(null)}>
+      <Dialog
+        open={selectedApp !== null}
+        onOpenChange={(open) => {
+          console.log('Dialog onOpenChange:', open, 'selectedApp:', selectedApp?.name)
+          if (!open) setSelectedApp(null)
+        }}
+      >
         <DialogContent className="h-[90vh] max-w-4xl p-0">
-          {selectedApp && (
+          {selectedApp ? (
             <AppDetail
               app={selectedApp}
-              onClose={() => setSelectedApp(null)}
+              onClose={() => {
+                console.log('AppDetail onClose called')
+                setSelectedApp(null)
+              }}
             />
+          ) : (
+            <div>No app selected</div>
           )}
         </DialogContent>
       </Dialog>
