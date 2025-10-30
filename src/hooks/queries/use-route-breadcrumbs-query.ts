@@ -246,7 +246,7 @@ function generateBreadcrumbs(
 
       case 'explore':
         breadcrumbs.push({
-          label: 'All Apps',
+          label: 'Discover',
           path: 'explore',
           isActive: isLast && !config.selectedExploreApp,
           // Make clickable if viewing an app detail (to go back to list)

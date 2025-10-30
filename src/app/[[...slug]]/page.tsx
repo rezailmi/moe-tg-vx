@@ -123,7 +123,7 @@ const primaryPages = [
   { key: 'inbox', label: 'Parents & Communications', icon: Presentation, tooltip: 'Parents & Communications' },
   { key: 'calendar', label: 'Timetable', icon: CalendarDays, tooltip: 'Timetable' },
   { key: 'forms', label: 'Forms', icon: FileText, tooltip: 'Forms' },
-  { key: 'explore', label: 'All Apps', icon: Compass, tooltip: 'All Apps' },
+  { key: 'explore', label: 'Discover', icon: Compass, tooltip: 'Discover' },
 ] as const
 
 const newTabConfig = {
@@ -220,7 +220,7 @@ const emptyStates: Record<TabKey, EmptyState> = {
     secondaryAction: 'Invite a teammate',
   },
   explore: {
-    heading: 'All Apps',
+    heading: 'Discover',
     title: 'Discover all available apps',
     description:
       'Browse through all apps and find the tools you need to enhance your workflow.',
@@ -2124,7 +2124,7 @@ export default function Home() {
 
               <SidebarSeparator className="mx-0 my-2 w-full" />
 
-              {/* All apps - standalone */}
+              {/* Discover - standalone */}
               <SidebarMenu>
                 {[primaryPages.find(p => p.key === 'explore')].filter((page): page is NonNullable<typeof page> => page !== undefined).map((page) => {
                   const Icon = page.icon

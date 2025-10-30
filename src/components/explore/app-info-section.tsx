@@ -1,4 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { comingSoonToast } from '@/lib/coming-soon-toast'
@@ -6,7 +7,7 @@ import { comingSoonToast } from '@/lib/coming-soon-toast'
 interface AppInfoSectionProps {
   name: string
   tagline: string
-  icon: LucideIcon
+  icon: LucideIcon | string
   gradient?: string
   inAppPurchases?: boolean
   thirdParty?: boolean
@@ -15,20 +16,37 @@ interface AppInfoSectionProps {
 export function AppInfoSection({
   name,
   tagline,
-  icon: Icon,
+  icon,
   gradient,
   inAppPurchases,
   thirdParty,
 }: AppInfoSectionProps) {
+  const isLogoPath = typeof icon === 'string'
+  
   return (
     <div className="border-b border-stone-200 px-8 py-6">
       <div className="flex items-start gap-6">
         {/* App Icon */}
-        <div
-          className={`flex size-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient || 'from-stone-400 to-stone-600'} shadow-md`}
-        >
-          <Icon className="size-12 text-white" />
-        </div>
+        {isLogoPath ? (
+          <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-white border border-stone-200 shadow-md overflow-hidden">
+            <Image
+              src={icon}
+              alt={`${name} logo`}
+              width={96}
+              height={96}
+              className="size-full object-contain p-2"
+            />
+          </div>
+        ) : (
+          <div
+            className={`flex size-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient || 'from-stone-400 to-stone-600'} shadow-md`}
+          >
+            {(() => {
+              const Icon = icon as LucideIcon
+              return <Icon className="size-12 text-white" />
+            })()}
+          </div>
+        )}
 
         {/* App Info & CTA */}
         <div className="flex-1 space-y-3">

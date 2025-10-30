@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Image from 'next/image'
 import {
   Search,
   CalendarDays,
@@ -63,7 +64,7 @@ const sdtDataTool: App = {
 The SDT actively works with key personnel and teachers to deepen understanding of student development and well-being needs by leveraging focused group discussions and data from various sources. This includes Well-being Check-in surveys, Student Experience & Engagement Survey results, Sociograms, and Peer-Support Leaders' Reports.
 
 The data is used to customize curriculum and support programs for students' holistic development, enabling schools to take a proactive, data-informed approach to student welfare. With intelligent analytics and comprehensive reporting, the SDT Data Tool empowers educators to identify at-risk students early and provide targeted interventions that make a real difference.`,
-  icon: Users,
+  icon: '/logos/sdt-logo-22-oct-2025-transparent.png',
   category: 'Recommended for you',
   gradient: 'from-blue-500 to-cyan-600',
   developer: {
@@ -102,7 +103,7 @@ const markly: App = {
 The platform supports multiple assessment types including essays, short answers, creative writing, and project work. Teachers can customize rubrics, set specific grading criteria, and review AI suggestions before finalizing marks. Mark.ly learns from your feedback style over time, becoming more aligned with your teaching philosophy and ensuring consistency across assessments.
 
 Designed specifically for Singapore MOE educators, Mark.ly integrates seamlessly with the Student Learning Space and other MOE systems, following local curriculum guidelines and assessment frameworks. Save hours on marking while providing more detailed, actionable feedback that helps every student improve. With batch marking capabilities and intelligent analytics, Mark.ly gives you back precious time to focus on what matters most—inspiring and supporting your students.`,
-  icon: Check,
+  icon: '/logos/Markly.svg',
   category: 'Recommended for you',
   gradient: 'from-amber-500 to-orange-600',
   developer: {
@@ -147,7 +148,7 @@ const allApps: App[] = [
 Through SEConnect, teachers can create engaging activities, monitor student participation, and foster a positive learning environment. Students benefit from peer networking opportunities, access to support resources, and channels for expressing their views and concerns in a safe, moderated environment.
 
 The platform integrates with existing MOE systems to provide a seamless experience, ensuring that student engagement data informs teaching strategies and school programs. SEConnect supports the holistic development of students by promoting active participation, building resilience, and strengthening school culture.`,
-    icon: Globe,
+    icon: '/logos/seconnect-mysei.png',
     category: 'Classes and students',
     gradient: 'from-green-500 to-emerald-600',
     developer: {
@@ -184,7 +185,7 @@ The platform integrates with existing MOE systems to provide a seamless experien
 At their convenience, teachers can select specific absent reasons, and the data is automatically synchronized to School Cockpit, the central MOE database. The system also provides easy access to parents' contact information and can automatically inform parents of students' absences via SMS, enhancing school-home communication.
 
 The platform has significantly improved efficiency by eliminating the manual submission process that previously required teachers to consolidate and submit attendance records manually. With automatic data sync, real-time updates, and mobile accessibility, SC Mobile represents a modern approach to school administration that saves time and reduces errors.`,
-    icon: CheckSquare,
+    icon: '/logos/sc-mobile.png',
     category: 'Classes and students',
     gradient: 'from-purple-500 to-violet-600',
     developer: {
@@ -223,7 +224,7 @@ The platform has significantly improved efficiency by eliminating the manual sub
 Teachers can now use Appraiser to generate a polished first draft within minutes instead of spending hours manually writing each testimonial. The tool has been designed with a user-friendly interface that requires minimal training, allowing teachers to adopt it quickly and effectively.
 
 To date, Appraiser has benefited more than 4,000 teachers and has generated over 40,000 testimonials, demonstrating significant efficiency gains across the MOE system. The AI-powered platform ensures personalized, well-structured testimonials that help students in their educational and career journeys, while freeing up valuable teacher time for direct student interaction and support.`,
-    icon: Star,
+    icon: '/logos/appraiser-logo-no-words.png',
     category: 'Classes and students',
     gradient: 'from-yellow-500 to-amber-600',
     developer: {
@@ -299,7 +300,7 @@ The Authoring Copilot is part of MOE's broader AI in Education initiative, which
 The system integrates data from various sources including CCA participation, student leadership roles, community service activities, academic achievements, and character development programs. Teachers and school leaders can use SDIS to identify students' strengths, recognize outstanding contributions, and provide targeted support where needed.
 
 SDIS supports the recognition of student development through structured frameworks, helping schools prepare graduation portfolios and references. The platform ensures that every student's holistic development is documented, celebrated, and supported throughout their educational journey, preparing them for success beyond the classroom.`,
-    icon: Database,
+    icon: '/logos/sdis-logo.png',
     category: 'Classes and students',
     gradient: 'from-teal-500 to-cyan-600',
     developer: {
@@ -339,7 +340,7 @@ SDIS supports the recognition of student development through structured framewor
 The platform uses evidence-based screening tools and creates a supportive environment where students feel heard. Early warning systems alert you to students who may need additional support, while respecting privacy and maintaining appropriate boundaries.
 
 Integrated with school counseling services, All Ears ensures that student welfare concerns are addressed holistically with proper documentation and follow-up protocols in place.`,
-    icon: Ear,
+    icon: '/logos/ae-logo.png',
     category: 'Parents and communications',
     gradient: 'from-teal-400 to-teal-600',
     developer: {
@@ -376,7 +377,7 @@ Integrated with school counseling services, All Ears ensures that student welfar
 Using Singpass authentication, parents can manage their children's school matters even if they attend different schools or are in different classes. The platform serves mainstream MOE kindergartens, primary schools, secondary schools, junior colleges, and selected polytechnics.
 
 The app enables parents to receive school announcements and updates via push notifications with multimedia attachments, view and respond to consent forms, book Parent-Teacher meeting slots, declare travel plans, and access parenting resources. With calendar integration and secure authentication, Parents Gateway strengthens school-home partnership to support children in their educational journey.`,
-    icon: Mail,
+    icon: '/logos/pgmessages-transparent.png',
     category: 'Parents and communications',
     gradient: 'from-blue-500 to-indigo-600',
     developer: {
@@ -414,7 +415,7 @@ The app enables parents to receive school announcements and updates via push not
 Using natural language processing, HeyTalia can answer common parent queries, provide school information, and route complex questions to the appropriate staff members. The platform supports multiple languages, making it accessible to Singapore's diverse parent community.
 
 HeyTalia integrates with existing school systems to provide personalized responses based on student information, school calendars, and relevant policies. From checking homework assignments to understanding school procedures, HeyTalia empowers parents to stay informed and engaged in their children's education while reducing administrative burden on school staff.`,
-    icon: Phone,
+    icon: '/logos/heytalia-icon.png',
     category: 'Parents and communications',
     gradient: 'from-pink-500 to-rose-600',
     developer: {
@@ -454,7 +455,7 @@ HeyTalia integrates with existing school systems to provide personalized respons
 The P1 Registration Portal provides a fully online registration process conducted over five phases (Phase 1, 2A, 2B, 2C, and 2C Supplementary) from July to August each year. The system uses Singpass authentication and allows parents to view eligible schools, submit registrations, and check results entirely online.
 
 For secondary school placement, the system uses a computerized allocation based on PSLE results and student preferences, with each school having specific cut-off points. The system is designed to give priority to choices indicated by students and parents while fairly distributing students among available schools, handling over 40,000 Primary 1 registrations annually.`,
-    icon: LayoutGrid,
+    icon: '/logos/allocate.png',
     category: 'School life & Admin',
     gradient: 'from-orange-500 to-red-600',
     developer: {
@@ -492,7 +493,7 @@ For secondary school placement, the system uses a computerized allocation based 
 MOE is actively working to whitelist TagUI and Python for use across government systems, recognizing the tremendous potential to automate rule-based tasks for MOE teachers and officers. The solution has been open-sourced on GitHub, making it easier for MOE to integrate into other rules-based workflows.
 
 Real-world applications include automating the addition of test questions from CSV files to populate question banks for Primary Mathematics adaptive learning systems, automating the registration of 170 teachers from Excel sheets for professional development workshops, and automating the sharing of SLS lessons (eliminating up to 4,000 manual clicks for a typical batch operation). According to the LinkedIn 2020 Emerging Jobs report, Robotics Process Automation is among the top 15 emerging career prospects in Singapore.`,
-    icon: Zap,
+    icon: '/logos/rpa-logo.png',
     category: 'School life & Admin',
     gradient: 'from-purple-500 to-pink-600',
     developer: {
@@ -608,7 +609,7 @@ The portal allows parents to view their child's eligible phases and schools, sub
 GovEntry gained significant recognition when it powered the General Election 2025's e-Registration system, ensuring a seamless and swift experience for over 2.4 million voters. Over 30 government agencies, including MOE, have leveraged GovEntry to run more than 100 events smoothly and cost-effectively.
 
 In the MOE context, the system can be used for school events, parent-teacher meetings, open houses, and other school-related activities requiring visitor management and attendance tracking. The platform enables event organizers to create custom sign-up forms, automate check-ins, and generate real-time attendance reports. The system has proven scalability, supporting events from small gatherings to large-scale operations serving millions of users.`,
-    icon: LogIn,
+    icon: '/logos/goventry-logo.png',
     category: 'School life & Admin',
     gradient: 'from-cyan-500 to-blue-600',
     developer: {
@@ -807,7 +808,7 @@ The cloud-based nature means no installation is required, and the system is acce
 The platform hosts multiple subject-specific and professional communities, including The Primary Mathematics Subject Chapter and The Lower Primary Learners Chapter, which are learning communities where teachers engage in collaborative inquiry. OPAL 2.0 serves as a repository of good teaching practices and materials, allowing teachers to build new capabilities through sharing and collaboration across schools via MOE's learning communities.
 
 Each school cluster receives consultancy support to strengthen the culture of collaboration and share technology-enabled lesson resources, ideas, and teaching strategies. The platform empowers educators to take charge of their professional growth while building a strong community of practice across Singapore's education system.`,
-    icon: Lightbulb,
+    icon: '/logos/glow-symbol.png',
     category: 'Growth and community',
     gradient: 'from-amber-500 to-yellow-600',
     developer: {
@@ -845,7 +846,7 @@ Each school cluster receives consultancy support to strengthen the culture of co
 Through nLDS, educators can access a curated collection of learning designs aligned with MOE's curriculum and pedagogical principles. Teachers can contribute their own innovations, learn from peers' experiences, and adapt successful approaches to their unique teaching contexts.
 
 The platform supports continuous improvement in teaching quality by providing a structured way to document, share, and refine learning designs. With features for feedback, ratings, and discussion, nLDS builds a vibrant community where educators collaborate to advance student learning outcomes through thoughtful instructional design.`,
-    icon: Network,
+    icon: '/logos/nlds-logo.png',
     category: 'Growth and community',
     gradient: 'from-blue-500 to-cyan-600',
     developer: {
@@ -923,7 +924,7 @@ Community fosters a sense of belonging and professional camaraderie among Singap
 For students, the MIMS username is the same as their iCON email address, making it easy to remember and use. The system includes a self-service password reset feature where users can set up security challenge questions to reset their passwords independently. Staff accounts must be logged into every 90 days to remain active.
 
 MIMS serves as the digital identity gateway for accessing all MOE Centrally Provisioned Digital Tools including Student iCON Email, SLS (Student Learning Space), Microsoft Pro Plus, and AllEars, ensuring a unified and secure authentication experience across the entire MOE digital ecosystem.`,
-    icon: Key,
+    icon: '/logos/mimsv2-keystone-logo.png',
     category: 'Digital innovation and enhancements',
     gradient: 'from-slate-500 to-gray-600',
     developer: {
@@ -964,7 +965,6 @@ Students also gain access to Zoom and Microsoft Pro Plus (Word, Excel, PowerPoin
     icon: AtSign,
     category: 'Digital innovation and enhancements',
     gradient: 'from-blue-500 to-indigo-600',
-    thirdParty: true,
     developer: {
       name: 'Google (implemented by MOE Singapore)',
       website: 'https://workspace.google.com/dashboard',
@@ -1001,7 +1001,7 @@ Students also gain access to Zoom and Microsoft Pro Plus (Word, Excel, PowerPoin
 The SSOE 2.0 rollout linked more than 100,000 devices across 344 schools and can provide connectivity for up to 500,000 devices—from desktops and laptops to mobile devices—in an environment of better and faster overall network performance. Multi-tiered firewalls and a network monitoring and management system for cyber threats have been built into SSOE 2.0 to enhance ICT security.
 
 A major innovation introduced with SSOE 2.0 was the automation of delivery of systems to schools, reducing the turnaround time for school infrastructure deployment (servers and virtual machines) from 4 days to just 1 day. The system includes secure features for e-assessments, with ITD Lockdown accounts recommended for subjects with National e-Examinations. In 2022, MOE announced a 3-year extension of the SSOE 2.0 programme, with plans for SSOE 3.0 currently in development.`,
-    icon: Shield,
+    icon: '/logos/w365-cloud-pc-logo-1.jpg',
     category: 'Digital innovation and enhancements',
     gradient: 'from-red-500 to-orange-600',
     developer: {
@@ -1076,7 +1076,7 @@ Whether collecting trip consent forms, gathering feedback, or managing school ev
 The platform adapts to each student's proficiency level, providing appropriate challenges and scaffolded support. Voice recognition technology gives pronunciation feedback, while natural language processing helps with grammar and composition. Teachers can assign specific practice modules and monitor student progress.
 
 Aligned with MOE language syllabuses, LangBuddy supplements classroom instruction with engaging practice that builds confidence and fluency outside regular lesson time.`,
-    icon: Languages,
+    icon: '/logos/langbuddy-square-with-text-blue.png',
     category: 'Digital innovation and enhancements',
     gradient: 'from-violet-400 to-violet-600',
     developer: {
@@ -1402,7 +1402,7 @@ export function ExploreContent({ onAppSelected, clearSelection }: ExploreContent
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {apps.map((app) => {
-                      const Icon = app.icon
+                      const isLogoPath = typeof app.icon === 'string'
                       return (
                         <Card
                           key={app.key}
@@ -1425,9 +1425,24 @@ export function ExploreContent({ onAppSelected, clearSelection }: ExploreContent
                           <CardHeader className="p-5">
                             <div className="flex items-start gap-4">
                               {/* Logo Area */}
-                              <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md pointer-events-none`}>
-                                <Icon className="size-8 text-white pointer-events-none" />
-                              </div>
+                              {isLogoPath ? (
+                                <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-white border border-stone-200 shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md overflow-hidden pointer-events-none">
+                                  <Image
+                                    src={app.icon as string}
+                                    alt={`${app.name} logo`}
+                                    width={64}
+                                    height={64}
+                                    className="size-full object-contain p-1.5"
+                                  />
+                                </div>
+                              ) : (
+                                <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md pointer-events-none`}>
+                                  {(() => {
+                                    const Icon = app.icon as LucideIcon
+                                    return <Icon className="size-8 text-white pointer-events-none" />
+                                  })()}
+                                </div>
+                              )}
 
                               {/* App Info */}
                               <div className="flex-1 space-y-1.5 min-w-0">
