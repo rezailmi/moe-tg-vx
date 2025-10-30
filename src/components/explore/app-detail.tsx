@@ -1,7 +1,6 @@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AppInfoSection } from './app-info-section'
 import { AppMetadataBar } from './app-metadata-bar'
-import { AppScreenshots } from './app-screenshots'
 import { AppDescription } from './app-description'
 import { AppDeveloperInfo } from './app-developer-info'
 import { AppReviews } from './app-reviews'
@@ -32,12 +31,6 @@ export function AppDetail({ app }: AppDetailProps) {
           <AppMetadataBar
             metadata={app.metadata}
             developerName={app.developer.name}
-          />
-
-          {/* Screenshots */}
-          <AppScreenshots
-            screenshots={app.screenshots}
-            appName={app.name}
           />
 
           {/* Description */}
