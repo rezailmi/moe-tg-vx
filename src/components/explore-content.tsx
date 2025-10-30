@@ -39,7 +39,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { AppDetail } from '@/components/explore/app-detail'
 import { comingSoonToast } from '@/lib/coming-soon-toast'
 
@@ -1415,6 +1415,8 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
                       return (
                         <Card
                           key={app.key}
+                          role="button"
+                          tabIndex={0}
                           className="group cursor-pointer overflow-hidden rounded-2xl border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           onClick={(e) => {
                             e.preventDefault()
@@ -1423,12 +1425,21 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
                             setSelectedApp(app)
                             onAppClick?.(app.key)
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              console.log('Card activated via keyboard:', app.name)
+                              setSelectedApp(app)
+                              onAppClick?.(app.key)
+                            }
+                          }}
                         >
                           <CardHeader className="p-5">
                             <div className="flex items-start gap-4">
                               {/* Logo Area */}
-                              <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md`}>
-                                <Icon className="size-8 text-white" />
+                              <div className={`flex size-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient || 'from-stone-400 to-stone-600'} shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md pointer-events-none`}>
+                                <Icon className="size-8 text-white pointer-events-none" />
                               </div>
 
                               {/* App Info */}
@@ -1468,7 +1479,12 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
           if (!open) setSelectedApp(null)
         }}
       >
-        <DialogContent className="h-[90vh] max-w-4xl p-0">
+        <DialogContent className="h-[90vh] max-w-4xl p-0" showCloseButton={false}>
+          {/* Visually hidden title for accessibility */}
+          <DialogTitle className="sr-only">
+            {selectedApp?.name || 'App Details'}
+          </DialogTitle>
+
           {selectedApp ? (
             <AppDetail
               app={selectedApp}
