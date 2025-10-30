@@ -10,7 +10,7 @@ export function AppDescription({
   platforms,
 }: AppDescriptionProps) {
   return (
-    <div className="border-b border-stone-200 px-6 py-8">
+    <div className="border-b border-stone-200 px-8 py-8">
       <div className="space-y-6">
         {/* Description */}
         <div className="space-y-4">

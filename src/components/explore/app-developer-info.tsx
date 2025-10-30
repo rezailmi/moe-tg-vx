@@ -17,7 +17,7 @@ export function AppDeveloperInfo({ developer }: AppDeveloperInfoProps) {
   }
 
   return (
-    <div className="border-b border-stone-200 px-6 py-8">
+    <div className="border-b border-stone-200 px-8 py-8">
       <div className="space-y-4">
         <h3 className="text-base font-semibold text-stone-900">
           {developer.name}

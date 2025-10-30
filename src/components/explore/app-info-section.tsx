@@ -21,7 +21,7 @@ export function AppInfoSection({
   thirdParty,
 }: AppInfoSectionProps) {
   return (
-    <div className="border-b border-stone-200 px-6 py-6">
+    <div className="border-b border-stone-200 px-8 py-6">
       <div className="flex items-start gap-6">
         {/* App Icon */}
         <div
