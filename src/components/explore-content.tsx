@@ -41,40 +41,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AppDetail } from '@/components/explore/app-detail'
 import { comingSoonToast } from '@/lib/coming-soon-toast'
-
-interface Developer {
-  name: string
-  website?: string
-  support?: string
-}
-
-interface AppMetadata {
-  rating?: number
-  ratingCount?: number
-  ageRating?: string
-  chartPosition?: number
-  chartCategory?: string
-  languages: string[]
-  size?: string
-}
-
-interface App {
-  key: string
-  name: string
-  description: string
-  tagline: string
-  fullDescription: string
-  icon: LucideIcon
-  category: string
-  gradient?: string
-  thirdParty?: boolean
-  developer: Developer
-  metadata: AppMetadata
-  features?: string[]
-  screenshots?: string[]
-  inAppPurchases?: boolean
-  platforms?: string[]
-}
+import type { App } from '@/types/explore'
 
 const categoryDescriptions: Record<string, string> = {
   'Recommended for you': "Because it's an exam period",
@@ -1297,11 +1264,7 @@ In the coming months, educators will be able to assign Gems (custom AI assistant
   },
 ]
 
-interface ExploreContentProps {
-  onAppClick?: (appKey: string) => void
-}
-
-export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
+export function ExploreContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedApp, setSelectedApp] = useState<App | null>(null)
 
@@ -1350,7 +1313,6 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
         <AppDetail
           app={selectedApp}
           onClose={() => {
-            console.log('Returning to app list')
             setSelectedApp(null)
           }}
         />
@@ -1361,7 +1323,8 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
   // Otherwise, show the app list
   return (
     <ScrollArea className="h-full w-full">
-      <div className="mx-auto w-full max-w-5xl space-y-8 px-8 py-10">
+      <div className="min-h-full bg-gradient-to-b from-white to-[#F5E3DF]">
+        <div className="mx-auto w-full max-w-5xl space-y-8 px-8 py-10">
         {/* Page Header */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-stone-900">Discover</h1>
@@ -1379,7 +1342,7 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search apps by name or description..."
-                className="h-12 rounded-xl border-stone-200 bg-white pl-12 pr-6 text-sm shadow-sm transition-shadow placeholder:text-stone-400 focus-visible:shadow-md"
+                className="h-12 sm:h-14 rounded-xl border-stone-200 bg-white pl-12 pr-6 text-sm shadow-sm transition-shadow placeholder:text-stone-400 focus-visible:shadow-md"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -1431,18 +1394,16 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
                           key={app.key}
                           role="button"
                           tabIndex={0}
-                          className="group cursor-pointer overflow-hidden rounded-2xl border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                          className="group cursor-pointer overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            console.log('Card clicked:', app.name)
                             setSelectedApp(app)
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault()
                               e.stopPropagation()
-                              console.log('Card activated via keyboard:', app.name)
                               setSelectedApp(app)
                             }
                           }}
@@ -1481,6 +1442,7 @@ export function ExploreContent({ onAppClick }: ExploreContentProps = {}) {
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
+    </ScrollArea>
   )
 }

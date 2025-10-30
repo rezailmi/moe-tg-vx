@@ -50,7 +50,7 @@ export function AppInfoSection({
               onClick={() => comingSoonToast.feature('App installation')}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              Get
+              Open
             </Button>
             {inAppPurchases && (
               <p className="text-xs text-stone-500">In-App Purchases</p>

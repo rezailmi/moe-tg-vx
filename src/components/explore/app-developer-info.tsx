@@ -12,10 +12,8 @@ interface AppDeveloperInfoProps {
 }
 
 export function AppDeveloperInfo({ developer }: AppDeveloperInfoProps) {
-  const handleLinkClick = (type: 'website' | 'support', url?: string) => {
-    if (url) {
-      comingSoonToast.feature(`${type === 'website' ? 'Developer website' : 'Support page'}`)
-    }
+  const handleLinkClick = (type: 'website' | 'support') => {
+    comingSoonToast.feature(`${type === 'website' ? 'Developer website' : 'Support page'}`)
   }
 
   return (
@@ -29,7 +27,7 @@ export function AppDeveloperInfo({ developer }: AppDeveloperInfoProps) {
           {developer.website && (
             <button
               type="button"
-              onClick={() => handleLinkClick('website', developer.website)}
+              onClick={() => handleLinkClick('website')}
               className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"
             >
               <ExternalLink className="size-4" />
@@ -40,7 +38,7 @@ export function AppDeveloperInfo({ developer }: AppDeveloperInfoProps) {
           {developer.support && (
             <button
               type="button"
-              onClick={() => handleLinkClick('support', developer.support)}
+              onClick={() => handleLinkClick('support')}
               className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"
             >
               <HelpCircle className="size-4" />

@@ -1,4 +1,3 @@
-import { type LucideIcon } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AppDetailHeader } from './app-detail-header'
 import { AppInfoSection } from './app-info-section'
@@ -7,43 +6,10 @@ import { AppScreenshots } from './app-screenshots'
 import { AppDescription } from './app-description'
 import { AppDeveloperInfo } from './app-developer-info'
 import { AppReviews } from './app-reviews'
-
-interface Developer {
-  name: string
-  website?: string
-  support?: string
-}
-
-interface AppMetadata {
-  rating?: number
-  ratingCount?: number
-  ageRating?: string
-  chartPosition?: number
-  chartCategory?: string
-  languages: string[]
-  size?: string
-}
-
-export interface AppDetailData {
-  key: string
-  name: string
-  tagline: string
-  description: string
-  fullDescription: string
-  icon: LucideIcon
-  category: string
-  gradient?: string
-  thirdParty?: boolean
-  developer: Developer
-  metadata: AppMetadata
-  features?: string[]
-  screenshots?: string[]
-  inAppPurchases?: boolean
-  platforms?: string[]
-}
+import type { App } from '@/types/explore'
 
 interface AppDetailProps {
-  app: AppDetailData
+  app: App
   onClose: () => void
 }
 
@@ -55,7 +21,8 @@ export function AppDetail({ app, onClose }: AppDetailProps) {
 
       {/* Scrollable content */}
       <ScrollArea className="flex-1">
-        <div className="flex flex-col">
+        <div className="min-h-full bg-gradient-to-b from-white to-[#F5E3DF]">
+          <div className="flex flex-col">
           {/* App Info Section */}
           <AppInfoSection
             name={app.name}
@@ -90,6 +57,7 @@ export function AppDetail({ app, onClose }: AppDetailProps) {
 
           {/* Ratings & Reviews */}
           <AppReviews metadata={app.metadata} />
+          </div>
         </div>
       </ScrollArea>
     </div>
