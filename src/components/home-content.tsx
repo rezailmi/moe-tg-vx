@@ -67,11 +67,11 @@ const actionButtons = [
 
 // Mock data for teacher widgets
 const podcastData = {
-  title: "Scheduling Time For Self-Care When You Don't Have Time",
+  title: "What Is Vibe Coding?",
   date: 'Oct 24',
   duration: '8 min',
-  description: 'Practical self-care strategies for teachers managing demanding schedules and workloads.',
-  imageUrl: '/images/podcast-thumb-pdm.png',
+  description: 'The material discusses "Vibe coding," a concept coined by computer scientist Andre Carpathy in February 2025.',
+  imageUrl: '/images/podcast-thumb.png',
 }
 
 const getTodayDate = () => {
@@ -225,7 +225,7 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
                 {/* Podcast Image */}
                 <div
                   className="relative h-32 overflow-hidden rounded-xl py-4"
-                  style={{ backgroundColor: '#59ACA9' }}
+                  style={{ backgroundColor: '#5DD3CF' }}
                 >
                   <img
                     src={podcastData.imageUrl}
