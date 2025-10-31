@@ -71,7 +71,7 @@ const podcastData = {
   date: 'Oct 24',
   duration: '8 min',
   description: 'The material discusses "Vibe coding," a concept coined by computer scientist Andre Carpathy in February 2025.',
-  imageUrl: '/images/podcast-thumb.png',
+  imageUrl: '/images/podcast-thumb-ai.png',
 }
 
 const getTodayDate = () => {
@@ -224,8 +224,8 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
               <CardContent className="flex h-full flex-col p-0" style={{ padding: `${widgetPadding}px` }}>
                 {/* Podcast Image */}
                 <div
-                  className="relative h-32 overflow-hidden rounded-xl py-4"
-                  style={{ backgroundColor: '#5DD3CF' }}
+                  className="relative h-48 overflow-hidden rounded-xl py-4"
+                  style={{ backgroundColor: '#67E8F9' }}
                 >
                   <img
                     src={podcastData.imageUrl}
@@ -237,15 +237,12 @@ export function HomeContent({ onNavigateToClassroom, onNavigateToExplore, onNavi
                 {/* Podcast Info */}
                 <div className="mt-3 space-y-1">
                   <h3 className="text-base font-semibold text-stone-900 sm:text-lg">{podcastData.title}</h3>
-                  <p className="text-xs text-stone-500">
-                    {podcastData.date} • {podcastData.duration}
-                  </p>
                   <p className="text-sm text-stone-600 line-clamp-2">{podcastData.description}</p>
                 </div>
 
                 {/* Play Button - pushed to bottom */}
                 <Button
-                  className="mt-auto h-9 w-full rounded-lg bg-stone-900 text-sm text-white hover:bg-stone-800"
+                  className="mt-4 h-9 w-full rounded-lg bg-stone-900 text-sm text-white hover:bg-stone-800"
                   onClick={() => comingSoonToast.feature('Podcast player')}
                 >
                   <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
