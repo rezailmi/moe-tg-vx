@@ -21,7 +21,7 @@ supabase/
 
 ## 🗄️ Database Schema
 
-### 19 Tables in Total
+### 18 Tables in Total
 
 **Core (3 tables)**
 - `teachers` - Teacher accounts
@@ -34,13 +34,12 @@ supabase/
 - `student_guardians` - Student-guardian relationships (1 primary + multiple additional)
 - `student_classes` - Student enrollments
 
-**Student Data (6 tables)**
+**Student Data (5 tables)**
 - `student_overview` - Background, health, family, SWAN info
 - `student_private_notes` - Teacher notes (multi-teacher, audit trail)
 - `attendance` - Daily/CCA/event attendance
 - `academic_results` - Test scores, grades, assessments
 - `physical_fitness` - NAPFA, PE assessments
-- `cce_results` - Character, Citizenship, Education per term
 
 **Social & Behaviour (2 tables)**
 - `friend_relationships` - Student friendships

@@ -52,14 +52,13 @@ export async function fetchStudentProfile(studentName: string) {
   termStartDate.setDate(today.getDate() - 60)
   const termStartStr = termStartDate.toISOString().split('T')[0]
 
-  // 2-11. Fetch all other data in parallel
+  // 2-10. Fetch all other data in parallel
   const [
     formClassData,
     overviewData,
     academicData,
     attendanceData,
     fitnessData,
-    cceData,
     behaviourData,
     friendsData,
     privateNotesData,
@@ -111,15 +110,6 @@ export async function fetchStudentProfile(studentName: string) {
       .select('*')
       .eq('student_id', studentId)
       .order('assessment_date', { ascending: false })
-      .then((res) => res.data),
-
-    // CCE results
-    supabase
-      .from('cce_results')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('academic_year', { ascending: false })
-      .order('term', { ascending: false })
       .then((res) => res.data),
 
     // Behaviour observations
@@ -238,7 +228,6 @@ export async function fetchStudentProfile(studentName: string) {
         }),
     },
     physical_fitness: fitnessData || [],
-    cce_results: cceData || [],
     behaviour_observations: behaviourData || [],
     friend_relationships: (friendsData || []).map(
       (f: {

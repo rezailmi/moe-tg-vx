@@ -401,66 +401,6 @@ export type Database = {
           },
         ]
       }
-      cce_results: {
-        Row: {
-          academic_year: string
-          assessed_by: string | null
-          character: string | null
-          citizenship: string | null
-          comments: string | null
-          created_at: string
-          education: string | null
-          id: string
-          overall_grade: string | null
-          student_id: string
-          term: string
-          updated_at: string
-        }
-        Insert: {
-          academic_year: string
-          assessed_by?: string | null
-          character?: string | null
-          citizenship?: string | null
-          comments?: string | null
-          created_at?: string
-          education?: string | null
-          id?: string
-          overall_grade?: string | null
-          student_id: string
-          term: string
-          updated_at?: string
-        }
-        Update: {
-          academic_year?: string
-          assessed_by?: string | null
-          character?: string | null
-          citizenship?: string | null
-          comments?: string | null
-          created_at?: string
-          education?: string | null
-          id?: string
-          overall_grade?: string | null
-          student_id?: string
-          term?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cce_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cce_results_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       classes: {
         Row: {
           academic_year: string
