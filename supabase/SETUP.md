@@ -91,12 +91,12 @@ npx supabase db diff
 You should see these tables:
 - Core: `teachers`, `classes`, `teacher_classes`
 - Guardians/Students: `parents_guardians`, `students`, `student_guardians`, `student_classes`
-- Student Data: `student_overview`, `student_private_notes`, `attendance`, `academic_results`, `physical_fitness`, `cce_results`
+- Student Data: `student_overview`, `student_private_notes`, `attendance`, `academic_results`, `physical_fitness`
 - Social: `friend_relationships`, `behaviour_observations`
 - Cases: `cases`, `case_issues`
 - Reports: `reports`, `report_comments`
 
-**Total: 19 tables**
+**Total: 18 tables**
 
 ## Database Schema Overview
 
@@ -121,7 +121,6 @@ students ──┬── student_overview
            ├── attendance
            ├── academic_results
            ├── physical_fitness
-           ├── cce_results
            ├── friend_relationships
            └── behaviour_observations
 ```

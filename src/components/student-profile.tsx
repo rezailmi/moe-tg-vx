@@ -320,45 +320,7 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
             </CardContent>
           </Card>
 
-          {/* CCE Results */}
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Character & Citizenship Education (CCE)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {studentData.cce_results.length > 0 ? (
-                  studentData.cce_results.map((cce, index) => (
-                    <div key={cce.id} className="border-b border-stone-100 pb-4 last:border-0 last:pb-0">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm font-medium text-stone-900">{cce.term} {cce.academic_year}</p>
-                        <span className="text-sm font-semibold text-stone-900">{cce.overall_grade}</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
-                        <div>
-                          <span className="text-stone-500">Character:</span>{' '}
-                          <span className="font-medium text-stone-900">{cce.character || 'N/A'}</span>
-                        </div>
-                        <div>
-                          <span className="text-stone-500">Citizenship:</span>{' '}
-                          <span className="font-medium text-stone-900">{cce.citizenship || 'N/A'}</span>
-                        </div>
-                        <div>
-                          <span className="text-stone-500">Education:</span>{' '}
-                          <span className="font-medium text-stone-900">{cce.education || 'N/A'}</span>
-                        </div>
-                      </div>
-                      {cce.comments && (
-                        <p className="text-sm text-stone-600 mt-2">{cce.comments}</p>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-stone-500">No CCE results recorded</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Physical Fitness */}
           <Card className="border-stone-200">

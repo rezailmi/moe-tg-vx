@@ -116,7 +116,7 @@ const getMockRecords = (studentName: string, studentId: string): StudentRecord[]
     id: 'rec-004',
     studentId: 'student-001',
     type: 'performance',
-    subType: 'character-cce',
+    subType: 'behavioral',
     title: 'Growth Mindset & Peer Support',
     description:
       `${studentName} shows excellent resilience and perseverance. Noticed helping classmates with study strategies.`,
@@ -127,7 +127,7 @@ const getMockRecords = (studentName: string, studentId: string): StudentRecord[]
     visibility: 'parent',
     tags: ['character', 'resilience', 'helping-peers'],
     data: {
-      subType: 'character-cce',
+      subType: 'behavioral',
       area: 'resilience',
       rating: 5,
       observation:

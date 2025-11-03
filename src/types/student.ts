@@ -73,18 +73,6 @@ export interface StudentProfileData {
     pass_status: boolean | null
   }>
 
-  // CCE results
-  cce_results: Array<{
-    id: string
-    term: string
-    academic_year: string
-    character: string | null
-    citizenship: string | null
-    education: string | null
-    overall_grade: string | null
-    comments: string | null
-  }>
-
   // Behaviour observations
   behaviour_observations: Array<{
     id: string
