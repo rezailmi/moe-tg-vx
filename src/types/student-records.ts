@@ -5,7 +5,6 @@ export type RecordType = 'attendance' | 'performance' | 'profile' | 'case-relate
 export type AttendanceSubType = 'daily' | 'cca' | 'school-events' | 'early-dismissal' | 'medical'
 export type PerformanceSubType =
   | 'academic-results'
-  | 'character-cce'
   | 'cca'
   | 'physical-fitness'
   | 'academic-concerns'
