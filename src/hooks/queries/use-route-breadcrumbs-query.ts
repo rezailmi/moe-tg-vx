@@ -150,7 +150,7 @@ function generateBreadcrumbs(
 
       case 'inbox':
         breadcrumbs.push({
-          label: 'Parents & Communications',
+          label: 'Parent Communication',
           path: 'inbox',
           isActive: isLast,
           onClick: onNavigate && !isLast ? () => onNavigate('inbox') : undefined,
