@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CaseManagementTable } from '@/components/case-management-table'
-import { cn, getInitials, getAvatarColor } from '@/lib/utils'
+import { cn, getInitials, getAvatarColor, getLetterGrade, calculatePercentage } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
 import { useStudentProfileQuery } from '@/hooks/queries/use-student-profile-query'
 import { useMessageParent } from '@/hooks/use-message-parent'
@@ -237,12 +237,41 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                 <h4 className="text-sm font-medium text-stone-900 mb-1">Background</h4>
                 <p className="text-sm text-stone-600">{studentData.overview?.background || 'No background information available.'}</p>
               </div>
-              {studentData.overview?.medical_conditions && (
-                <div>
-                  <h4 className="text-sm font-medium text-stone-900 mb-1">Medical Conditions</h4>
-                  <p className="text-sm text-stone-600">{JSON.stringify(studentData.overview.medical_conditions)}</p>
-                </div>
-              )}
+              {studentData.overview?.medical_conditions && typeof studentData.overview.medical_conditions === 'object' && Object.keys(studentData.overview.medical_conditions).length > 0 && (() => {
+                const medicalData = studentData.overview.medical_conditions as { notes?: string; allergies?: string[]; conditions?: string[]; medications?: string[] }
+                const hasContent = medicalData.notes || (medicalData.allergies && medicalData.allergies.length > 0) || (medicalData.conditions && medicalData.conditions.length > 0) || (medicalData.medications && medicalData.medications.length > 0)
+
+                if (!hasContent) return null
+
+                return (
+                  <div>
+                    <h4 className="text-sm font-medium text-stone-900 mb-1">Medical Conditions</h4>
+                    <div className="space-y-2">
+                      {medicalData.notes && (
+                        <p className="text-sm text-stone-600">{medicalData.notes}</p>
+                      )}
+                      {medicalData.conditions && medicalData.conditions.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-stone-700">Conditions:</p>
+                          <p className="text-sm text-stone-600">{medicalData.conditions.join(', ')}</p>
+                        </div>
+                      )}
+                      {medicalData.allergies && medicalData.allergies.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-stone-700">Allergies:</p>
+                          <p className="text-sm text-stone-600">{medicalData.allergies.join(', ')}</p>
+                        </div>
+                      )}
+                      {medicalData.medications && medicalData.medications.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-stone-700">Medications:</p>
+                          <p className="text-sm text-stone-600">{medicalData.medications.join(', ')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
               {studentData.overview?.mental_wellness && (
                 <div>
                   <h4 className="text-sm font-medium text-stone-900 mb-1">Mental Wellness</h4>
@@ -322,23 +351,29 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
             <CardContent>
               <div className="space-y-3">
                 {studentData.academic_results.length > 0 ? (
-                  studentData.academic_results.slice(0, 10).map((result, index) => (
-                    <div key={result.id} className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium text-stone-900">{result.assessment_name}</p>
-                        <p className="text-xs text-stone-500">
-                          {new Date(result.assessment_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                          {result.term && ` • ${result.term}`}
-                        </p>
+                  studentData.academic_results.slice(0, 10).map((result, index) => {
+                    // Calculate correct grade based on HDP standards
+                    const percentage = result.percentage || (result.score && result.max_score ? calculatePercentage(result.score, result.max_score) : 0)
+                    const grade = getLetterGrade(percentage)
+
+                    return (
+                      <div key={result.id} className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-medium text-stone-900">{result.assessment_name}</p>
+                          <p className="text-xs text-stone-500">
+                            {new Date(result.assessment_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            {result.term && ` • ${result.term}`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-stone-600">{result.score}/{result.max_score}</span>
+                          <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-900">
+                            {grade}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-stone-600">{result.score}/{result.max_score}</span>
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-900">
-                          {result.grade}
-                        </span>
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 ) : (
                   <p className="text-sm text-stone-500">No academic results recorded</p>
                 )}
@@ -348,46 +383,6 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
 
 
 
-          {/* Physical Fitness */}
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-stone-900">Physical Fitness</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {studentData.physical_fitness.length > 0 ? (
-                  studentData.physical_fitness.map((fitness, index) => (
-                    <div key={fitness.id} className="border-b border-stone-100 pb-4 last:border-0 last:pb-0">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="text-sm font-medium text-stone-900">{fitness.assessment_type}</p>
-                          <p className="text-xs text-stone-500">
-                            {new Date(fitness.assessment_date).toLocaleDateString('en-SG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                          </p>
-                        </div>
-                        <span className={cn(
-                          'px-2 py-1 text-xs font-medium rounded-full',
-                          fitness.pass_status ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
-                        )}>
-                          {fitness.overall_grade || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        {Object.entries(fitness.metrics as Record<string, unknown>).map(([key, value]) => (
-                          <div key={key}>
-                            <span className="text-stone-500 capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
-                            <span className="font-medium text-stone-900">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-stone-500">No fitness records available</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Attendance Tab */}
