@@ -423,6 +423,7 @@ function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessag
 
     setMessages((prev) => [...prev, userMessage])
     const messageText = input.trim().toLowerCase()
+    const inputValue = input.trim()
     setInput('')
     setIsLoading(true)
 
@@ -446,43 +447,122 @@ function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessag
       (messageText.includes('prepare') || messageText.includes('help') || messageText.includes('ready') || messageText.includes('upcoming') || messageText.includes('next') || messageText === pattern)
     )
 
-    if (isPTMRequest) {
-      // Add thinking indicator
-      const thinkingMessage: Message = {
-        id: generateMessageId(),
-        role: 'assistant',
-        content: 'Thought for 5 seconds',
-        timestamp: new Date(),
-        isThinking: true,
-      }
-      setMessages((prev) => [...prev, thinkingMessage])
+    try {
+      // For PTM requests, skip OpenAI and show component directly
+      if (isPTMRequest) {
+        // Show loading indicator briefly
+        const loadingMessage: Message = {
+          id: generateMessageId(),
+          role: 'assistant',
+          content: 'Loading PTM data...',
+          timestamp: new Date(),
+          isThinking: true,
+        }
+        setMessages((prev) => [...prev, loadingMessage])
 
-      // Simulate PTM response
-      setTimeout(() => {
-        // Remove thinking message and add actual response
+        // Small delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Remove loading and show PTM component
         setMessages((prev) => prev.filter((msg) => !msg.isThinking))
 
-        const assistantMessage: Message = {
+        const ptmMessage: Message = {
           id: generateMessageId(),
           role: 'assistant',
           content: <PTMResponseContent onStudentClick={onStudentClick} onStudentClickWithClass={onStudentClickWithClass} />,
           timestamp: new Date(),
         }
-        setMessages((prev) => [...prev, assistantMessage])
+        setMessages((prev) => [...prev, ptmMessage])
         setIsLoading(false)
-      }, 5000)
-    } else {
-      // Default simulated response for non-PTM messages
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: generateMessageId(),
-          role: 'assistant',
-          content: 'This is a simulated response. In a real implementation, this would connect to an AI service.',
-          timestamp: new Date(),
+        return
+      }
+
+      // For non-PTM requests, use OpenAI streaming
+      // Create streaming message
+      const streamingMessageId = generateMessageId()
+      const streamingMessage: Message = {
+        id: streamingMessageId,
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, streamingMessage])
+
+      // Call streaming API
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputValue,
+          conversationHistory: messages
+            .filter(m => typeof m.content === 'string' && !m.isThinking)
+            .map(m => ({
+              role: m.role,
+              content: m.content as string,
+            })),
+          isPTMRequest: false, // Never PTM here since we handle it above
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send message')
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedContent = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6))
+
+              if (data.content) {
+                accumulatedContent += data.content
+                // Update streaming message
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === streamingMessageId
+                      ? { ...msg, content: accumulatedContent }
+                      : msg
+                  )
+                )
+              }
+
+              if (data.error) {
+                throw new Error(data.error)
+              }
+            }
+          }
         }
-        setMessages((prev) => [...prev, assistantMessage])
-        setIsLoading(false)
-      }, 1000)
+      }
+
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Chat error:', error)
+      // Remove failed streaming message
+      setMessages((prev) => prev.filter(m => m.content !== ''))
+
+      // Add error message
+      const errorMessage: Message = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+      setIsLoading(false)
     }
   }
 
@@ -521,32 +601,127 @@ function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessag
     }
 
     setMessages((prev) => [...prev, userMessage])
-
-    // Add thinking indicator
-    const thinkingMessage: Message = {
-      id: generateMessageId(),
-      role: 'assistant',
-      content: 'Thought for 5 seconds',
-      timestamp: new Date(),
-      isThinking: true,
-    }
-    setMessages((prev) => [...prev, thinkingMessage])
     setIsLoading(true)
 
-    // Simulate assistant response
-    setTimeout(() => {
-      // Remove thinking message and add actual response
-      setMessages((prev) => prev.filter((msg) => !msg.isThinking))
+    const isPTMRequest = shortcut.command === '/ptm'
 
-      const assistantMessage: Message = {
-        id: generateMessageId(),
+    try {
+      // For PTM requests, skip OpenAI and show component directly
+      if (isPTMRequest) {
+        // Show loading indicator briefly
+        const loadingMessage: Message = {
+          id: generateMessageId(),
+          role: 'assistant',
+          content: 'Loading PTM data...',
+          timestamp: new Date(),
+          isThinking: true,
+        }
+        setMessages((prev) => [...prev, loadingMessage])
+
+        // Small delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Remove loading and show PTM component
+        setMessages((prev) => prev.filter((msg) => !msg.isThinking))
+
+        const ptmMessage: Message = {
+          id: generateMessageId(),
+          role: 'assistant',
+          content: <PTMResponseContent onStudentClick={onStudentClick} onStudentClickWithClass={onStudentClickWithClass} />,
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, ptmMessage])
+        setIsLoading(false)
+        return
+      }
+
+      // For non-PTM requests, use OpenAI streaming
+      // Create streaming message
+      const streamingMessageId = generateMessageId()
+      const streamingMessage: Message = {
+        id: streamingMessageId,
         role: 'assistant',
-        content: shortcut.command === '/ptm' ? <PTMResponseContent onStudentClick={onStudentClick} onStudentClickWithClass={onStudentClickWithClass} /> : 'This is a simulated response. In a real implementation, this would connect to an AI service.',
+        content: '',
         timestamp: new Date(),
       }
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, streamingMessage])
+
+      // Call streaming API with full prompt
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: shortcut.prompt,
+          conversationHistory: messages
+            .filter(m => typeof m.content === 'string' && !m.isThinking)
+            .map(m => ({
+              role: m.role,
+              content: m.content as string,
+            })),
+          isPTMRequest: false, // Never PTM here since we handle it above
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send message')
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedContent = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6))
+
+              if (data.content) {
+                accumulatedContent += data.content
+                // Update streaming message
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === streamingMessageId
+                      ? { ...msg, content: accumulatedContent }
+                      : msg
+                  )
+                )
+              }
+
+              if (data.error) {
+                throw new Error(data.error)
+              }
+            }
+          }
+        }
+      }
+
       setIsLoading(false)
-    }, 5000)
+    } catch (error) {
+      console.error('Chat error:', error)
+      // Remove failed streaming message
+      setMessages((prev) => prev.filter(m => m.content !== ''))
+
+      // Add error message
+      const errorMessage: Message = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+      setIsLoading(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
