@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { MailIcon, PhoneIcon, MessageSquare, Loader2, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,6 +11,7 @@ import { CaseManagementTable } from '@/components/case-management-table'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
 import { PageLayout } from '@/components/layout/page-layout'
 import { useStudentProfileQuery } from '@/hooks/queries/use-student-profile-query'
+import { useMessageParent } from '@/hooks/use-message-parent'
 import type { StudentProfileData } from '@/types/student'
 
 interface StudentProfileProps {
@@ -25,6 +27,7 @@ interface StudentProfileProps {
 export function StudentProfile({ studentName, classId, onBack, activeTab, onNavigate, classroomTabs, studentProfileTabs }: StudentProfileProps) {
   const router = useRouter()
   const { data: studentData, isLoading: loading, error } = useStudentProfileQuery(studentName) as { data: StudentProfileData | undefined; isLoading: boolean; error: Error | null }
+  const { messageParent, isLoading: isMessagingParent } = useMessageParent()
 
   if (loading) {
     return (
@@ -186,16 +189,39 @@ export function StudentProfile({ studentName, classId, onBack, activeTab, onNavi
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full"
                   onClick={() => {
-                    // Check if conversation exists for this student
-                    // In real app, would query backend to find or create conversation
-                    // For now, navigate to inbox with conversation #1 as demo (Bryan Yeo's parents)
-                    router.push('/inbox/conv-1')
+                    // Validate guardian exists
+                    if (!studentData?.guardian) {
+                      toast.error('No guardian information available for this student')
+                      return
+                    }
+
+                    // Validate class ID exists
+                    if (!studentData?.form_class_id) {
+                      toast.error('Student class information is missing')
+                      return
+                    }
+
+                    // Message parent using the hook
+                    messageParent({
+                      studentId: studentData.id, // Use id (UUID) not student_id (student number)
+                      classId: studentData.form_class_id,
+                      guardianName: studentData.guardian.name,
+                    })
                   }}
+                  disabled={isMessagingParent || !studentData?.guardian}
                 >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Message Parents
+                  {isMessagingParent ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Opening conversation...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Message Parents
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
