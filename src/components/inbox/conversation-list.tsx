@@ -221,13 +221,19 @@ export function ConversationList({
                                 </p>
                               </div>
                               <span className="text-xs text-stone-500 flex-shrink-0">
-                                {formatTime(latestMessage.sentAt)}
+                                {latestMessage ? formatTime(latestMessage.sentAt) : 'Now'}
                               </span>
                             </div>
 
                             <p className="text-sm text-stone-700 line-clamp-1">
-                              {latestMessage.senderRole === 'teacher' && 'You: '}
-                              {latestMessage.content}
+                              {latestMessage ? (
+                                <>
+                                  {latestMessage.senderRole === 'teacher' && 'You: '}
+                                  {latestMessage.content}
+                                </>
+                              ) : (
+                                <span className="text-stone-500 italic">No messages yet</span>
+                              )}
                             </p>
                           </div>
                         </div>
