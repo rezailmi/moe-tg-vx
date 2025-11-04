@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, Loader2Icon, MonitorIcon, PanelRightIcon, SendIcon, SquareIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { CheckIcon, ChevronRightIcon, Loader2Icon, MonitorIcon, PanelRightIcon, SendIcon, SquareIcon, Trash2Icon, XIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -15,6 +15,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
+import AssistantRichText from '@/components/assistant-rich-text'
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom'
 import { usePTMStudents } from '@/hooks/queries/use-ptm-students-query'
 import { formatAttendanceRate } from '@/lib/utils/ptm-utils'
@@ -36,6 +37,7 @@ type AssistantPanelProps = {
   onStudentClickWithClass?: (classId: string, studentName: string) => void
   incomingMessage?: string | null
   onMessageProcessed?: () => void
+  useInternalScroll?: boolean
 }
 
 type AssistantBodyProps = {
@@ -44,6 +46,7 @@ type AssistantBodyProps = {
   onStudentClickWithClass?: (classId: string, studentName: string) => void
   incomingMessage?: string | null
   onMessageProcessed?: () => void
+  useScrollArea?: boolean
 }
 
 type Message = {
@@ -371,7 +374,7 @@ function PTMResponseContent({
   )
 }
 
-function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessage, onMessageProcessed }: AssistantBodyProps) {
+function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessage, onMessageProcessed, useScrollArea = true }: AssistantBodyProps) {
   // Use context for persisted state
   const { messages, setMessages, currentInput: input, setCurrentInput: setInput, clearMessages } = useAssistant()
   const { scrollRef } = useScrollToBottom({ dependencies: [messages] })
@@ -749,63 +752,73 @@ function AssistantBody({ onStudentClick, onStudentClickWithClass, incomingMessag
     }
   }
 
+  const messagesContent = (
+    <div className="flex flex-col gap-2 px-3">
+      {messages.map((message) => (
+        <div
+          key={message.id}
+          className={cn(
+            'flex flex-col gap-1 text-sm',
+            message.role === 'user'
+              ? 'ml-auto max-w-[85%] rounded-lg bg-orange-500 p-2 text-white'
+              : message.isThinking
+                ? 'mr-auto flex-row items-center gap-2'
+                : 'mr-auto w-full min-w-0 rounded-lg bg-background p-2',
+          )}
+        >
+          {message.isThinking ? (
+            <>
+              <span className="text-muted-foreground">{message.content}</span>
+              <ChevronRightIcon className="size-4 text-muted-foreground" />
+            </>
+          ) : (
+            <>
+              {/* Check if this is a command message with full prompt */}
+              {message.command && message.fullPrompt ? (
+                <CollapsibleUserMessage command={message.command} fullPrompt={message.fullPrompt} />
+              ) : typeof message.content === 'string' ? (
+                <AssistantRichText text={message.content as string} className="break-words overflow-hidden" />
+              ) : (
+                <div>{message.content}</div>
+              )}
+              {!message.isThinking && (
+                <span className="text-xs opacity-60">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      ))}
+      {isLoading && (
+        <div className="mr-auto max-w-[85%] rounded-lg bg-background p-2 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <div className="size-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
+              <div className="size-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
+              <div className="size-2 animate-bounce rounded-full bg-muted-foreground" />
+            </div>
+            <span className="text-muted-foreground">Thinking...</span>
+          </div>
+        </div>
+      )}
+      <div ref={scrollRef} />
+    </div>
+  )
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <ScrollArea className="h-0 flex-1">
-        <div className="flex flex-col gap-3 px-5">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                'flex flex-col gap-1 text-sm',
-                message.role === 'user'
-                  ? 'ml-auto max-w-[85%] rounded-lg bg-orange-500 p-3 text-white'
-                  : message.isThinking
-                    ? 'mr-auto flex-row items-center gap-2'
-                    : 'mr-auto max-w-full',
-              )}
-            >
-              {message.isThinking ? (
-                <>
-                  <span className="text-muted-foreground">{message.content}</span>
-                  <ChevronRightIcon className="size-4 text-muted-foreground" />
-                </>
-              ) : (
-                <>
-                  {/* Check if this is a command message with full prompt */}
-                  {message.command && message.fullPrompt ? (
-                    <CollapsibleUserMessage command={message.command} fullPrompt={message.fullPrompt} />
-                  ) : typeof message.content === 'string' ? (
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                  ) : (
-                    <div>{message.content}</div>
-                  )}
-                  {!message.isThinking && (
-                    <span className="text-xs opacity-60">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-          {isLoading && (
-            <div className="mr-auto max-w-[85%] rounded-lg bg-background p-3 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="size-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-                  <div className="size-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-                  <div className="size-2 animate-bounce rounded-full bg-muted-foreground" />
-                </div>
-                <span className="text-muted-foreground">Thinking...</span>
-              </div>
-            </div>
-          )}
-          <div ref={scrollRef} />
+      {useScrollArea ? (
+        <ScrollArea className="assistant-scroll-mask flex-1 min-h-0">
+          {messagesContent}
+        </ScrollArea>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-auto">
+          {messagesContent}
         </div>
-      </ScrollArea>
+      )}
 
-      <div className="flex flex-col gap-2 px-5">
+      <div className="flex flex-col gap-2 px-4">
         {/* Shortcut hints - only show when no messages */}
         {messages.length === 0 && (
           <div className="flex items-center gap-2">
@@ -887,7 +900,25 @@ export function AssistantModeSwitcher({ mode, onModeChange, activeOption, classN
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={cn('gap-1.5', className)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn('size-8', className)}
+          aria-label={
+            current === 'sidebar'
+              ? 'Switch assistant mode (sidebar)'
+              : current === 'full'
+                ? 'Switch assistant mode (full page)'
+                : 'Switch assistant mode (floating)'
+          }
+          title={
+            current === 'sidebar'
+              ? 'Sidebar'
+              : current === 'full'
+                ? 'Full page'
+                : 'Floating'
+          }
+        >
           {current === 'sidebar' ? (
             <PanelRightIcon className="size-4 text-muted-foreground" />
           ) : current === 'full' ? (
@@ -895,10 +926,6 @@ export function AssistantModeSwitcher({ mode, onModeChange, activeOption, classN
           ) : (
             <SquareIcon className="size-4 text-muted-foreground" />
           )}
-          <span className="text-sm font-medium">
-            {current === 'sidebar' ? 'Sidebar' : current === 'full' ? 'Full page' : 'Floating'}
-          </span>
-          <ChevronDownIcon aria-hidden className="size-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="min-w-48">
@@ -953,6 +980,7 @@ export function AssistantPanel({
   onStudentClickWithClass,
   incomingMessage,
   onMessageProcessed,
+  useInternalScroll = true,
 }: AssistantPanelProps) {
   // Get clearMessages from context
   const { clearMessages } = useAssistant()
@@ -972,7 +1000,7 @@ export function AssistantPanel({
               onClick={clearMessages}
               aria-label="Clear chat history"
             >
-              <Trash2Icon className="size-4" />
+              <Trash2Icon className="size-4 text-muted-foreground" />
             </Button>
             <AssistantModeSwitcher mode={mode} onModeChange={onModeChange} />
             <Button
@@ -982,7 +1010,7 @@ export function AssistantPanel({
               onClick={() => onOpenChange(false)}
               aria-label="Close assistant"
             >
-              <XIcon className="size-4" />
+              <XIcon className="size-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
@@ -993,6 +1021,7 @@ export function AssistantPanel({
         onStudentClickWithClass={onStudentClickWithClass}
         incomingMessage={incomingMessage}
         onMessageProcessed={onMessageProcessed}
+        useScrollArea={useInternalScroll}
       />
     </div>
   )
@@ -1027,7 +1056,7 @@ export function AssistantPanel({
                 onClick={clearMessages}
                 aria-label="Clear chat history"
               >
-                <Trash2Icon className="size-4" />
+                <Trash2Icon className="size-4 text-muted-foreground" />
               </Button>
               <AssistantModeSwitcher mode={mode} onModeChange={onModeChange} />
               <Button
@@ -1037,7 +1066,7 @@ export function AssistantPanel({
                 onClick={() => onOpenChange(false)}
                 aria-label="Close assistant"
               >
-                <XIcon className="size-4" />
+                <XIcon className="size-4 text-muted-foreground" />
               </Button>
             </div>
           </SheetHeader>

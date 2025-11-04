@@ -444,21 +444,23 @@ const TabContent = memo(function TabContent({
   // Only render content for the current URL
   if (isAssistantTabActive) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
-        {assistantMode === 'sidebar' ? (
-          <AssistantPanel
-            mode="sidebar"
-            isOpen
-            onOpenChange={setIsAssistantOpen}
-            onModeChange={handleAssistantModeChange}
-            showBodyHeading={false}
-            showHeaderControls={false}
-            onStudentClick={handleOpenStudentProfile}
-            onStudentClickWithClass={handleOpenStudentFromClass}
-          />
-        ) : (
-          <AssistantBody showHeading={false} onStudentClick={handleOpenStudentProfile} onStudentClickWithClass={handleOpenStudentFromClass} />
-        )}
+      <div className="flex h-full flex-col">
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="mx-auto w-full max-w-2xl px-4 py-4">
+            <AssistantPanel
+              mode="sidebar"
+              isOpen
+              onOpenChange={setIsAssistantOpen}
+              onModeChange={handleAssistantModeChange}
+              showBodyHeading={false}
+              showHeaderControls={false}
+              className="flex h-full min-h-0 flex-col"
+              useInternalScroll={false}
+              onStudentClick={handleOpenStudentProfile}
+              onStudentClickWithClass={handleOpenStudentFromClass}
+            />
+          </div>
+        </ScrollArea>
       </div>
     )
   }
