@@ -72,7 +72,7 @@ const podcastData = {
   date: 'Oct 24',
   duration: '8 min',
   description: "Through these MLUs, educators can gain an understanding of emotions, emotion regulation and its benefits.",
-  imageUrl: '/images/podcast-thumb-student-development.png',
+  imageUrl: '/images/podcast-thumb-student-dev.png',
   audioUrl: '/audio/ElevenLabs_Draft_SEED_Emotional_Regulation.mp3',
 }
 
