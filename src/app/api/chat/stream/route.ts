@@ -271,14 +271,17 @@ ${pageList}
 
 IMPORTANT INSTRUCTIONS:
 1. Use ONLY the content from these pages to answer the question
-2. Always cite specific pages when referencing information
-3. Structure your response like the example: direct answer, frameworks, citations
-4. End with a "Recommended Further Reading" section with clickable links
+2. Always cite MULTIPLE relevant pages when available - don't just use one source
+3. Reference different pages for different aspects of your answer
+4. Structure your response: direct answer, frameworks from multiple sources, citations
+5. End with a comprehensive "Recommended Further Reading" section organized by topic
 
-Citation format: [Page Title](opal2.moe.edu.sg/page-id)
+Citation format: [Page Title](actual-notion-url)
 
-Example response structure:
-"According to your [SEND Space](opal2.moe.edu.sg/page-id) resources, the CALM framework includes: Check for safety, Avoid power struggles, Let others know, Make sure an adult stays..."
+Example multi-source response:
+"According to your [SEND Space](notion-url-1), the CALM framework includes... Additionally, your [Student Support Guide](notion-url-2) provides de-escalation scripts, while [School SOPs](notion-url-3) outline the follow-up procedures..."
+
+ALWAYS use multiple sources when available to provide comprehensive answers.
 
 `
       }
