@@ -253,11 +253,13 @@ async function buildSystemPrompt(
       // Search for content related to the user's message
       // Try multiple search strategies to find relevant content
       const searchQuery = message.toLowerCase()
+
+      // Strategy 1: Exact query search
       let searchResult = await notionMCP.executeTool('notion_search', {
         query: searchQuery
       })
 
-      // If no results, try broader search terms
+      // Strategy 2: Try broader search terms
       if (!searchResult?.results?.length) {
         const broadTerms = searchQuery.split(' ').filter(word => word.length > 3)
         if (broadTerms.length > 0) {
@@ -267,18 +269,63 @@ async function buildSystemPrompt(
         }
       }
 
-      // If still no results, try empty search to get all accessible content
+      // Strategy 3: Get list of all databases and query them specifically
+      let databaseResults = []
       if (!searchResult?.results?.length) {
-        searchResult = await notionMCP.executeTool('notion_search', {
-          query: ''
-        })
+        try {
+          // Get all accessible content to find databases
+          const allContentResult = await notionMCP.executeTool('notion_search', {
+            query: '',
+            filter: { property: 'object', value: 'database' }
+          })
+
+          if (allContentResult?.results?.length) {
+            // Query each database with relevant terms
+            const queryTerms = searchQuery.split(' ').filter(word => word.length > 2).slice(0, 3)
+
+            for (const db of allContentResult.results.slice(0, 3)) {
+              try {
+                const dbResult = await notionMCP.executeTool('notion_get_database', {
+                  database_id: db.id,
+                  page_size: 10
+                })
+
+                if (dbResult?.results?.length) {
+                  databaseResults.push({
+                    database: db,
+                    entries: dbResult.results
+                  })
+                }
+              } catch (dbError) {
+                console.error(`Error querying database ${db.id}:`, dbError)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error searching databases:', error)
+        }
       }
 
-      if (searchResult?.results?.length > 0) {
+      // Strategy 4: If still no results, get recent pages (limited fallback)
+      if (!searchResult?.results?.length && !databaseResults.length) {
+        searchResult = await notionMCP.executeTool('notion_search', {
+          query: '',
+          sort: { direction: 'descending', timestamp: 'last_edited_time' }
+        })
+
+        // Limit to top 5 most recent if we're doing a fallback search
+        if (searchResult?.results?.length) {
+          searchResult.results = searchResult.results.slice(0, 5)
+        }
+      }
+
+      if (searchResult?.results?.length > 0 || databaseResults.length > 0) {
         // Try to get actual page content for the top results
         const enrichedPages = []
 
-        for (const page of searchResult.results.slice(0, 5)) {
+        // Process regular search results
+        if (searchResult?.results?.length > 0) {
+          for (const page of searchResult.results.slice(0, 8)) {
           try {
             if (page.object === 'page') {
               // Get full page content
@@ -319,6 +366,58 @@ async function buildSystemPrompt(
             console.error(`Error getting page content for ${page.id}:`, error)
             enrichedPages.push(page)
           }
+          }
+        }
+
+        // Process database results
+        for (const dbResult of databaseResults) {
+          try {
+            const dbEntries = dbResult.entries.slice(0, 5) // Limit entries per database
+
+            for (const entry of dbEntries) {
+              // Extract properties from database entry
+              const properties = entry.properties || {}
+              const propertyText = Object.entries(properties)
+                .map(([key, value]: [string, any]) => {
+                  // Handle different property types
+                  if (value.type === 'title' && value.title?.[0]?.plain_text) {
+                    return `${key}: ${value.title[0].plain_text}`
+                  }
+                  if (value.type === 'rich_text' && value.rich_text?.[0]?.plain_text) {
+                    return `${key}: ${value.rich_text[0].plain_text}`
+                  }
+                  if (value.type === 'select' && value.select?.name) {
+                    return `${key}: ${value.select.name}`
+                  }
+                  if (value.type === 'multi_select' && value.multi_select?.length) {
+                    return `${key}: ${value.multi_select.map((s: any) => s.name).join(', ')}`
+                  }
+                  if (value.type === 'date' && value.date?.start) {
+                    return `${key}: ${value.date.start}`
+                  }
+                  if (value.type === 'number' && value.number !== null) {
+                    return `${key}: ${value.number}`
+                  }
+                  return null
+                })
+                .filter(Boolean)
+                .slice(0, 4) // Limit properties shown
+                .join(', ')
+
+              enrichedPages.push({
+                id: entry.id,
+                title: this.extractPageTitle(entry) || `Database Entry`,
+                object: 'database_entry',
+                url: entry.url,
+                contentPreview: `Database: ${dbResult.database.title || 'Unnamed'}\n  Properties: ${propertyText}`,
+                hasFiles: false,
+                fileCount: 0,
+                database: dbResult.database.title
+              })
+            }
+          } catch (error) {
+            console.error(`Error processing database result:`, error)
+          }
         }
 
         const pageList = enrichedPages.map((page: any) => {
@@ -327,34 +426,48 @@ async function buildSystemPrompt(
 
         notionSearchResults = `
 
-===== RELEVANT NOTION CONTENT FOUND =====
+===== NOTION WORKSPACE CONTENT FOUND =====
 
 Based on your query "${searchQuery}", I found these relevant pages in your workspace:
 
 ${pageList}
 
-IMPORTANT INSTRUCTIONS:
-1. Use ONLY the content from these pages to answer the question
-2. Always cite MULTIPLE relevant pages when available - don't just use one source
-3. Reference different pages for different aspects of your answer
-4. MENTION FILES AND ATTACHMENTS when they appear on pages (PDFs, images, videos, etc.)
-5. Structure your response: direct answer, frameworks from multiple sources, file references, inline citations
-6. Use numbered hyperlinked citations throughout the text
+CRITICAL: YOU MUST ONLY USE THE CONTENT ABOVE TO ANSWER THE QUESTION.
 
-NUMBERED HYPERLINKED CITATIONS:
-Use small numbered citations that link directly to the sources: [1](URL), [2](URL), etc.
+STRICT INSTRUCTIONS:
+1. ONLY use information from the Notion pages listed above
+2. DO NOT use general knowledge or external information
+3. If the Notion content doesn't fully answer the question, say "Based on your workspace, [partial answer from Notion], but I don't have additional information in your Notion workspace to fully answer this question."
+4. Always cite MULTIPLE relevant pages when available - don't just use one source
+5. Reference different pages for different aspects of your answer
+6. MENTION FILES AND ATTACHMENTS when they appear on pages (PDFs, images, videos, etc.)
+7. Use [source] hyperlinked citations throughout the text
 
-Example response with numbered hyperlinked citations:
-"According to your SEND Space [1](https://www.notion.so/send-space-url), the CALM framework includes: Check for safety, Avoid power struggles, Let others know, Make sure an adult stays. Your Student Support Guide [2](https://www.notion.so/guide-url) provides additional de-escalation scripts, while the School SOPs [3](https://www.notion.so/sops-url) outline follow-up procedures..."
+HYPERLINKED CITATIONS:
+Use [source] citations that link directly to the sources: [source](URL) format.
 
-When pages contain files, mention them:
-"Your SEND Space [1](https://www.notion.so/page-url) contains the CALM framework and includes supporting PDF documents for implementation..."
+Example response with hyperlinked citations:
+"According to your SEND Space [source](https://www.notion.so/send-space-url), the CALM framework includes: Check for safety, Avoid power struggles, Let others know, Make sure an adult stays. Your Student Support Guide [source](https://www.notion.so/guide-url) provides additional de-escalation scripts..."
 
-Citation format: [1](actual-notion-url), [2](actual-notion-url), etc.
+Citation format: [source](actual-notion-url) for all citations.
 
-NO "Recommended Further Reading" section needed - citations are inline and clickable.
+ALWAYS cite the Notion sources and stick strictly to the workspace content.
 
-ALWAYS use multiple sources AND mention any files/attachments found on the pages.
+`
+      } else {
+        // No Notion results found - enforce Notion-only mode
+        notionSearchResults = `
+
+===== NO RELEVANT NOTION CONTENT FOUND =====
+
+I searched your Notion workspace for "${searchQuery}" but couldn't find any relevant content.
+
+CRITICAL INSTRUCTION:
+You MUST respond with: "I couldn't find information about '${searchQuery}' in your existing knowledge base. Please check that:
+1. You might want to search for related terms or check your workspace organization
+2. If this information should be in your workspace, you may need to create or update the relevant pages"
+
+DO NOT provide general knowledge or external information. Only respond with the message above.
 
 `
       }
@@ -372,11 +485,11 @@ ALWAYS use multiple sources AND mention any files/attachments found on the pages
 IMPORTANT: Structure your responses with proper formatting:
 
 1. **Direct answer** addressing the core question
-2. **Key frameworks/information** from the search results with inline numbered citations
+2. **Key frameworks/information** from the search results with inline [source] citations
 3. **NO separate reading section** - use only inline citations
 
 CITATION FORMAT REQUIREMENTS:
-- Use numbered hyperlinked citations: [1](URL), [2](URL), [3](URL)
+- Use [source] hyperlinked citations: [source](URL)
 - Reference sources directly in the text flow
 - Multiple sources should be cited throughout the response
 

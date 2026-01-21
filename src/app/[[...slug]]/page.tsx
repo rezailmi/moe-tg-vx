@@ -936,7 +936,6 @@ const TabContent = memo(function TabContent({
           Go Home
         </Button>
         {/* Daily Roundup button removed */}
-        </Button>
       </div>
     </div>
   )
