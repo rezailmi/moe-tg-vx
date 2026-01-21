@@ -2055,7 +2055,8 @@ export default function Home() {
                 </>
               )}
 
-              {/* School life section */}
+              {/* School life section - HIDDEN */}
+              {/*
               <div className="space-y-1">
                 <SidebarGroupLabel className="text-sm">School Life</SidebarGroupLabel>
                 <SidebarMenu>
@@ -2083,6 +2084,7 @@ export default function Home() {
                   })}
                 </SidebarMenu>
               </div>
+              */}
 
               <SidebarSeparator className="mx-0 my-2 w-full" />
 
