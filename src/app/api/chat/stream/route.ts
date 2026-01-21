@@ -100,13 +100,36 @@ export async function POST(request: NextRequest) {
       { role: 'user', content: message },
     ]
 
-    // Create OpenAI stream
+    // Define Notion function tools for OpenAI
+    const functions = [
+      {
+        type: "function",
+        function: {
+          name: "notion_search",
+          description: "Search across all accessible pages and databases in the Notion workspace",
+          parameters: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "The search query to execute"
+              }
+            },
+            required: ["query"]
+          }
+        }
+      }
+    ]
+
+    // Create OpenAI stream with function calling
     const stream = (await openai.chat.completions.create({
       model: OPENAI_CONFIG.chat.model,
       messages: messages as any,
       temperature: OPENAI_CONFIG.chat.temperature,
       max_tokens: OPENAI_CONFIG.chat.max_tokens,
       stream: true, // Enable streaming
+      tools: functions,
+      tool_choice: "auto" // Let OpenAI decide when to call functions
     } as any)) as unknown as AsyncIterable<any>
 
     // Track token usage and cost
