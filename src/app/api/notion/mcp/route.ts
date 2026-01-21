@@ -20,17 +20,15 @@ export async function POST(request: NextRequest) {
     const body: NotionMCPRequest = await request.json()
     const { action, tool_name, args = {} } = body
 
-    // Get authenticated user
-    const supabase = await createClient()
-    let userId: string
-
     // Check if in mock/demo mode
     const mockMode = process.env.NEXT_PUBLIC_PTM_MOCK_MODE === 'true'
     const mockTeacherId = process.env.NEXT_PUBLIC_PTM_MOCK_TEACHER_ID
+    let userId: string
 
     if (mockMode && mockTeacherId) {
       userId = mockTeacherId
     } else {
+      const supabase = await createClient()
       const {
         data: { user },
         error: authError,

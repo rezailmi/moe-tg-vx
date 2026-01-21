@@ -6,11 +6,11 @@ import { createServiceClient } from '@/lib/supabase/server'
  */
 export const RATE_LIMITS = {
   chat: {
-    requests: 10,
+    requests: 30, // Increased from 10 for testing
     window: 60 * 1000, // 1 minute in milliseconds
   },
   image: {
-    requests: 5,
+    requests: 10, // Increased from 5 for testing
     window: 60 * 1000, // 1 minute in milliseconds
   },
 } as const
