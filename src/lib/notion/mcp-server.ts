@@ -184,7 +184,7 @@ export class NotionMCPService {
    * Query database
    */
   private async queryDatabase(databaseId: string, filter?: any, sorts?: any[], pageSize: number = 20) {
-    const response = await this.client.databases.query({
+    const response = await (this.client.databases as any).query({
       database_id: databaseId,
       filter,
       sorts,
